@@ -29,38 +29,36 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+// NewRootCmd returns the base command used when called without any subcommands
+func NewRootCmd() *cobra.Command {
+	var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:          "stool",
-	Short:        "stool profiles access log",
-	SilenceUsage: true, // don't show help content when error occurred
-}
+	//cobra.OnInitialize(initConfig)
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+	rootCmd := &cobra.Command{
+		Use:          "stool",
+		Short:        "stool is access log profiler",
+		SilenceUsage: true, // don't show help content when error occurred
+
 	}
-}
-
-func init() {
-	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.stool.yaml)")
 	rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
 	rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
 	rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
-	viper.BindPFlag("file", rootCmd.PersistentFlags().Lookup("file"))
-	viper.BindPFlag("matching_groups", rootCmd.PersistentFlags().Lookup("matching_groups"))
-	viper.BindPFlag("time_format", rootCmd.PersistentFlags().Lookup("time_format"))
+	_ = viper.BindPFlag("file", rootCmd.PersistentFlags().Lookup("file"))
+	_ = viper.BindPFlag("matching_groups", rootCmd.PersistentFlags().Lookup("matching_groups"))
+	_ = viper.BindPFlag("time_format", rootCmd.PersistentFlags().Lookup("time_format"))
+
+	rootCmd.AddCommand(NewTrendCmd())
+
+	initConfig(cfgFile)
+
+	return rootCmd
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig() {
+func initConfig(cfgFile string) {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
