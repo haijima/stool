@@ -23,24 +23,13 @@ package cmd
 
 import (
 	"github.com/haijima/stool"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-type RootCommand struct {
-	IO
-}
-
 // NewRootCmd returns the base command used when called without any subcommands
-func NewRootCmd() *RootCommand {
-	return &RootCommand{
-		IO: NewStdIO(),
-	}
-}
-
-func (c *RootCommand) Cmd() *cobra.Command {
-	viper.SetFs(c.Fs)
-
+func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:          "stool",
 		Short:        "stool is access log profiler",
@@ -50,14 +39,15 @@ func (c *RootCommand) Cmd() *cobra.Command {
 	addLoggingOption(rootCmd)
 	useConfig(rootCmd)
 
-	rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
-	rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
-	rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
-	_ = viper.BindPFlag("file", rootCmd.PersistentFlags().Lookup("file"))
-	_ = viper.BindPFlag("matching_groups", rootCmd.PersistentFlags().Lookup("matching_groups"))
-	_ = viper.BindPFlag("time_format", rootCmd.PersistentFlags().Lookup("time_format"))
+	//rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
+	//rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
+	//rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
+	//_ = v.BindPFlag("file", rootCmd.PersistentFlags().Lookup("file"))
+	//_ = v.BindPFlag("matching_groups", rootCmd.PersistentFlags().Lookup("matching_groups"))
+	//_ = v.BindPFlag("time_format", rootCmd.PersistentFlags().Lookup("time_format"))
+	v.SetFs(fs)
 
-	rootCmd.AddCommand(NewTrendCommand(*stool.NewTrendProfiler()).Cmd())
+	rootCmd.AddCommand(NewTrendCommand(*stool.NewTrendProfiler(), viper.New(), afero.NewOsFs()))
 
 	return rootCmd
 }
