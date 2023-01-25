@@ -23,8 +23,6 @@ package cmd
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/haijima/stool"
@@ -32,55 +30,79 @@ import (
 	"github.com/spf13/viper"
 )
 
-// NewTrendCmd returns the trend command
-func NewTrendCmd() *cobra.Command {
+type TrendCommand struct {
+	IO
+	profiler stool.TrendProfiler
+}
+
+// NewTrendCommand returns the trend command
+func NewTrendCommand(p stool.TrendProfiler) *TrendCommand {
+	return &TrendCommand{
+		IO:       NewStdIO(),
+		profiler: p,
+	}
+}
+
+func (c *TrendCommand) Cmd() *cobra.Command {
 	trendCmd := &cobra.Command{
 		Use:   "trend",
 		Short: "Show the count of accesses for each endpoint over time",
-		RunE:  run,
+		RunE:  c.RunE,
 	}
+
+	trendCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
+	trendCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
+	trendCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
+	_ = viper.BindPFlag("file", trendCmd.PersistentFlags().Lookup("file"))
+	_ = viper.BindPFlag("matching_groups", trendCmd.PersistentFlags().Lookup("matching_groups"))
+	_ = viper.BindPFlag("time_format", trendCmd.PersistentFlags().Lookup("time_format"))
 	_ = viper.BindPFlag("trend.interval", trendCmd.Flags().Lookup("interval"))
 
 	return trendCmd
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func (c *TrendCommand) RunE(cmd *cobra.Command, args []string) error {
 	file := viper.GetString("file")
 	matchingGroups := viper.GetStringSlice("matching_groups")
 	timeFormat := viper.GetString("time_format")
 	interval := viper.GetInt("trend.interval")
 
+	f, err := c.Fs.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
 	opt := stool.TrendOption{
 		MatchingGroups: matchingGroups,
-		File:           file,
 		TimeFormat:     timeFormat,
 		Interval:       interval,
 	}
 
-	result, err := stool.Trend(opt)
+	result, err := c.profiler.Profile(f, opt)
 	if err != nil {
 		return err
 	}
 
-	return printCsv(result, os.Stdout)
+	return c.printCsv(result)
 }
 
-func printCsv(result stool.TrendResult, out io.Writer) error {
+func (c *TrendCommand) printCsv(result stool.Trend) error {
 	// header
-	fmt.Fprint(out, "Method, Uri")
-	for i := 0; i < result.Step(); i++ {
-		fmt.Fprintf(out, ", %d", i*result.Interval())
+	fmt.Fprint(c.Out, "Method, Uri")
+	for i := 0; i < result.Step; i++ {
+		fmt.Fprintf(c.Out, ", %d", i*result.Interval)
 	}
-	fmt.Fprintln(out)
+	fmt.Fprintln(c.Out)
 
 	// data rows for each endpoint
 	for _, endpoint := range result.Endpoints() {
-		fmt.Fprint(out, strings.Replace(endpoint, " ", ", ", 1)) // split into Method and Uri
+		fmt.Fprint(c.Out, strings.Replace(endpoint, " ", ", ", 1)) // split into Method and Uri
 		for _, count := range result.Counts(endpoint) {
-			fmt.Fprintf(out, ", %d", count)
+			fmt.Fprintf(c.Out, ", %d", count)
 		}
-		fmt.Fprintln(out)
+		fmt.Fprintln(c.Out)
 	}
 	return nil
 }

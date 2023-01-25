@@ -3,8 +3,9 @@ package stool
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -12,102 +13,95 @@ import (
 	"github.com/samber/lo"
 )
 
-type TrendOption struct {
-	MatchingGroups []string
-	File           string
-	TimeFormat     string
-	Interval       int
+type TrendProfiler struct {
 }
 
-type TrendResult struct {
-	data     map[string]map[int]int
-	interval int
-	Start    time.Time
-	End      time.Time
+func NewTrendProfiler() *TrendProfiler {
+	return &TrendProfiler{}
 }
 
-func NewTrendResult(data map[string]map[int]int, interval int, start, end time.Time) TrendResult {
-	return TrendResult{
-		data:     data,
-		interval: interval,
-		Start:    start,
-		End:      end,
-	}
-}
-
-func (t *TrendResult) Counts(endpoint string) []int {
-	m, ok := t.data[endpoint]
-	if !ok {
-		return []int{}
-	}
-
-	return lo.Times(t.Step(), func(i int) int {
-		return m[i] // if not contained stores zero
-	})
-}
-
-func (t *TrendResult) Endpoints() []string {
-	return lo.Keys(t.data)
-}
-
-func (t *TrendResult) Step() int {
-	return int(t.End.Sub(t.Start).Seconds())/t.interval + 1
-}
-
-func (t *TrendResult) Interval() int {
-	return t.interval
-}
-
-func Trend(opt TrendOption) (TrendResult, error) {
+func (p *TrendProfiler) Profile(in io.Reader, opt TrendOption) (Trend, error) {
 	var patterns []*regexp.Regexp
 	patterns = make([]*regexp.Regexp, len(opt.MatchingGroups))
 	for i, mg := range opt.MatchingGroups {
 		p, err := regexp.Compile(mg)
 		if err != nil {
-			return TrendResult{}, err
+			return Trend{}, err
 		}
 		patterns[i] = p
 	}
 
-	f, err := os.Open(opt.File)
-	if err != nil {
-		return TrendResult{}, err
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(in)
 	scanner.Split(bufio.ScanLines)
 
 	var result = map[string]map[int]int{}
 	var startTime time.Time
-	var endTime time.Time
+	step := 0
 	for scanner.Scan() {
 		row := make(map[string]string)
-		row, err = ltsv.DefaultParser.ParseLineAsMap(scanner.Bytes(), row)
+		row, err := ltsv.DefaultParser.ParseLineAsMap(scanner.Bytes(), row)
 		if err != nil {
-			return TrendResult{}, err
+			return Trend{}, err
 		}
 
 		reqTime, err := time.Parse(opt.TimeFormat, row["time"])
 		if err != nil {
-			return TrendResult{}, err
+			return Trend{}, err
 		}
-
-		if startTime.IsZero() {
-			startTime = reqTime
-		}
-		endTime = reqTime
 
 		k := key(row["req"], patterns)
 		if result[k] == nil {
 			result[k] = map[int]int{}
 		}
+
+		if startTime.IsZero() {
+			startTime = reqTime
+		}
 		t := int(reqTime.Sub(startTime).Seconds()) / opt.Interval
+		step = t + 1
+
 		result[k][t] += 1
 	}
 
-	res := NewTrendResult(result, opt.Interval, startTime, endTime)
+	res := NewTrend(result, opt.Interval, step)
 	return res, nil
+}
+
+type TrendOption struct {
+	MatchingGroups []string
+	TimeFormat     string
+	Interval       int
+}
+
+type Trend struct {
+	data     map[string]map[int]int
+	Interval int
+	Step     int
+}
+
+func NewTrend(data map[string]map[int]int, interval, step int) Trend {
+	return Trend{
+		data:     data,
+		Interval: interval,
+		Step:     step,
+	}
+}
+
+func (t *Trend) Counts(endpoint string) []int {
+	m, ok := t.data[endpoint]
+	if !ok {
+		return []int{}
+	}
+
+	return lo.Times(t.Step, func(i int) int {
+		return m[i] // if not contained stores zero
+	})
+}
+
+func (t *Trend) Endpoints() []string {
+	keys := lo.Keys(t.data)
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	return keys
 }
 
 func key(req string, patterns []*regexp.Regexp) string {

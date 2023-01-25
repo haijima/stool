@@ -22,27 +22,34 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/haijima/stool"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// NewRootCmd returns the base command used when called without any subcommands
-func NewRootCmd() *cobra.Command {
-	var cfgFile string
+type RootCommand struct {
+	IO
+}
 
-	//cobra.OnInitialize(initConfig)
+// NewRootCmd returns the base command used when called without any subcommands
+func NewRootCmd() *RootCommand {
+	return &RootCommand{
+		IO: NewStdIO(),
+	}
+}
+
+func (c *RootCommand) Cmd() *cobra.Command {
+	viper.SetFs(c.Fs)
 
 	rootCmd := &cobra.Command{
 		Use:          "stool",
 		Short:        "stool is access log profiler",
 		SilenceUsage: true, // don't show help content when error occurred
-
 	}
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.stool.yaml)")
+	addLoggingOption(rootCmd)
+	useConfig(rootCmd)
+
 	rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
 	rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
 	rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
@@ -50,33 +57,7 @@ func NewRootCmd() *cobra.Command {
 	_ = viper.BindPFlag("matching_groups", rootCmd.PersistentFlags().Lookup("matching_groups"))
 	_ = viper.BindPFlag("time_format", rootCmd.PersistentFlags().Lookup("time_format"))
 
-	rootCmd.AddCommand(NewTrendCmd())
-
-	initConfig(cfgFile)
+	rootCmd.AddCommand(NewTrendCommand(*stool.NewTrendProfiler()).Cmd())
 
 	return rootCmd
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig(cfgFile string) {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		wd, err := os.Getwd()
-		cobra.CheckErr(err)
-		viper.AddConfigPath(wd)
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".stool")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
 }
