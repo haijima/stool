@@ -6,21 +6,20 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func addLoggingOption(cmd *cobra.Command) *zap.Logger {
-	var debugEnabled bool
-	var verboseEnabled bool
-
-	cmd.PersistentFlags().BoolVar(&debugEnabled, "debug", false, "debug level output")
-	cmd.PersistentFlags().BoolVarP(&verboseEnabled, "verbose", "v", false, "verbose level output")
+func addLoggingOption(cmd *cobra.Command, v *viper.Viper) *zap.Logger {
+	cmd.PersistentFlags().Bool("debug", false, "debug level output")
+	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose level output")
+	v.BindPFlags(cmd.PersistentFlags())
 
 	var logger *zap.Logger
 	var restoreGlobal func()
 	cobra.OnInitialize(func() {
-		if debugEnabled {
+		if v.GetBool("debug") {
 			cfg := zap.NewProductionConfig()
 			cfg.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 			cfg.DisableStacktrace = true
@@ -29,7 +28,7 @@ func addLoggingOption(cmd *cobra.Command) *zap.Logger {
 				fmt.Fprintf(os.Stderr, "failed to initialize a debug logger: %v\n", err)
 			}
 			logger = debugLogger
-		} else if verboseEnabled {
+		} else if v.GetBool("verbose") {
 			cfg := zap.NewDevelopmentConfig()
 			cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 			cfg.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)

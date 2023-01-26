@@ -36,15 +36,9 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 		SilenceUsage: true, // don't show help content when error occurred
 	}
 
-	addLoggingOption(rootCmd)
-	useConfig(rootCmd)
+	addLoggingOption(rootCmd, v)
+	useConfig(rootCmd, v)
 
-	//rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
-	//rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
-	//rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
-	//_ = v.BindPFlag("file", rootCmd.PersistentFlags().Lookup("file"))
-	//_ = v.BindPFlag("matching_groups", rootCmd.PersistentFlags().Lookup("matching_groups"))
-	//_ = v.BindPFlag("time_format", rootCmd.PersistentFlags().Lookup("time_format"))
 	v.SetFs(fs)
 
 	rootCmd.AddCommand(NewTrendCommand(*stool.NewTrendProfiler(), viper.New(), afero.NewOsFs()))

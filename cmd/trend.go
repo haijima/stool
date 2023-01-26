@@ -27,7 +27,6 @@ import (
 	"github.com/haijima/stool"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -45,10 +44,10 @@ func NewTrendCommand(p stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.
 	trendCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
 	trendCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	trendCmd.PersistentFlags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
-	trendCmd.SetGlobalNormalizationFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
-		return pflag.NormalizedName("trend." + name)
-	})
-	v.BindPFlags(trendCmd.Flags())
+	//trendCmd.SetGlobalNormalizationFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	//	return pflag.NormalizedName("trend." + name)
+	//})
+	v.BindPFlags(trendCmd.PersistentFlags())
 	v.SetFs(fs)
 
 	return trendCmd
@@ -58,7 +57,7 @@ func runE(cmd *cobra.Command, p stool.TrendProfiler, v *viper.Viper, fs afero.Fs
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	timeFormat := v.GetString("time_format")
-	interval := v.GetInt("trend.interval")
+	interval := v.GetInt("interval")
 
 	f, err := fs.Open(file)
 	if err != nil {
