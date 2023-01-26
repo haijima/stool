@@ -28,7 +28,7 @@ func NewTrendCommand(p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra
 	trendCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
 	trendCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	trendCmd.PersistentFlags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
-	v.BindPFlags(trendCmd.PersistentFlags())
+	_ = v.BindPFlags(trendCmd.PersistentFlags())
 	v.SetFs(fs)
 
 	return trendCmd
