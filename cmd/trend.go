@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -39,6 +40,10 @@ func runE(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.F
 	timeFormat := v.GetString("time_format")
 	interval := v.GetInt("interval")
 	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
+
+	if interval <= 0 {
+		return errors.New(fmt.Sprintf("interval flag should be positive. but: %d", interval))
+	}
 
 	f, err := fs.Open(file)
 	if err != nil {
