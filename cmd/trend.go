@@ -22,6 +22,8 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"encoding/csv"
+	"strconv"
 	"strings"
 
 	"github.com/haijima/stool"
@@ -80,20 +82,24 @@ func runE(cmd *cobra.Command, p stool.TrendProfiler, v *viper.Viper, fs afero.Fs
 }
 
 func printCsv(cmd *cobra.Command, result stool.Trend) error {
-	// header
-	cmd.Print("Method, Uri")
+	writer := csv.NewWriter(cmd.OutOrStdout())
+
+	header := make([]string, 0)
+	header = append(header, "Method", "Uri")
 	for i := 0; i < result.Step; i++ {
-		cmd.Printf(", %d", i*result.Interval)
+		header = append(header, strconv.Itoa(i*result.Interval))
 	}
-	cmd.Println()
+	writer.Write(header)
 
 	// data rows for each endpoint
 	for _, endpoint := range result.Endpoints() {
-		cmd.Print(strings.Replace(endpoint, " ", ", ", 1)) // split into Method and Uri
+		row := make([]string, 0)
+		row = append(row, strings.SplitN(endpoint, " ", 2)...) // split into Method and Uri
 		for _, count := range result.Counts(endpoint) {
-			cmd.Printf(", %d", count)
+			row = append(row, strconv.Itoa(count))
 		}
-		cmd.Println()
+		writer.Write(row)
 	}
+	writer.Flush()
 	return nil
 }
