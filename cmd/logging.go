@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -25,9 +23,7 @@ func addLoggingOption(cmd *cobra.Command, v *viper.Viper) *zap.Logger {
 			cfg.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 			cfg.DisableStacktrace = true
 			debugLogger, err := cfg.Build()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to initialize a debug logger: %v\n", err)
-			}
+			cobra.CheckErr(err)
 			logger = debugLogger
 		} else if v.GetBool("verbose") {
 			cfg := zap.NewDevelopmentConfig()
@@ -37,9 +33,7 @@ func addLoggingOption(cmd *cobra.Command, v *viper.Viper) *zap.Logger {
 				enc.AppendString(t.Local().Format("2006-01-02 15:04:05 MST"))
 			}
 			verboseLogger, err := cfg.Build()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to initialize a verbose logger: %v\n", err)
-			}
+			cobra.CheckErr(err)
 			logger = verboseLogger
 		} else {
 			logger = zap.NewNop()
