@@ -5,6 +5,7 @@ github.com/hashicorp/hcl,https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE,MP
 github.com/magiconair/properties,https://github.com/magiconair/properties/blob/v1.8.7/LICENSE.md,BSD-2-Clause
 github.com/mitchellh/mapstructure,https://github.com/mitchellh/mapstructure/blob/v1.5.0/LICENSE,MIT
 github.com/pelletier/go-toml/v2,https://github.com/pelletier/go-toml/blob/v2.0.6/LICENSE,MIT
+github.com/samber/lo,https://github.com/samber/lo/blob/v1.37.0/LICENSE,MIT
 github.com/spf13/afero,https://github.com/spf13/afero/blob/v1.9.3/LICENSE.txt,Apache-2.0
 github.com/spf13/cast,https://github.com/spf13/cast/blob/v1.5.0/LICENSE,MIT
 github.com/spf13/cobra,https://github.com/spf13/cobra/blob/v1.6.1/LICENSE.txt,Apache-2.0
@@ -12,6 +13,7 @@ github.com/spf13/jwalterweatherman,https://github.com/spf13/jwalterweatherman/bl
 github.com/spf13/pflag,https://github.com/spf13/pflag/blob/v1.0.5/LICENSE,BSD-3-Clause
 github.com/spf13/viper,https://github.com/spf13/viper/blob/v1.15.0/LICENSE,MIT
 github.com/subosito/gotenv,https://github.com/subosito/gotenv/blob/v1.4.2/LICENSE,MIT
+golang.org/x/exp/constraints,https://cs.opensource.google/go/x/exp/+/bbda1eaf:LICENSE,BSD-3-Clause
 golang.org/x/sys/unix,https://cs.opensource.google/go/x/sys/+/v0.3.0:LICENSE,BSD-3-Clause
 golang.org/x/text,https://cs.opensource.google/go/x/text/+/v0.5.0:LICENSE,BSD-3-Clause
 golang.org/x/xerrors,https://cs.opensource.google/go/x/xerrors/+/04be3eba:LICENSE,BSD-3-Clause
