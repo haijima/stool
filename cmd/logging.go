@@ -14,6 +14,7 @@ import (
 func addLoggingOption(cmd *cobra.Command, v *viper.Viper) *zap.Logger {
 	cmd.PersistentFlags().Bool("debug", false, "debug level output")
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose level output")
+	cmd.MarkFlagsMutuallyExclusive("debug", "verbose")
 	v.BindPFlags(cmd.PersistentFlags())
 
 	var logger *zap.Logger
