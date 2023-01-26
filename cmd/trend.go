@@ -14,7 +14,7 @@ import (
 )
 
 // NewTrendCommand returns the trend command
-func NewTrendCommand(p stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+func NewTrendCommand(p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	trendCmd := &cobra.Command{
 		Use:   "trend",
 		Short: "Show the count of accesses for each endpoint over time",
@@ -33,7 +33,7 @@ func NewTrendCommand(p stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.
 	return trendCmd
 }
 
-func runE(cmd *cobra.Command, p stool.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
+func runE(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	timeFormat := v.GetString("time_format")
