@@ -60,7 +60,7 @@ func runE(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.F
 	return printCsv(cmd, result)
 }
 
-func printCsv(cmd *cobra.Command, result stool.Trend) error {
+func printCsv(cmd *cobra.Command, result *stool.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	header := make([]string, 0)

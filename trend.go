@@ -20,13 +20,13 @@ func NewTrendProfiler() *TrendProfiler {
 	return &TrendProfiler{}
 }
 
-func (p *TrendProfiler) Profile(in io.Reader, opt TrendOption) (Trend, error) {
+func (p *TrendProfiler) Profile(in io.Reader, opt TrendOption) (*Trend, error) {
 	var patterns []*regexp.Regexp
 	patterns = make([]*regexp.Regexp, len(opt.MatchingGroups))
 	for i, mg := range opt.MatchingGroups {
 		p, err := regexp.Compile(mg)
 		if err != nil {
-			return Trend{}, err
+			return nil, err
 		}
 		patterns[i] = p
 	}
@@ -41,12 +41,12 @@ func (p *TrendProfiler) Profile(in io.Reader, opt TrendOption) (Trend, error) {
 		row := make(map[string]string)
 		row, err := ltsv.DefaultParser.ParseLineAsMap(scanner.Bytes(), row)
 		if err != nil {
-			return Trend{}, err
+			return nil, err
 		}
 
 		reqTime, err := time.Parse(opt.TimeFormat, row["time"])
 		if err != nil {
-			return Trend{}, err
+			return nil, err
 		}
 
 		k := key(row["req"], patterns)
@@ -79,8 +79,8 @@ type Trend struct {
 	Step     int
 }
 
-func NewTrend(data map[string]map[int]int, interval, step int) Trend {
-	return Trend{
+func NewTrend(data map[string]map[int]int, interval, step int) *Trend {
+	return &Trend{
 		data:     data,
 		Interval: interval,
 		Step:     step,
