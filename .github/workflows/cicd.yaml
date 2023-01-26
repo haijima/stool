@@ -56,9 +56,10 @@ jobs:
     if: ${{ needs.determine_release.outputs.will_release }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: cycjimmy/semantic-release-action@v3.0.0
+        with:
+          semantic-release: v20.1
+          branch: main
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - uses: actions/setup-go@v3
