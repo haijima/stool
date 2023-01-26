@@ -33,6 +33,7 @@ func useConfig(cmd *cobra.Command, v *viper.Viper) {
 		// If a config file is found, read it in.
 		if err := v.ReadInConfig(); err == nil {
 			zap.L().Info(fmt.Sprintf("Using config file: %s", v.ConfigFileUsed()))
+			zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
 		}
 	})
 }

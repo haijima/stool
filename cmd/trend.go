@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/csv"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // NewTrendCommand returns the trend command
@@ -36,6 +38,7 @@ func runE(cmd *cobra.Command, p stool.TrendProfiler, v *viper.Viper, fs afero.Fs
 	matchingGroups := v.GetStringSlice("matching_groups")
 	timeFormat := v.GetString("time_format")
 	interval := v.GetInt("interval")
+	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	f, err := fs.Open(file)
 	if err != nil {
