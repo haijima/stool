@@ -1,6 +1,6 @@
 {
   "branches": [
-    "main"
+    "main", "cicd"
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",
