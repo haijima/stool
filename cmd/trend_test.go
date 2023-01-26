@@ -119,7 +119,7 @@ func Test_printCsv(t *testing.T) {
 	cmd.SetOut(stdout)
 
 	result := stool.NewTrend(data, 5, 5)
-	printCsv(cmd, result)
+	_ = printCsv(cmd, result)
 
 	assert.Equal(t, `Method,Uri,0,5,10,15,20
 GET,/,1,2,3,4,0
