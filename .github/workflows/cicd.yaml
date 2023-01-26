@@ -35,7 +35,7 @@ jobs:
         run: go test -shuffle on ./...
 #    if: github.ref == 'refs/heads/main'
   tag:
-    name: Release
+    name: tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,8 +46,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "lts/*"
-      - name: Install dependencies
-        run: npm ci
+#      - name: Install dependencies
+#        run: npm ci
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
