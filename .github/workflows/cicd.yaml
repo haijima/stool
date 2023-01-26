@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: cycjimmy/semantic-release-action@v3.0.0
         with:
-          semantic-release: v20.1
+          semantic_version: v20.1
           branch: main
         env:
           GITHUB_TOKEN: ${{ github.token }}
