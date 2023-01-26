@@ -21,8 +21,7 @@ func NewTrendProfiler() *TrendProfiler {
 }
 
 func (p *TrendProfiler) Profile(in io.Reader, opt TrendOption) (*Trend, error) {
-	var patterns []*regexp.Regexp
-	patterns = make([]*regexp.Regexp, len(opt.MatchingGroups))
+	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
 	for i, mg := range opt.MatchingGroups {
 		p, err := regexp.Compile(mg)
 		if err != nil {
