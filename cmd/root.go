@@ -21,6 +21,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	v.SetFs(fs)
 
 	rootCmd.AddCommand(NewTrendCommand(stool.NewTrendProfiler(), v, fs))
+	rootCmd.AddCommand(NewTransitionCmd(stool.NewTransitionProfiler(), v, fs))
 
 	return rootCmd
 }
