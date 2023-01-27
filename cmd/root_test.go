@@ -29,7 +29,9 @@ func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {} // dummy function to make command runnable
 	cmd.SetArgs([]string{})                              // dummy not to use os.Args[1:]
-	cmd.Execute()
+	err := cmd.Execute()
+
+	assert.Nil(t, err)
 }
 
 func TestNewRootCmd_Flag_Debug(t *testing.T) {
@@ -41,7 +43,9 @@ func TestNewRootCmd_Flag_Debug(t *testing.T) {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {} // dummy function to make command runnable
 	cmd.SetArgs([]string{})                              // dummy not to use os.Args[1:]
-	cmd.Execute()
+	err := cmd.Execute()
+
+	assert.Nil(t, err)
 }
 
 func TestNewRootCmd_ConfigFile(t *testing.T) {
@@ -49,11 +53,13 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
 
-	fs.Create(".stool.yaml")
+	_, _ = fs.Create(".stool.yaml")
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {} // dummy function to make command runnable
 	cmd.SetArgs([]string{"--config", ".stool.yaml"})
-	cmd.Execute()
+	err := cmd.Execute()
+
+	assert.Nil(t, err)
 }
 
 func TestExecute(t *testing.T) {
