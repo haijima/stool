@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewRootCmd(t *testing.T) {
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
 
@@ -21,7 +21,7 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestNewRootCmd_Flag_Verbose(t *testing.T) {
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
 
@@ -35,7 +35,7 @@ func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 }
 
 func TestNewRootCmd_Flag_Debug(t *testing.T) {
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
 
@@ -49,7 +49,7 @@ func TestNewRootCmd_Flag_Debug(t *testing.T) {
 }
 
 func TestNewRootCmd_ConfigFile(t *testing.T) {
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
 
@@ -63,7 +63,7 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	fs := afero.NewOsFs()
+	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
 
