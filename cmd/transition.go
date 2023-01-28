@@ -23,7 +23,7 @@ func NewTransitionCmd(p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) 
 		Use:   "transition",
 		Short: "Show the transition between endpoints",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return _runE(cmd, p, v, fs)
+			return runTransition(cmd, p, v, fs)
 		},
 	}
 
@@ -38,7 +38,7 @@ func NewTransitionCmd(p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) 
 	return transitionCmd
 }
 
-func _runE(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) error {
+func runTransition(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) error {
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	ignorePatterns := v.GetStringSlice("ignore_patterns")
@@ -69,7 +69,7 @@ func _runE(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Viper, fs a
 	case "png":
 		return createDot(cmd, result, "png", fs)
 	case "csv":
-		return _printCsv(cmd, result)
+		return printTransitionCsv(cmd, result)
 	}
 	return fmt.Errorf("invalid format flag: %s", format)
 }
@@ -189,7 +189,7 @@ func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs a
 	return nil
 }
 
-func _printCsv(cmd *cobra.Command, result *stool.Transition) error {
+func printTransitionCsv(cmd *cobra.Command, result *stool.Transition) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	eps := result.Endpoints.ToSlice()

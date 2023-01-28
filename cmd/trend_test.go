@@ -32,7 +32,7 @@ func TestNewTrendCmd_Flag(t *testing.T) {
 	assert.Equal(t, "int", intervalFlag.Value.Type(), "\"interval\" flag is int")
 }
 
-func Test_RunE(t *testing.T) {
+func Test_Trend_RunE(t *testing.T) {
 	p := stool.NewTrendProfiler()
 	v := viper.GetViper()
 	fs := afero.NewMemMapFs()
@@ -55,7 +55,7 @@ func Test_RunE(t *testing.T) {
 	assert.Equal(t, "Method,Uri,0,5\nGET,/,0,1\nPOST,/initialize,1,0\n", stdout.String())
 }
 
-func Test_RunE_Flag_interval_not_positive(t *testing.T) {
+func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 	p := stool.NewTrendProfiler()
 	v := viper.GetViper()
 	fs := afero.NewMemMapFs()
@@ -68,7 +68,7 @@ func Test_RunE_Flag_interval_not_positive(t *testing.T) {
 	assert.ErrorContains(t, err, "interval flag should be positive. but: 0")
 }
 
-func Test_RunE_file_not_exists(t *testing.T) {
+func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 	p := stool.NewTrendProfiler()
 	v := viper.GetViper()
 	fs := afero.NewMemMapFs()
@@ -83,7 +83,7 @@ func Test_RunE_file_not_exists(t *testing.T) {
 	assert.ErrorContains(t, err, "not_exists.log")
 }
 
-func Test_RunE_file_profiler_error(t *testing.T) {
+func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 	p := stool.NewTrendProfiler()
 	v := viper.GetViper()
 	fs := afero.NewMemMapFs()
@@ -101,7 +101,7 @@ func Test_RunE_file_profiler_error(t *testing.T) {
 	assert.ErrorContains(t, err, "parsing time")
 }
 
-func Test_printCsv(t *testing.T) {
+func Test_printTrendCsv(t *testing.T) {
 	data := make(map[string]map[int]int, 2)
 	data["GET /"] = make(map[int]int, 4)
 	data["GET /"][0] = 1
@@ -120,7 +120,7 @@ func Test_printCsv(t *testing.T) {
 	cmd.SetOut(stdout)
 
 	result := stool.NewTrend(data, 5, 5)
-	_ = printCsv(cmd, result)
+	_ = printTrendCsv(cmd, result)
 
 	assert.Equal(t, `Method,Uri,0,5,10,15,20
 GET,/,1,2,3,4,0

@@ -19,7 +19,7 @@ func NewTrendCommand(p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra
 		Use:   "trend",
 		Short: "Show the count of accesses for each endpoint over time",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runE(cmd, p, v, fs)
+			return runTrend(cmd, p, v, fs)
 		},
 	}
 
@@ -33,7 +33,7 @@ func NewTrendCommand(p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra
 	return trendCmd
 }
 
-func runE(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
+func runTrend(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	timeFormat := v.GetString("time_format")
@@ -61,10 +61,10 @@ func runE(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.F
 		return err
 	}
 
-	return printCsv(cmd, result)
+	return printTrendCsv(cmd, result)
 }
 
-func printCsv(cmd *cobra.Command, result *stool.Trend) error {
+func printTrendCsv(cmd *cobra.Command, result *stool.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	header := make([]string, 0)
