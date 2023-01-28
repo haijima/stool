@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -90,7 +91,8 @@ func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs a
 	graph.SetESep(1)
 
 	eps := result.Endpoints.ToSlice()
-	maxSum := 0
+	sort.Strings(eps)
+	maxSum := 2 // if maxSum <= 1 error will occur on logNorm()
 	for _, e := range eps {
 		s := result.Sum[e]
 		if s > maxSum {
@@ -193,6 +195,7 @@ func printTransitionCsv(cmd *cobra.Command, result *stool.Transition) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	eps := result.Endpoints.ToSlice()
+	sort.Strings(eps)
 
 	// header
 	header := []string{""}
