@@ -3,10 +3,10 @@ package cmd
 import (
 	"bytes"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/goccy/go-graphviz"
 	"github.com/goccy/go-graphviz/cgraph"
@@ -31,6 +31,7 @@ func NewTransitionCmd(p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) 
 	transitionCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
 	transitionCmd.PersistentFlags().StringSlice("ignore_patterns", []string{}, "comma-separated list of regular expression patterns to ignore URIs")
 	transitionCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
+	transitionCmd.PersistentFlags().String("format", "dot", "The output format (dot, png, csv)")
 	_ = v.BindPFlags(transitionCmd.PersistentFlags())
 	v.SetFs(fs)
 
@@ -61,11 +62,19 @@ func _runE(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Viper, fs a
 		return err
 	}
 
-	//return _printCsv(cmd, result)
-	return createDot(cmd, result, fs)
+	format := v.GetString("format")
+	switch strings.ToLower(format) {
+	case "dot":
+		return createDot(cmd, result, "dot", fs)
+	case "png":
+		return createDot(cmd, result, "png", fs)
+	case "csv":
+		return _printCsv(cmd, result)
+	}
+	return fmt.Errorf("invalid format flag: %s", format)
 }
 
-func createDot(cmd *cobra.Command, result *stool.Transition, fs afero.Fs) error {
+func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs afero.Fs) error {
 	g := graphviz.New()
 	graph, err := g.Graph()
 	if err != nil {
@@ -145,6 +154,9 @@ func createDot(cmd *cobra.Command, result *stool.Transition, fs afero.Fs) error 
 				return err
 			}
 			level, err := logNorm(count, maxSum, 5) // level: [0, 5]
+			if err != nil {
+				return err
+			}
 			e.SetLen(1 / (1 + level))
 			e.SetPenWidth(level + 1)
 			e.SetColorScheme("reds6")
@@ -158,12 +170,16 @@ func createDot(cmd *cobra.Command, result *stool.Transition, fs afero.Fs) error 
 		}
 	}
 
+	var filename string
+	if format == string(graphviz.XDOT) {
+		filename = "./graph.dot"
+	} else if format == string(graphviz.PNG) {
+		filename = "./graph.png"
+	} else {
+		return fmt.Errorf("invalid format: %s", format)
+	}
 	var buf bytes.Buffer
-	// filename := "./graph.dot"
-	// format := graphviz.XDOT
-	filename := "./graph.png"
-	format := graphviz.PNG
-	if err := g.Render(graph, format, &buf); err != nil {
+	if err := g.Render(graph, graphviz.Format(format), &buf); err != nil {
 		return err
 	}
 	if err := afero.WriteFile(fs, filename, buf.Bytes(), 0644); err != nil {
@@ -181,7 +197,7 @@ func _printCsv(cmd *cobra.Command, result *stool.Transition) error {
 	// header
 	header := []string{""}
 	header = append(header, eps...)
-	writer.Write(header)
+	_ = writer.Write(header)
 
 	// data rows
 	var row []string
@@ -190,7 +206,7 @@ func _printCsv(cmd *cobra.Command, result *stool.Transition) error {
 		for _, e2 := range eps {
 			row = append(row, strconv.Itoa(result.Data[e][e2]))
 		}
-		writer.Write(row)
+		_ = writer.Write(row)
 	}
 
 	writer.Flush()
@@ -200,13 +216,13 @@ func _printCsv(cmd *cobra.Command, result *stool.Transition) error {
 // logNorm maps num where it is mapped from [1, s] to [0, t] on a logarithmic scale.
 func logNorm(num, src, target int) (float64, error) {
 	if num <= 0 {
-		return 0, errors.New(fmt.Sprintf("num should be more than 0 but: %d", num))
+		return 0, fmt.Errorf("num should be more than 0 but: %d", num)
 	}
 	if src <= 1 {
-		return 0, errors.New(fmt.Sprintf("src should be more than 1 but: %d", src))
+		return 0, fmt.Errorf("src should be more than 1 but: %d", src)
 	}
 	if target <= 0 {
-		return 0, errors.New(fmt.Sprintf("target should be more than 0 but: %d", target))
+		return 0, fmt.Errorf("target should be more than 0 but: %d", target)
 	}
 	if num == 1 {
 		return 0, nil
