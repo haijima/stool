@@ -111,6 +111,7 @@ func key(req string, patterns []*regexp.Regexp) string {
 	for _, p := range patterns {
 		if p.MatchString(uri) {
 			uri = p.String()
+			return fmt.Sprintf("%s %s", method, uri)
 		}
 	}
 	return fmt.Sprintf("%s %s", method, uri)
