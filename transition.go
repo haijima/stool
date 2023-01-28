@@ -41,6 +41,7 @@ func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Trans
 	var result = map[string]map[string]int{}
 	result[""] = map[string]int{}
 	var lastVisit = map[string]string{}
+	var sum = map[string]int{}
 	endpoints := mapset.NewSet[string]()
 	endpoints.Add("")
 	for scanner.Scan() {
@@ -58,6 +59,7 @@ func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Trans
 		}
 
 		endpoints.Add(k)
+		sum[k] += 1
 
 		if uidGot != "" {
 			// revisiting user
@@ -80,7 +82,7 @@ func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Trans
 		result[lv][""] += 1
 	}
 
-	res := NewTransition(result, endpoints)
+	res := NewTransition(result, endpoints, sum)
 	return res, nil
 }
 
@@ -105,11 +107,13 @@ type TransitionOption struct {
 type Transition struct {
 	Data      map[string]map[string]int
 	Endpoints mapset.Set[string]
+	Sum       map[string]int
 }
 
-func NewTransition(data map[string]map[string]int, endpoints mapset.Set[string]) *Transition {
+func NewTransition(data map[string]map[string]int, endpoints mapset.Set[string], sum map[string]int) *Transition {
 	return &Transition{
 		Data:      data,
 		Endpoints: endpoints,
+		Sum:       sum,
 	}
 }
