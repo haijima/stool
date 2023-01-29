@@ -1,15 +1,18 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
+    #- go generate ./...
 builds:
-  - env:
+  - main: ./cmd/stool/main.go
+    binary: stool
+    ldflags:
+      - -s -w
+      - -X github.com/haijima/stool/cmd.Version={{.Version}}
+      - -X github.com/haijima/stool/cmd.Revision={{.ShortCommit}}
+    flags:
+      - -trimpath
+    env:
       - CGO_ENABLED=0
-    main: ./cmd/stool/main.go
     goos:
       - linux
       - windows
@@ -17,7 +20,6 @@ builds:
 
 archives:
   - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -46,8 +48,3 @@ changelog:
       - '^test:'
 release:
   mode: keep-existing
-
-# The lines beneath this are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/use them.
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
