@@ -30,7 +30,7 @@ func NewTransitionCmd(p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) 
 	transitionCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
 	transitionCmd.PersistentFlags().StringSlice("ignore_patterns", []string{}, "comma-separated list of regular expression patterns to ignore URIs")
 	transitionCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
-	transitionCmd.PersistentFlags().String("format", "dot", "The output format (dot, png, csv)")
+	transitionCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
 	_ = v.BindPFlags(transitionCmd.PersistentFlags())
 	v.SetFs(fs)
 
@@ -64,16 +64,14 @@ func runTransition(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Vip
 	format := v.GetString("format")
 	switch strings.ToLower(format) {
 	case "dot":
-		return createDot(cmd, result, "dot", fs)
-	case "png":
-		return createDot(cmd, result, "png", fs)
+		return createDot(cmd, result, fs)
 	case "csv":
 		return printTransitionCsv(cmd, result)
 	}
 	return fmt.Errorf("invalid format flag: %s", format)
 }
 
-func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs afero.Fs) error {
+func createDot(cmd *cobra.Command, result *stool.Transition, fs afero.Fs) error {
 	graph := gographviz.NewEscape()
 	if err := graph.SetName("stool transition"); err != nil {
 		return err
@@ -114,12 +112,7 @@ func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs a
 		}
 	}
 
-	if format == "dot" {
-		fmt.Fprintln(cmd.OutOrStdout(), graph.String())
-	} else if format == "png" {
-	} else {
-		return fmt.Errorf("invalid format: %s", format)
-	}
+	fmt.Fprintln(cmd.OutOrStdout(), graph.String())
 	return nil
 }
 
