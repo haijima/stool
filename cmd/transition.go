@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/csv"
 	"fmt"
 	"math"
@@ -9,8 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/goccy/go-graphviz"
-	"github.com/goccy/go-graphviz/cgraph"
+	"github.com/awalterschulze/gographviz"
 	"github.com/haijima/stool"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -76,66 +74,24 @@ func runTransition(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Vip
 }
 
 func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs afero.Fs) error {
-	g := graphviz.New()
-	graph, err := g.Graph()
-	if err != nil {
+	graph := gographviz.NewEscape()
+	if err := graph.SetName("stool transition"); err != nil {
 		return err
 	}
-	defer func() {
-		if err := graph.Close(); err != nil {
-			cobra.CheckErr(err)
-		}
-		g.Close()
-	}()
-	graph.SetStart(cgraph.RegularStart)
-	graph.SetESep(1)
+	if err := graph.SetDir(true); err != nil {
+		return err
+	}
 
 	eps := result.Endpoints.ToSlice()
 	sort.Strings(eps)
-	maxSum := 2 // if maxSum <= 1 error will occur on logNorm()
-	for _, e := range eps {
-		s := result.Sum[e]
-		if s > maxSum {
-			maxSum = s
-		}
-	}
 
-	nodes := map[string]*cgraph.Node{}
 	for _, e := range eps {
 		if e == "" {
 			continue
 		}
-		n, err := graph.CreateNode(e)
+		err := graph.AddNode("G", e, nil)
 		if err != nil {
 			return err
-		}
-		nodes[e] = n
-		n.SetLabel(fmt.Sprintf("%s\n(Call: %d)", e, result.Sum[e]))
-
-		n.SetShape(cgraph.BoxShape)
-		n.SetMargin(0.2)
-		fontSize, err := logNorm(result.Sum[e], maxSum, 34)
-		if err != nil {
-			return err
-		}
-		n.SetFontSize(fontSize + 8)                     // [8, 42]
-		level, err := logNorm(result.Sum[e], maxSum, 5) // level: [0, 5]
-		if err != nil {
-			return err
-		}
-		n.SetPenWidth(level + 1)
-		n.SafeSet("style", "solid,filled", "")
-
-		n.SetColorScheme("reds6")
-		if level >= 3 { // [3, 5]
-			n.SetColor(strconv.Itoa(int(math.Round(level) + 1)))
-		} else if level >= 2 { // [2, 3)
-			n.SetColor("#2f4f4f")
-		} else { // [0, 2)
-			n.SetColor("#696969")
-		}
-		if level >= 3 {
-			n.SetFillColor(strconv.Itoa(int(math.Round(level))))
 		}
 	}
 
@@ -151,43 +107,16 @@ func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs a
 			if count == 0 {
 				continue
 			}
-			e, err := graph.CreateEdge(strconv.Itoa(count), nodes[source], nodes[target])
-			if err != nil {
-				return err
-			}
-			level, err := logNorm(count, maxSum, 5) // level: [0, 5]
-			if err != nil {
-				return err
-			}
-			e.SetLen(1 / (1 + level))
-			e.SetPenWidth(level + 1)
-			e.SetColorScheme("reds6")
-			if level >= 3 {
-				e.SetColor(strconv.Itoa(int(math.Round(level) + 1)))
-			} else if level == 2 {
-				e.SetColor("#2f4f4f")
-			} else {
-				e.SetColor("#696969")
-			}
+			graph.AddEdge(source, target, true, nil)
 		}
 	}
 
-	var filename string
-	if format == string(graphviz.XDOT) {
-		filename = "./graph.dot"
-	} else if format == string(graphviz.PNG) {
-		filename = "./graph.png"
+	if format == string("dot") {
+		fmt.Fprintln(cmd.OutOrStdout(), graph.String())
+	} else if format == string("png") {
 	} else {
 		return fmt.Errorf("invalid format: %s", format)
 	}
-	var buf bytes.Buffer
-	if err := g.Render(graph, graphviz.Format(format), &buf); err != nil {
-		return err
-	}
-	if err := afero.WriteFile(fs, filename, buf.Bytes(), 0644); err != nil {
-		return err
-	}
-
 	return nil
 }
 
