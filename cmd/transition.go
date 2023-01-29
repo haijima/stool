@@ -107,13 +107,16 @@ func createDot(cmd *cobra.Command, result *stool.Transition, format string, fs a
 			if count == 0 {
 				continue
 			}
-			graph.AddEdge(source, target, true, nil)
+			err := graph.AddEdge(source, target, true, nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	if format == string("dot") {
+	if format == "dot" {
 		fmt.Fprintln(cmd.OutOrStdout(), graph.String())
-	} else if format == string("png") {
+	} else if format == "png" {
 	} else {
 		return fmt.Errorf("invalid format: %s", format)
 	}
