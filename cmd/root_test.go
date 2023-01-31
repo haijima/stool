@@ -16,7 +16,7 @@ func TestNewRootCmd(t *testing.T) {
 
 	assert.Equal(t, "stool", cmd.Name(), "NewRootCommand() should return command named \"stool\". but: \"%s\"", cmd.Name())
 	assert.False(t, cmd.HasParent(), "RootCommand should not have parent command.")
-	assert.Equal(t, 3, len(cmd.Commands()), "RootCommand should have 1 sub command. but: %d", len(cmd.Commands()))
+	assert.Equal(t, 4, len(cmd.Commands()), "RootCommand should have 1 sub command. but: %d", len(cmd.Commands()))
 	assert.False(t, cmd.Runnable(), "RootCommand should not runnable.")
 }
 
