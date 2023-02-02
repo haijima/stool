@@ -61,14 +61,14 @@ func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Trans
 		endpoints.Add(k)
 		sum[k] += 1
 
-		if uidGot != "" {
+		if uidGot != "" && uidGot != "-" {
 			// revisiting user
 			if result[lastVisit[uidGot]] == nil {
 				result[lastVisit[uidGot]] = map[string]int{}
 			}
 			result[lastVisit[uidGot]][k] += 1
 			lastVisit[uidGot] = k
-		} else if uidSet != "" {
+		} else if uidSet != "" && uidSet != "-" {
 			// new user
 			result[""][k] += 1
 			lastVisit[uidSet] = k
