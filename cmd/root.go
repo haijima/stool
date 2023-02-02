@@ -22,7 +22,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 
 	rootCmd.AddCommand(NewTrendCommand(stool.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(stool.NewTransitionProfiler(), v, fs))
-	rootCmd.AddCommand(NewScenarioCmd(v, fs))
+	rootCmd.AddCommand(NewScenarioCmd(stool.NewScenarioProfiler(), v, fs))
 	rootCmd.AddCommand(versionCmd)
 
 	// Split commands into main command group and utility command group
