@@ -7,8 +7,6 @@ builds:
     binary: stool
     ldflags:
       - -s -w
-      - -X github.com/haijima/stool/cmd.Version={{.Version}}
-      - -X github.com/haijima/stool/cmd.Revision={{.ShortCommit}}
     flags:
       - -trimpath
     env:

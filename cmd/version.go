@@ -3,14 +3,9 @@ package cmd
 import (
 	"fmt"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
-)
-
-// These variables are set in build step
-var (
-	Version  = "unset"
-	Revision = "unset"
 )
 
 // versionCmd represents the version command
@@ -22,6 +17,27 @@ var versionCmd = &cobra.Command{
 Revision: %s
 OS: %s
 Arch: %s
-`, Version, Revision, runtime.GOOS, runtime.GOARCH)
+`, version(), revision(), runtime.GOOS, runtime.GOARCH)
 	},
+}
+
+func version() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "(devel)"
+	}
+	return info.Main.Version
+}
+
+func revision() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "(devel)"
+	}
+	for _, setting := range info.Settings {
+		if setting.Key == "vcs.revision" {
+			return setting.Value
+		}
+	}
+	return "(devel)"
 }
