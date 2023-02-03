@@ -26,7 +26,7 @@ func NewScenarioProfiler() *ScenarioProfiler {
 	return &ScenarioProfiler{}
 }
 
-func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Pattern, error) {
+func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, error) {
 	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
 	for i, mg := range opt.MatchingGroups {
 		p, err := regexp.Compile(mg)
@@ -47,7 +47,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Pattern, 
 	scanner := bufio.NewScanner(in)
 	scanner.Split(bufio.ScanLines)
 
-	var result = map[string]*Pattern{}
+	var result = map[string]*node{}
 	endpoints := mapset.NewSet[string]()
 	intToEndpoint := map[int]string{}
 	endpointToInt := map[string]int{}
@@ -87,14 +87,14 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Pattern, 
 		if uidGot != "" && uidGot != "-" {
 			// revisiting user
 			if _, ok := result[uidGot]; !ok {
-				result[uidGot] = &Pattern{}
+				result[uidGot] = &node{}
 			}
 			//result[uidGot].Append(k)
 			result[uidGot].Append(fmt.Sprintf("%d", endpointToInt[k]))
 			lastCalls[uidGot] = reqTimeSec
 		} else if uidSet != "" && uidSet != "-" {
 			// new user
-			result[uidSet] = &Pattern{}
+			result[uidSet] = &node{}
 			//result[uidSet].Append(k)
 			result[uidSet].Append(fmt.Sprintf("%d", endpointToInt[k]))
 			firstCalls[uidSet] = reqTimeSec
@@ -117,7 +117,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Pattern, 
 		count    int
 		firstReq int
 		lastReq  int
-		pattern  *Pattern
+		pattern  *node
 	}
 	scenarios := map[string]scenarioStruct{}
 	for uid, scenario := range result {
@@ -148,7 +148,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Pattern, 
 	for _, s := range ss {
 		match := false
 		for i, t := range tt {
-			if p, ok := merge([]Pattern{*s.pattern}, []Pattern{*t.pattern}); ok {
+			if p, ok := merge([]node{*s.pattern}, []node{*t.pattern}); ok {
 				p.rep = s.pattern.rep || t.pattern.rep
 				tt[i] = scenarioStruct{
 					hash:     p.String(),
@@ -175,7 +175,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Pattern, 
 		}
 		return a.pattern.String() > b.pattern.String()
 	})
-	fmt.Println("first call[s],last call[s],count,scenario Pattern")
+	fmt.Println("first call[s],last call[s],count,scenario node")
 	for _, s := range tt {
 		fmt.Printf("%d,%d,%d,%s\n", s.firstReq, s.lastReq, s.count, s.pattern.String())
 	}

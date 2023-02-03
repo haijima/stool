@@ -10,25 +10,55 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Pattern struct {
-	children []Pattern
-	endpoint string
+type node struct {
+	children []node
+	value    string
 	rep      bool
 }
 
-func (p *Pattern) String() string {
-	if p.IsEmpty() {
+func NewNode(children []node) *node {
+	return &node{children: children}
+}
+
+func NewLeaf(value string) *node {
+	return &node{value: value}
+}
+
+func (p *node) Children() []node {
+	return p.children
+}
+
+func (p *node) First() *node {
+	if p.IsLeaf() {
+		return p
+	}
+	return p.children[0].First()
+}
+
+func (p *node) Last() *node {
+	if p.IsLeaf() {
+		return p
+	}
+	return p.children[len(p.children)-1].Last()
+}
+
+func (p *node) IsLeaf() bool {
+	return p.children == nil || len(p.children) == 0
+}
+
+func (p *node) String() string {
+	if p.IsLeaf() {
 		if p.rep {
-			return fmt.Sprintf("%s *", p.endpoint)
+			return fmt.Sprintf("%s *", p.value)
 		}
-		return p.endpoint
+		return p.value
 	}
 
-	if len(p.children) == 1 {
-		return p.children[0].String()
-	}
+	//if len(p.children) == 1 {
+	//	return p.children[0].String()
+	//}
 
-	childrenStr := strings.Join(lo.Map(p.children, func(child Pattern, i int) string {
+	childrenStr := strings.Join(lo.Map(p.children, func(child node, i int) string {
 		return child.String()
 	}), " -> ")
 	if p.rep {
@@ -37,33 +67,22 @@ func (p *Pattern) String() string {
 	return childrenStr
 }
 
-func (p *Pattern) IsEmpty() bool {
-	return p.children == nil || len(p.children) == 0
-}
-
-func (p *Pattern) LastPattern() *Pattern {
-	if p.IsEmpty() {
-		return p
-	}
-	return p.children[len(p.children)-1].LastPattern()
-}
-
-func (p *Pattern) Append(endpoint string) {
+func (p *node) Append(value string) {
 	l := len(p.children)
 	for i := l - 1; i >= 0; i-- {
-		if p.children[i].LastPattern().endpoint != endpoint {
+		if p.children[i].Last().value != value {
 			continue
 		}
-		s := make([]Pattern, l-i)
+		s := make([]node, l-i)
 		copy(s, p.children[i+1:l])
-		s[l-i-1] = Pattern{endpoint: endpoint}
+		s[l-i-1] = node{value: value}
 
 		for j := i; j >= 0; j-- {
 			if newPattern, ok := merge(s, p.children[j:i+1]); ok {
 				p.children = p.children[:j]
 				p.children = append(p.children, *newPattern)
 				return
-			} else if i == j && !p.children[i].IsEmpty() {
+			} else if i == j && !p.children[i].IsLeaf() {
 				ll := len(p.children[i].children)
 				for k := ll - 1; k >= 0; k-- {
 					if newPattern, ok := merge(s, p.children[i].children[k:]); ok {
@@ -82,13 +101,13 @@ func (p *Pattern) Append(endpoint string) {
 	}
 
 	if p.children == nil {
-		p.children = make([]Pattern, 0)
+		p.children = make([]node, 0)
 	}
-	newPattern := Pattern{endpoint: endpoint}
+	newPattern := node{value: value}
 	p.children = append(p.children, newPattern)
 }
 
-func merge(src []Pattern, dest []Pattern) (*Pattern, bool) {
+func merge(src []node, dest []node) (*node, bool) {
 	if !flatCompare(src, dest) {
 		return nil, false
 	}
@@ -104,7 +123,7 @@ func merge(src []Pattern, dest []Pattern) (*Pattern, bool) {
 		return &newChildren[0], true
 	}
 
-	newPattern := Pattern{
+	newPattern := node{
 		children: newChildren,
 		rep:      true,
 	}
@@ -112,48 +131,48 @@ func merge(src []Pattern, dest []Pattern) (*Pattern, bool) {
 	return &newPattern, true
 }
 
-func _merge(src []Pattern, dest []Pattern) ([]Pattern, error) {
+func _merge(src []node, dest []node) ([]node, error) {
 	if len(src) == 0 || len(dest) == 0 {
 		return nil, errors.New("empty patterns cannot be merged")
 	}
 
-	if len(src) == 1 && src[0].IsEmpty() && len(dest) == 1 && dest[0].IsEmpty() {
-		if src[0].endpoint != dest[0].endpoint {
-			return nil, errors.New("different endpoint leaf patterns cannot be merged")
+	if len(src) == 1 && src[0].IsLeaf() && len(dest) == 1 && dest[0].IsLeaf() {
+		if src[0].value != dest[0].value {
+			return nil, errors.New("different value leaf patterns cannot be merged")
 		}
-		return []Pattern{{
-			endpoint: src[0].endpoint,
-			rep:      src[0].rep || dest[0].rep,
+		return []node{{
+			value: src[0].value,
+			rep:   src[0].rep || dest[0].rep,
 		}}, nil
 	}
 
-	if len(src) == 1 && !src[0].IsEmpty() && len(dest) == 1 && !dest[0].IsEmpty() {
+	if len(src) == 1 && !src[0].IsLeaf() && len(dest) == 1 && !dest[0].IsLeaf() {
 		mergedChildren, err := _merge(src[0].children, dest[0].children)
 		if err != nil {
 			return nil, err
 		}
-		return []Pattern{{
+		return []node{{
 			children: mergedChildren,
 			rep:      src[0].rep || dest[0].rep,
 		}}, nil
 	}
 
-	if len(src) == 1 && !src[0].IsEmpty() {
+	if len(src) == 1 && !src[0].IsLeaf() {
 		mergedChildren, err := _merge(src[0].children, dest)
 		if err != nil {
 			return nil, err
 		}
-		return []Pattern{{
+		return []node{{
 			children: mergedChildren,
 			rep:      true,
 		}}, nil
 	}
-	if len(dest) == 1 && !dest[0].IsEmpty() {
+	if len(dest) == 1 && !dest[0].IsLeaf() {
 		mergedChildren, err := _merge(src, dest[0].children)
 		if err != nil {
 			return nil, err
 		}
-		return []Pattern{{
+		return []node{{
 			children: mergedChildren,
 			rep:      true,
 		}}, nil
@@ -182,18 +201,18 @@ func _merge(src []Pattern, dest []Pattern) ([]Pattern, error) {
 
 }
 
-func flatten(ps []Pattern) []string {
+func flatten(ps []node) []string {
 	result := make([]string, 0)
 	for _, p := range ps {
-		if p.IsEmpty() {
-			result = append(result, p.endpoint)
+		if p.IsLeaf() {
+			result = append(result, p.value)
 		} else {
-			result = append(result, flatten(p.children)...)
+			result = append(result, flatten(p.Children())...)
 		}
 	}
 	return result
 }
 
-func flatCompare(src []Pattern, dest []Pattern) bool {
+func flatCompare(src []node, dest []node) bool {
 	return slices.Equal(flatten(src), flatten(dest))
 }

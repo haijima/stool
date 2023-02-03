@@ -33,23 +33,23 @@ func Test_pattern(t *testing.T) {
 		endpoints: []string{"A", "A", "A", "B", "B", "C", "A", "A"},
 		want:      "A * -> B * -> C -> A *",
 	}, {
-		name:      "Pattern",
+		name:      "node",
 		endpoints: []string{"A", "B", "C", "A", "B", "C", "D"},
 		want:      "(A -> B -> C)* -> D",
 	}, {
-		name:      "repetition in the Pattern",
+		name:      "repetition in the node",
 		endpoints: []string{"A", "B", "B", "C", "A", "B", "C", "D"},
 		want:      "(A -> B * -> C)* -> D",
 	}, {
-		name:      "nest Pattern",
+		name:      "nest node",
 		endpoints: []string{"A", "B", "C", "B", "C", "D", "B", "C", "D", "E"},
 		want:      "A -> ((B -> C)* -> D)* -> E",
 	}, {
-		name:      "repeat the tail of Pattern",
+		name:      "repeat the tail of node",
 		endpoints: []string{"A", "B", "A", "B", "B", "C"},
 		want:      "(A -> B *)* -> C",
 	}, {
-		name:      "repeat the tails of Pattern",
+		name:      "repeat the tails of node",
 		endpoints: []string{"A", "B", "C", "A", "B", "C", "B", "C", "D"},
 		want:      "(A -> (B -> C)*)* -> D",
 	}, {
@@ -92,7 +92,7 @@ func Test_pattern(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := &Pattern{}
+			root := &node{}
 			for _, endpoint := range tt.endpoints {
 				root.Append(endpoint)
 			}
@@ -103,7 +103,7 @@ func Test_pattern(t *testing.T) {
 }
 
 func Test(t *testing.T) {
-	root := &Pattern{}
+	root := &node{}
 	for i, p := range []string{"A", "B", "C", "B", "C", "A", "B", "A", "B", "C", "D"} {
 		root.Append(p)
 		fmt.Printf("%2d: %s\n", i, root.String())
