@@ -9,7 +9,7 @@ import (
 )
 
 // Version is set in build step
-var Version = "unset"
+var Version = ""
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
