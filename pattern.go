@@ -13,7 +13,11 @@ import (
 type node struct {
 	children []node
 	value    string
-	rep      bool
+	root     bool
+}
+
+func NewRoot() *node {
+	return &node{root: true}
 }
 
 func NewNode(children []node) *node {
@@ -48,23 +52,16 @@ func (p *node) IsLeaf() bool {
 
 func (p *node) String() string {
 	if p.IsLeaf() {
-		if p.rep {
-			return fmt.Sprintf("%s *", p.value)
-		}
 		return p.value
 	}
-
-	//if len(p.children) == 1 {
-	//	return p.children[0].String()
-	//}
 
 	childrenStr := strings.Join(lo.Map(p.children, func(child node, i int) string {
 		return child.String()
 	}), " -> ")
-	if p.rep {
-		return fmt.Sprintf("(%s)*", childrenStr)
+	if p.root {
+		return childrenStr
 	}
-	return childrenStr
+	return fmt.Sprintf("(%s)*", childrenStr)
 }
 
 func (p *node) Append(value string) {
@@ -73,25 +70,22 @@ func (p *node) Append(value string) {
 		if p.children[i].Last().value != value {
 			continue
 		}
+
 		s := make([]node, l-i)
 		copy(s, p.children[i+1:l])
-		s[l-i-1] = node{value: value}
+		s[l-i-1] = *NewLeaf(value)
 
 		for j := i; j >= 0; j-- {
 			if newPattern, ok := merge(s, p.children[j:i+1]); ok {
 				p.children = p.children[:j]
-				p.children = append(p.children, *newPattern)
+				p.appendChild(*newPattern)
 				return
 			} else if i == j && !p.children[i].IsLeaf() {
 				ll := len(p.children[i].children)
 				for k := ll - 1; k >= 0; k-- {
 					if newPattern, ok := merge(s, p.children[i].children[k:]); ok {
-						if k == ll-1 {
-							p.children[i].children[ll-1].rep = true
-						} else {
-							p.children[i].children = p.children[i].children[:k]
-							p.children[i].children = append(p.children[i].children, *newPattern)
-						}
+						p.children[i].children = p.children[i].children[:k]
+						p.children[i].appendChild(*newPattern)
 						p.children = p.children[:i+1]
 						return
 					}
@@ -103,8 +97,14 @@ func (p *node) Append(value string) {
 	if p.children == nil {
 		p.children = make([]node, 0)
 	}
-	newPattern := node{value: value}
-	p.children = append(p.children, newPattern)
+	p.appendChild(*NewLeaf(value))
+}
+
+func (p *node) appendChild(n node) {
+	if p.children == nil {
+		p.children = make([]node, 0)
+	}
+	p.children = append(p.children, n)
 }
 
 func merge(src []node, dest []node) (*node, bool) {
@@ -114,74 +114,58 @@ func merge(src []node, dest []node) (*node, bool) {
 
 	newChildren, err := _merge(src, dest)
 	if err != nil {
-		zap.L().Info(err.Error())
+		if err == ErrUnexpected {
+			zap.L().Info(err.Error())
+		}
 		return nil, false
 	}
 
-	if len(newChildren) == 1 {
-		newChildren[0].rep = true
+	if len(newChildren) == 1 && !newChildren[0].IsLeaf() {
 		return &newChildren[0], true
 	}
-
-	newPattern := node{
-		children: newChildren,
-		rep:      true,
-	}
-
-	return &newPattern, true
+	return NewNode(newChildren), true
 }
+
+var (
+	ErrEmpty              = errors.New("empty patterns cannot be merged")
+	ErrDifferentLeaf      = errors.New("different value leaf patterns cannot be merged")
+	ErrDifferentStructure = errors.New("different structure")
+	ErrUnexpected         = fmt.Errorf("unexpected error in _merge")
+)
 
 func _merge(src []node, dest []node) ([]node, error) {
 	if len(src) == 0 || len(dest) == 0 {
-		return nil, errors.New("empty patterns cannot be merged")
+		return nil, ErrEmpty
 	}
 
 	if len(src) == 1 && src[0].IsLeaf() && len(dest) == 1 && dest[0].IsLeaf() {
 		if src[0].value != dest[0].value {
-			return nil, errors.New("different value leaf patterns cannot be merged")
+			return nil, ErrDifferentLeaf
 		}
-		return []node{{
-			value: src[0].value,
-			rep:   src[0].rep || dest[0].rep,
-		}}, nil
+		return []node{*NewLeaf(src[0].value)}, nil
 	}
 
-	if len(src) == 1 && !src[0].IsLeaf() && len(dest) == 1 && !dest[0].IsLeaf() {
-		mergedChildren, err := _merge(src[0].children, dest[0].children)
-		if err != nil {
-			return nil, err
-		}
-		return []node{{
-			children: mergedChildren,
-			rep:      src[0].rep || dest[0].rep,
-		}}, nil
-	}
-
+	s := src
+	d := dest
 	if len(src) == 1 && !src[0].IsLeaf() {
-		mergedChildren, err := _merge(src[0].children, dest)
-		if err != nil {
-			return nil, err
-		}
-		return []node{{
-			children: mergedChildren,
-			rep:      true,
-		}}, nil
+		s = src[0].children
 	}
 	if len(dest) == 1 && !dest[0].IsLeaf() {
-		mergedChildren, err := _merge(src, dest[0].children)
+		d = dest[0].children
+	}
+
+	if len(src) == 1 || len(dest) == 1 {
+		mergedChildren, err := _merge(s, d)
 		if err != nil {
 			return nil, err
 		}
-		return []node{{
-			children: mergedChildren,
-			rep:      true,
-		}}, nil
+		return []node{*NewNode(mergedChildren)}, nil
 	}
 
 	for i := 1; i <= len(src); i++ {
 		for j := 1; j <= len(dest); j++ {
 			if i == len(src) && j == len(dest) {
-				return nil, errors.New("different structure")
+				return nil, ErrDifferentStructure
 			}
 			if flatCompare(src[:i], dest[:j]) {
 				head, err := _merge(src[:i], dest[:j])
@@ -197,8 +181,8 @@ func _merge(src []node, dest []node) ([]node, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("unexpected error in _merge src:%+v dest:%+v\n", src, dest)
-
+	zap.L().Info(fmt.Sprintf("unexpected error in _merge src:%+v dest:%+v\n", src, dest))
+	return nil, ErrUnexpected
 }
 
 func flatten(ps []node) []string {
