@@ -174,18 +174,19 @@ func flatCompare(src []node, dest []node) bool {
 		return false
 	}
 
-	return slices.Equal(flatten(src, srcSize), flatten(dest, destSize))
+	return slices.Equal(
+		flatten(src, make([]string, srcSize)),
+		flatten(dest, make([]string, destSize)))
 }
 
-func flatten(ps []node, size int) []string {
-	result := make([]string, size)
+func flatten(ps []node, result []string) []string {
 	i := 0
 	for _, p := range ps {
 		if p.IsLeaf() {
 			result[i] = p.value
 			i++
 		} else {
-			for _, v := range flatten(p.children, p.elems) {
+			for _, v := range flatten(p.children, result[i:i+p.elems]) {
 				result[i] = v
 				i++
 			}
