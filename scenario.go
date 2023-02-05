@@ -121,7 +121,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 	}
 	scenarios := map[string]scenarioStruct{}
 	for uid, scenario := range result {
-		if s, ok := scenarios[scenario.String()]; ok {
+		if s, ok := scenarios[scenario.String(true)]; ok {
 			s.count += 1
 			if firstCalls[uid] < s.firstReq {
 				s.firstReq = firstCalls[uid]
@@ -130,10 +130,10 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 				s.lastReq = lastCalls[uid]
 
 			}
-			scenarios[scenario.String()] = s
+			scenarios[scenario.String(true)] = s
 		} else {
-			scenarios[scenario.String()] = scenarioStruct{
-				hash:     scenario.String(),
+			scenarios[scenario.String(true)] = scenarioStruct{
+				hash:     scenario.String(true),
 				count:    1,
 				firstReq: firstCalls[uid],
 				lastReq:  lastCalls[uid],
@@ -150,7 +150,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 		for i, t := range tt {
 			if p, ok := merge([]node{*s.pattern}, []node{*t.pattern}); ok {
 				tt[i] = scenarioStruct{
-					hash:     p.String(),
+					hash:     p.String(true),
 					count:    tt[i].count + s.count,
 					firstReq: lo.Min([]int{tt[i].firstReq, s.firstReq}),
 					lastReq:  lo.Max([]int{tt[i].lastReq, s.lastReq}),
@@ -172,11 +172,11 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 		if a.count != b.count {
 			return a.count > b.count
 		}
-		return a.pattern.String() > b.pattern.String()
+		return a.pattern.String(true) > b.pattern.String(true)
 	})
 	fmt.Println("first call[s],last call[s],count,scenario node")
 	for _, s := range tt {
-		fmt.Printf("%d,%d,%d,%s\n", s.firstReq, s.lastReq, s.count, s.pattern.String())
+		fmt.Printf("%d,%d,%d,%s\n", s.firstReq, s.lastReq, s.count, s.pattern.String(true))
 	}
 
 	return nil, nil

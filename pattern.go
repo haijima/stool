@@ -10,14 +10,9 @@ import (
 )
 
 type node struct {
-	children []node
 	value    string
-	root     bool
+	children []node
 	elems    int
-}
-
-func newRoot() *node {
-	return &node{root: true}
 }
 
 func newNode(children []node) *node {
@@ -46,18 +41,18 @@ func (p *node) IsLeaf() bool {
 	return p.children == nil || len(p.children) == 0
 }
 
-func (p *node) String() string {
+func (p *node) String(root bool) string {
 	if p.IsLeaf() {
 		return p.value
 	}
 
 	childrenStrSlice := make([]string, len(p.children))
 	for i, child := range p.children {
-		childrenStrSlice[i] = child.String()
+		childrenStrSlice[i] = child.String(false)
 	}
 	childrenStr := strings.Join(childrenStrSlice, " -> ")
 
-	if p.root {
+	if root {
 		return childrenStr
 	}
 	return "(" + childrenStr + ")*"
