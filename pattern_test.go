@@ -92,7 +92,7 @@ func Test_pattern(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := NewRoot()
+			root := newRoot()
 			for _, endpoint := range tt.endpoints {
 				root.Append(endpoint)
 			}
@@ -103,7 +103,7 @@ func Test_pattern(t *testing.T) {
 }
 
 func Test(t *testing.T) {
-	root := NewRoot()
+	root := newRoot()
 	for i, p := range []string{"A", "B", "C", "B", "C", "A", "B", "A", "B", "C", "D"} {
 		root.Append(p)
 		fmt.Printf("%2d: %s\n", i, root.String())
@@ -112,7 +112,7 @@ func Test(t *testing.T) {
 
 func BenchmarkNode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		root := NewRoot()
+		root := newRoot()
 		for _, p := range []string{"A", "B", "C", "B", "C", "A", "B", "A", "B", "C", "D"} {
 			root.Append(p)
 		}
@@ -122,7 +122,7 @@ func BenchmarkNode(b *testing.B) {
 
 func BenchmarkDeepNode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		root := NewRoot()
+		root := newRoot()
 		for _, p := range []string{"A", "A", "B", "A", "B", "C", "A", "B", "C", "D", "A", "B", "C", "D", "E", "A", "B", "C", "D", "E", "F", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "H", "A", "B", "C", "D", "E", "F", "G", "H", "I", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"} {
 			root.Append(p)
 		}

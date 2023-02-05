@@ -148,7 +148,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 	for _, s := range ss {
 		match := false
 		for i, t := range tt {
-			if p, ok := merge([]*node{s.pattern}, []*node{t.pattern}); ok {
+			if p, ok := merge([]node{*s.pattern}, []node{*t.pattern}); ok {
 				tt[i] = scenarioStruct{
 					hash:     p.String(),
 					count:    tt[i].count + s.count,
