@@ -57,18 +57,17 @@ func (n *node) String(root bool) string {
 }
 
 func (n *node) Append(value string) {
-	for i := len(n.children) - 1; i >= 0; i-- {
+	n.children = append(n.children, *newLeaf(value))
+	for i := len(n.children) - 2; i >= 0; i-- {
 		if n.children[i].last().value != value {
 			continue
 		}
 
-		s := append(n.children[i+1:len(n.children)], *newLeaf(value))
-
+		s := n.children[i+1:]
 		for j := i; j >= 0; j-- {
 			// Check if n.children[j:i+1] equals s
 			if mergedNode, ok := merge(n.children[j:i+1], s); ok {
-				n.elems -= elems(n.children[j:])
-				n.elems += mergedNode.elems
+				n.elems += -elems(n.children[j:]) + mergedNode.elems
 				n.children = n.children[:j+1]
 				n.children[j] = *mergedNode
 				return
@@ -78,8 +77,7 @@ func (n *node) Append(value string) {
 			if i == j && n.children[i].elems > elems(s) {
 				for k := len(n.children[i].children) - 1; k >= 0; k-- {
 					if mergedNode, ok := merge(n.children[i].children[k:], s); ok {
-						n.children[i].elems -= elems(n.children[i].children[k:])
-						n.children[i].elems += mergedNode.elems
+						n.children[i].elems += -elems(n.children[i].children[k:]) + mergedNode.elems
 						n.children[i].children = n.children[i].children[:k+1]
 						n.children[i].children[k] = *mergedNode
 						n.elems -= elems(n.children[i+1:])
@@ -92,13 +90,7 @@ func (n *node) Append(value string) {
 		}
 	}
 
-	if n.children == nil {
-		n.children = []node{*newLeaf(value)}
-		n.elems = 1
-	} else {
-		n.children = append(n.children, *newLeaf(value))
-		n.elems += 1
-	}
+	n.elems += 1
 }
 
 func merge(src, dest []node) (*node, bool) {
@@ -184,10 +176,8 @@ func flatten(ns []node, result []string) []string {
 			result[i] = n.value
 			i++
 		} else {
-			for _, v := range flatten(n.children, result[i:i+n.elems]) {
-				result[i] = v
-				i++
-			}
+			flatten(n.children, result[i:i+n.elems])
+			i += n.elems
 		}
 	}
 	return result
