@@ -18,74 +18,72 @@ func newLeaf(value string) *node {
 	return &node{value: value, elems: 1}
 }
 
-func (p *node) first() *node {
-	if p.IsLeaf() {
-		return p
+func (n *node) first() *node {
+	if n.IsLeaf() {
+		return n
 	}
-	return p.children[0].first()
+	return n.children[0].first()
 }
 
-func (p *node) last() *node {
-	if p.IsLeaf() {
-		return p
+func (n *node) last() *node {
+	if n.IsLeaf() {
+		return n
 	}
-	return p.children[len(p.children)-1].last()
+	return n.children[len(n.children)-1].last()
 }
 
-func (p *node) IsLeaf() bool {
-	return p.children == nil || len(p.children) == 0
+func (n *node) IsLeaf() bool {
+	return n.children == nil || len(n.children) == 0
 }
 
-func (p *node) String(root bool) string {
-	if p.IsLeaf() {
-		return p.value
+func (n *node) String(root bool) string {
+	if n.IsLeaf() {
+		return n.value
 	}
 
-	childrenStr := ""
-	for i, child := range p.children {
+	str := ""
+	for i, child := range n.children {
 		if i == 0 {
-			childrenStr += child.String(false)
+			str += child.String(false)
 		} else {
-			childrenStr += " -> " + child.String(false)
+			str += " -> " + child.String(false)
 		}
 	}
 
 	if root {
-		return childrenStr
+		return str
 	}
-	return "(" + childrenStr + ")*"
+	return "(" + str + ")*"
 }
 
-func (p *node) Append(value string) {
-	l := len(p.children)
-	for i := l - 1; i >= 0; i-- {
-		if p.children[i].last().value != value {
+func (n *node) Append(value string) {
+	for i := len(n.children) - 1; i >= 0; i-- {
+		if n.children[i].last().value != value {
 			continue
 		}
 
-		s := append(p.children[i+1:l], *newLeaf(value))
+		s := append(n.children[i+1:len(n.children)], *newLeaf(value))
 
 		for j := i; j >= 0; j-- {
-			// Check if p.children[j:i+1] equals s
-			if mergedNode, ok := merge(p.children[j:i+1], s); ok {
-				p.elems -= elems(p.children[j:])
-				p.elems += mergedNode.elems
-				p.children = p.children[:j+1]
-				p.children[j] = *mergedNode
+			// Check if n.children[j:i+1] equals s
+			if mergedNode, ok := merge(n.children[j:i+1], s); ok {
+				n.elems -= elems(n.children[j:])
+				n.elems += mergedNode.elems
+				n.children = n.children[:j+1]
+				n.children[j] = *mergedNode
 				return
 			}
 
-			// Check if p.children[i]'s tail matches s
-			if i == j && p.children[i].elems > elems(s) {
-				ll := len(p.children[i].children)
-				for k := ll - 1; k >= 0; k-- {
-					if mergedNode, ok := merge(p.children[i].children[k:], s); ok {
-						p.children[i].elems -= elems(p.children[i].children[k:])
-						p.children[i].elems += mergedNode.elems
-						p.children[i].children = p.children[i].children[:k+1]
-						p.children[i].children[k] = *mergedNode
-						p.elems -= elems(p.children[i+1:])
-						p.children = p.children[:i+1]
+			// Check if n.children[i]'s tail matches s
+			if i == j && n.children[i].elems > elems(s) {
+				for k := len(n.children[i].children) - 1; k >= 0; k-- {
+					if mergedNode, ok := merge(n.children[i].children[k:], s); ok {
+						n.children[i].elems -= elems(n.children[i].children[k:])
+						n.children[i].elems += mergedNode.elems
+						n.children[i].children = n.children[i].children[:k+1]
+						n.children[i].children[k] = *mergedNode
+						n.elems -= elems(n.children[i+1:])
+						n.children = n.children[:i+1]
 						return
 					}
 				}
@@ -94,16 +92,16 @@ func (p *node) Append(value string) {
 		}
 	}
 
-	if p.children == nil {
-		p.children = []node{*newLeaf(value)}
-		p.elems = 1
+	if n.children == nil {
+		n.children = []node{*newLeaf(value)}
+		n.elems = 1
 	} else {
-		p.children = append(p.children, *newLeaf(value))
-		p.elems += 1
+		n.children = append(n.children, *newLeaf(value))
+		n.elems += 1
 	}
 }
 
-func merge(src []node, dest []node) (*node, bool) {
+func merge(src, dest []node) (*node, bool) {
 	if !flatCompare(src, dest) {
 		return nil, false
 	}
@@ -119,7 +117,7 @@ func merge(src []node, dest []node) (*node, bool) {
 	return newNode(newChildren), true
 }
 
-func _merge(src []node, dest []node) []node {
+func _merge(src, dest []node) []node {
 	if len(src) == 0 || len(dest) == 0 {
 		return nil
 	}
@@ -164,7 +162,7 @@ func elems(nodes []node) int {
 	return s
 }
 
-func flatCompare(src []node, dest []node) bool {
+func flatCompare(src, dest []node) bool {
 	if src[0].first().value != dest[0].first().value {
 		return false
 	}
@@ -179,14 +177,14 @@ func flatCompare(src []node, dest []node) bool {
 		flatten(dest, make([]string, destSize)))
 }
 
-func flatten(ps []node, result []string) []string {
+func flatten(ns []node, result []string) []string {
 	i := 0
-	for _, p := range ps {
-		if p.IsLeaf() {
-			result[i] = p.value
+	for _, n := range ns {
+		if n.IsLeaf() {
+			result[i] = n.value
 			i++
 		} else {
-			for _, v := range flatten(p.children, result[i:i+p.elems]) {
+			for _, v := range flatten(n.children, result[i:i+n.elems]) {
 				result[i] = v
 				i++
 			}
