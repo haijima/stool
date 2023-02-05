@@ -1,11 +1,6 @@
 package stool
 
 import (
-	"errors"
-	"fmt"
-	"strings"
-
-	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 )
 
@@ -23,18 +18,18 @@ func newLeaf(value string) *node {
 	return &node{value: value, elems: 1}
 }
 
-func (p *node) First() *node {
+func (p *node) first() *node {
 	if p.IsLeaf() {
 		return p
 	}
-	return p.children[0].First()
+	return p.children[0].first()
 }
 
-func (p *node) Last() *node {
+func (p *node) last() *node {
 	if p.IsLeaf() {
 		return p
 	}
-	return p.children[len(p.children)-1].Last()
+	return p.children[len(p.children)-1].last()
 }
 
 func (p *node) IsLeaf() bool {
@@ -46,11 +41,14 @@ func (p *node) String(root bool) string {
 		return p.value
 	}
 
-	childrenStrSlice := make([]string, len(p.children))
+	childrenStr := ""
 	for i, child := range p.children {
-		childrenStrSlice[i] = child.String(false)
+		if i == 0 {
+			childrenStr += child.String(false)
+		} else {
+			childrenStr += " -> " + child.String(false)
+		}
 	}
-	childrenStr := strings.Join(childrenStrSlice, " -> ")
 
 	if root {
 		return childrenStr
@@ -61,7 +59,7 @@ func (p *node) String(root bool) string {
 func (p *node) Append(value string) {
 	l := len(p.children)
 	for i := l - 1; i >= 0; i-- {
-		if p.children[i].Last().value != value {
+		if p.children[i].last().value != value {
 			continue
 		}
 
@@ -76,6 +74,7 @@ func (p *node) Append(value string) {
 				p.children[j] = *mergedNode
 				return
 			}
+
 			// Check if p.children[i]'s tail matches s
 			if i == j && p.children[i].elems > elems(s) {
 				ll := len(p.children[i].children)
@@ -91,6 +90,7 @@ func (p *node) Append(value string) {
 					}
 				}
 			}
+
 		}
 	}
 
@@ -108,11 +108,8 @@ func merge(src []node, dest []node) (*node, bool) {
 		return nil, false
 	}
 
-	newChildren, err := _merge(src, dest)
-	if err != nil {
-		if err == ErrUnexpected {
-			zap.L().Info(err.Error())
-		}
+	newChildren := _merge(src, dest)
+	if newChildren == nil {
 		return nil, false
 	}
 
@@ -122,23 +119,16 @@ func merge(src []node, dest []node) (*node, bool) {
 	return newNode(newChildren), true
 }
 
-var (
-	ErrEmpty              = errors.New("empty patterns cannot be merged")
-	ErrDifferentLeaf      = errors.New("different value leaf patterns cannot be merged")
-	ErrDifferentStructure = errors.New("different structure")
-	ErrUnexpected         = fmt.Errorf("unexpected error in _merge")
-)
-
-func _merge(src []node, dest []node) ([]node, error) {
+func _merge(src []node, dest []node) []node {
 	if len(src) == 0 || len(dest) == 0 {
-		return nil, ErrEmpty
+		return nil
 	}
 
 	if len(src) == 1 && src[0].IsLeaf() && len(dest) == 1 && dest[0].IsLeaf() {
 		if src[0].value != dest[0].value {
-			return nil, ErrDifferentLeaf
+			return nil
 		}
-		return []node{*newLeaf(src[0].value)}, nil
+		return []node{*newLeaf(src[0].value)}
 	}
 
 	s := src
@@ -151,34 +141,19 @@ func _merge(src []node, dest []node) ([]node, error) {
 	}
 
 	if len(src) == 1 || len(dest) == 1 {
-		mergedChildren, err := _merge(s, d)
-		if err != nil {
-			return nil, err
-		}
-		return []node{*newNode(mergedChildren)}, nil
+		return []node{*newNode(_merge(s, d))}
 	}
 
-	for i := 1; i <= len(src); i++ {
-		for j := 1; j <= len(dest); j++ {
-			if i == len(src) && j == len(dest) {
-				return nil, ErrDifferentStructure
+	for i := 1; i < len(src); i++ {
+		for j := 1; j < len(dest); j++ {
+			if elems(src[:i]) != elems(dest[:j]) {
+				continue
 			}
-			if flatCompare(src[:i], dest[:j]) {
-				head, err := _merge(src[:i], dest[:j])
-				if err != nil {
-					return nil, err
-				}
-				tail, err := _merge(src[i:], dest[j:])
-				if err != nil {
-					return nil, err
-				}
-				return append(head, tail...), nil
-			}
+			return append(_merge(src[:i], dest[:j]), _merge(src[i:], dest[j:])...)
 		}
 	}
 
-	zap.L().Info(fmt.Sprintf("unexpected error in _merge src:%+v dest:%+v\n", src, dest))
-	return nil, ErrUnexpected
+	return nil
 }
 
 func elems(nodes []node) int {
@@ -190,7 +165,7 @@ func elems(nodes []node) int {
 }
 
 func flatCompare(src []node, dest []node) bool {
-	if src[0].First().value != dest[0].First().value {
+	if src[0].first().value != dest[0].first().value {
 		return false
 	}
 	srcSize := elems(src)
