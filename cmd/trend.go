@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/haijima/stool"
+	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -14,7 +14,7 @@ import (
 )
 
 // NewTrendCommand returns the trend command
-func NewTrendCommand(p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	trendCmd := &cobra.Command{
 		Use:   "trend",
 		Short: "Show the count of accesses for each endpoint over time",
@@ -33,7 +33,7 @@ func NewTrendCommand(p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra
 	return trendCmd
 }
 
-func runTrend(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
+func runTrend(cmd *cobra.Command, p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	timeFormat := v.GetString("time_format")
@@ -50,7 +50,7 @@ func runTrend(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afe
 	}
 	defer f.Close()
 
-	opt := stool.TrendOption{
+	opt := internal.TrendOption{
 		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
 		Interval:       interval,
@@ -64,7 +64,7 @@ func runTrend(cmd *cobra.Command, p *stool.TrendProfiler, v *viper.Viper, fs afe
 	return printTrendCsv(cmd, result)
 }
 
-func printTrendCsv(cmd *cobra.Command, result *stool.Trend) error {
+func printTrendCsv(cmd *cobra.Command, result *internal.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	header := make([]string, 0)

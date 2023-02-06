@@ -1,10 +1,9 @@
-package stool
+package internal
 
 import (
 	"bufio"
 	"io"
 	"regexp"
-	"strings"
 
 	"github.com/Wing924/ltsv"
 	mapset "github.com/deckarep/golang-set/v2"
@@ -84,18 +83,6 @@ func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Trans
 
 	res := NewTransition(result, endpoints, sum)
 	return res, nil
-}
-
-func isIgnored(req string, ignorePatterns []*regexp.Regexp) bool {
-	splitted := strings.Split(req, " ")
-	uri := strings.Split(splitted[1], "?")[0]
-
-	for _, p := range ignorePatterns {
-		if p.MatchString(uri) {
-			return true
-		}
-	}
-	return false
 }
 
 type TransitionOption struct {
