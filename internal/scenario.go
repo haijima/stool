@@ -1,4 +1,4 @@
-package stool
+package internal
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/Wing924/ltsv"
 	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/haijima/stool/internal/pattern"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 )
@@ -26,7 +27,7 @@ func NewScenarioProfiler() *ScenarioProfiler {
 	return &ScenarioProfiler{}
 }
 
-func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, error) {
+func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*pattern.Node, error) {
 	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
 	for i, mg := range opt.MatchingGroups {
 		p, err := regexp.Compile(mg)
@@ -47,7 +48,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 	scanner := bufio.NewScanner(in)
 	scanner.Split(bufio.ScanLines)
 
-	var result = map[string]*node{}
+	var result = map[string]*pattern.Node{}
 	endpoints := mapset.NewSet[string]()
 	intToEndpoint := map[int]string{}
 	endpointToInt := map[string]int{}
@@ -87,14 +88,14 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 		if uidGot != "" && uidGot != "-" {
 			// revisiting user
 			if _, ok := result[uidGot]; !ok {
-				result[uidGot] = &node{}
+				result[uidGot] = &pattern.Node{}
 			}
 			result[uidGot].Append(k)
 			//result[uidGot].Append(fmt.Sprintf("%d", endpointToInt[k]))
 			lastCalls[uidGot] = reqTimeSec
 		} else if uidSet != "" && uidSet != "-" {
 			// new user
-			result[uidSet] = &node{}
+			result[uidSet] = &pattern.Node{}
 			result[uidSet].Append(k)
 			//result[uidSet].Append(fmt.Sprintf("%d", endpointToInt[k]))
 			firstCalls[uidSet] = reqTimeSec
@@ -117,7 +118,7 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*node, err
 		count    int
 		firstReq int
 		lastReq  int
-		pattern  *node
+		pattern  *pattern.Node
 	}
 	scenarios := map[string]scenarioStruct{}
 	for uid, scenario := range result {

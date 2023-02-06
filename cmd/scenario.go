@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/haijima/stool"
+	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,7 +11,7 @@ import (
 )
 
 // NewScenarioCmd returns the scenario command
-func NewScenarioCmd(p *stool.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	var scenarioCmd = &cobra.Command{
 		Use:   "scenario",
 		Short: "Show the access patterns of users",
@@ -31,7 +31,7 @@ func NewScenarioCmd(p *stool.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cob
 	return scenarioCmd
 }
 
-func runScenario(cmd *cobra.Command, p *stool.ScenarioProfiler, v *viper.Viper, fs afero.Fs) error {
+func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) error {
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	ignorePatterns := v.GetStringSlice("ignore_patterns")
@@ -44,7 +44,7 @@ func runScenario(cmd *cobra.Command, p *stool.ScenarioProfiler, v *viper.Viper, 
 	}
 	defer f.Close()
 
-	opt := stool.ScenarioOption{
+	opt := internal.ScenarioOption{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/haijima/stool"
+	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,7 +23,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 
 	rootCmd.AddCommand(NewTrendCommand(stool.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(stool.NewTransitionProfiler(), v, fs))
-	rootCmd.AddCommand(NewScenarioCmd(stool.NewScenarioProfiler(), v, fs))
+	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
 	rootCmd.AddCommand(versionCmd)
 
 	// Split commands into main command group and utility command group
