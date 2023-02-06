@@ -18,8 +18,6 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runScenario(cmd, p, v, fs)
 		},
-
-		Hidden: true,
 	}
 	scenarioCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
 	scenarioCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
