@@ -57,6 +57,10 @@ func Test_pattern(t *testing.T) {
 		endpoints: []string{"A", "B", "C", "B", "C", "A", "B", "C", "B", "C", "D"},
 		want:      "(A -> (B -> C)*)* -> D",
 	}, {
+		name:      "repeat the tails of pattern3",
+		endpoints: []string{"A", "B", "C", "D", "E", "B", "C", "D", "E", "C", "D", "E", "D", "E"},
+		want:      "A -> (B -> (C -> (D -> E)*)*)*",
+	}, {
 		name:      "count Merge",
 		endpoints: []string{"A", "B", "B", "C", "A", "A", "B", "C", "C", "D"},
 		want:      "((A)* -> (B)* -> (C)*)* -> D",
@@ -98,6 +102,7 @@ func Test_pattern(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.want, root.String(true))
+			assert.NoError(t, validateElem(root))
 		})
 	}
 }
@@ -128,4 +133,25 @@ func BenchmarkDeepNode(b *testing.B) {
 		}
 		root.String(true)
 	}
+}
+
+func validateElem(node Node) error {
+	if node.IsLeaf() {
+		if node.elems != 1 {
+			return fmt.Errorf("node elem should be 1 but: %d, node.String() = %s", node.elems, node.String(false))
+		}
+		return nil
+	}
+
+	if node.elems != elems(node.children) {
+		return fmt.Errorf("node elem should be %d but: %d, node.String() = %s", elems(node.children), node.elems, node.String(false))
+	}
+
+	for _, child := range node.children {
+		err := validateElem(child)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
