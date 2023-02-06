@@ -42,11 +42,11 @@ func (n *node) String(root bool) string {
 	}
 
 	str := ""
-	for i, child := range n.children {
+	for i := range n.children {
 		if i == 0 {
-			str += child.String(false)
+			str += n.children[i].String(false)
 		} else {
-			str += " -> " + child.String(false)
+			str += " -> " + n.children[i].String(false)
 		}
 	}
 
@@ -121,17 +121,14 @@ func _merge(src, dest []node) []node {
 		return []node{*newLeaf(src[0].value)}
 	}
 
-	s := src
-	d := dest
+	if len(src) == 1 && !src[0].IsLeaf() && len(dest) == 1 && !dest[0].IsLeaf() {
+		return []node{*newNode(_merge(src[0].children, dest[0].children))}
+	}
 	if len(src) == 1 && !src[0].IsLeaf() {
-		s = src[0].children
+		return []node{*newNode(_merge(src[0].children, dest))}
 	}
 	if len(dest) == 1 && !dest[0].IsLeaf() {
-		d = dest[0].children
-	}
-
-	if len(src) == 1 || len(dest) == 1 {
-		return []node{*newNode(_merge(s, d))}
+		return []node{*newNode(_merge(src, dest[0].children))}
 	}
 
 	for i := 1; i < len(src); i++ {
@@ -147,11 +144,11 @@ func _merge(src, dest []node) []node {
 }
 
 func elems(nodes []node) int {
-	s := 0
-	for _, n := range nodes {
-		s += n.elems
+	r := 0
+	for i := range nodes {
+		r += nodes[i].elems
 	}
-	return s
+	return r
 }
 
 func flatCompare(src, dest []node) bool {
@@ -171,13 +168,13 @@ func flatCompare(src, dest []node) bool {
 
 func flatten(ns []node, result []string) []string {
 	i := 0
-	for _, n := range ns {
-		if n.IsLeaf() {
-			result[i] = n.value
+	for j := range ns {
+		if ns[j].IsLeaf() {
+			result[i] = ns[j].value
 			i++
 		} else {
-			flatten(n.children, result[i:i+n.elems])
-			i += n.elems
+			flatten(ns[j].children, result[i:i+ns[j].elems])
+			i += ns[j].elems
 		}
 	}
 	return result
