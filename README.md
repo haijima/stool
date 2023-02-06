@@ -22,6 +22,7 @@ stool [command]
 
 ### Commands
 
+- `scenario`: Show the access patterns of users
 - `transition`: Show the transition between endpoints
 - `trend`: Show the count of accesses for each endpoint over time
 
