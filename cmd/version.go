@@ -3,15 +3,13 @@ package cmd
 import (
 	"fmt"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
 
-// These variables are set in build step
-var (
-	Version  = "unset"
-	Revision = "unset"
-)
+// Version is set in build step
+var Version = ""
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
@@ -19,9 +17,18 @@ var versionCmd = &cobra.Command{
 	Short: "Show the version of stool command",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(cmd.OutOrStdout(), `Version: %s
-Revision: %s
 OS: %s
 Arch: %s
-`, Version, Revision, runtime.GOOS, runtime.GOARCH)
+`, version(), runtime.GOOS, runtime.GOARCH)
 	},
+}
+
+func version() string {
+	if Version != "" {
+		return Version
+	}
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		return buildInfo.Main.Version
+	}
+	return "(devel)"
 }
