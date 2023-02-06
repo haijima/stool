@@ -1,8 +1,7 @@
-package stool
+package internal
 
 import (
 	"bytes"
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -116,14 +115,4 @@ func TestTrend_Endpoints(t *testing.T) {
 	assert.Equal(t, 2, len(trend.Endpoints()))
 	assert.Equal(t, "GET /", trend.Endpoints()[0])
 	assert.Equal(t, "POST /", trend.Endpoints()[1])
-}
-
-func Test_key(t *testing.T) {
-	mg := "^/api/user/[^\\/]+$"
-	pattern, err := regexp.Compile(mg)
-	assert.Nil(t, err)
-
-	k := key("GET /api/user/xyz?key=v&foo=bar", []*regexp.Regexp{pattern})
-
-	assert.Equal(t, "GET ^/api/user/[^\\/]+$", k)
 }

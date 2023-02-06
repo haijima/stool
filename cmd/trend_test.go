@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/haijima/stool"
+	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTrendCmd(t *testing.T) {
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -20,7 +20,7 @@ func TestNewTrendCmd(t *testing.T) {
 }
 
 func TestNewTrendCmd_Flag(t *testing.T) {
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -44,7 +44,7 @@ func TestNewTrendCmd_Flag(t *testing.T) {
 }
 
 func Test_Trend_RunE(t *testing.T) {
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -65,7 +65,7 @@ func Test_Trend_RunE(t *testing.T) {
 }
 
 func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -78,7 +78,7 @@ func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 }
 
 func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -93,7 +93,7 @@ func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 }
 
 func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -120,7 +120,7 @@ func Test_printTrendCsv(t *testing.T) {
 	data["POST /"] = make(map[int]int, 1)
 	data["POST /"][0] = 1
 
-	p := stool.NewTrendProfiler()
+	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
@@ -128,7 +128,7 @@ func Test_printTrendCsv(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	result := stool.NewTrend(data, 5, 5)
+	result := internal.NewTrend(data, 5, 5)
 	_ = printTrendCsv(cmd, result)
 
 	assert.Equal(t, `Method,Uri,0,5,10,15,20

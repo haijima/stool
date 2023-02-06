@@ -1,12 +1,10 @@
-package stool
+package internal
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"regexp"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/Wing924/ltsv"
@@ -101,18 +99,4 @@ func (t *Trend) Endpoints() []string {
 	keys := lo.Keys(t.data)
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	return keys
-}
-
-func key(req string, patterns []*regexp.Regexp) string {
-	splitted := strings.Split(req, " ")
-	method := splitted[0]
-	uri := strings.Split(splitted[1], "?")[0]
-
-	for _, p := range patterns {
-		if p.MatchString(uri) {
-			uri = p.String()
-			return fmt.Sprintf("%s %s", method, uri)
-		}
-	}
-	return fmt.Sprintf("%s %s", method, uri)
 }

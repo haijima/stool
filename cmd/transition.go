@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/awalterschulze/gographviz"
-	"github.com/haijima/stool"
+	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +17,7 @@ import (
 )
 
 // NewTransitionCmd returns the transition command
-func NewTransitionCmd(p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	var transitionCmd = &cobra.Command{
 		Use:   "transition",
 		Short: "Show the transition between endpoints",
@@ -37,7 +37,7 @@ func NewTransitionCmd(p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) 
 	return transitionCmd
 }
 
-func runTransition(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Viper, fs afero.Fs) error {
+func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) error {
 	file := v.GetString("file")
 	matchingGroups := v.GetStringSlice("matching_groups")
 	ignorePatterns := v.GetStringSlice("ignore_patterns")
@@ -50,7 +50,7 @@ func runTransition(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Vip
 	}
 	defer f.Close()
 
-	opt := stool.TransitionOption{
+	opt := internal.TransitionOption{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
@@ -71,7 +71,7 @@ func runTransition(cmd *cobra.Command, p *stool.TransitionProfiler, v *viper.Vip
 	return fmt.Errorf("invalid format flag: %s", format)
 }
 
-func createDot(cmd *cobra.Command, result *stool.Transition, fs afero.Fs) error {
+func createDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
 	graph := gographviz.NewEscape()
 	if err := graph.SetName("stool transition"); err != nil {
 		return err
@@ -116,7 +116,7 @@ func createDot(cmd *cobra.Command, result *stool.Transition, fs afero.Fs) error 
 	return nil
 }
 
-func printTransitionCsv(cmd *cobra.Command, result *stool.Transition) error {
+func printTransitionCsv(cmd *cobra.Command, result *internal.Transition) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	eps := result.Endpoints.ToSlice()

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/haijima/stool"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -21,8 +20,8 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 
 	v.SetFs(fs)
 
-	rootCmd.AddCommand(NewTrendCommand(stool.NewTrendProfiler(), v, fs))
-	rootCmd.AddCommand(NewTransitionCmd(stool.NewTransitionProfiler(), v, fs))
+	rootCmd.AddCommand(NewTrendCommand(internal.NewTrendProfiler(), v, fs))
+	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
 	rootCmd.AddCommand(versionCmd)
