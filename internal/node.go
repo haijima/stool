@@ -10,6 +10,10 @@ type Node struct {
 	elems    int
 }
 
+func NewRoot() Node {
+	return Node{children: []Node{}}
+}
+
 func NewNode(children []Node) *Node {
 	return &Node{children: children, elems: elems(children)}
 }
@@ -33,7 +37,7 @@ func (n *Node) last() *Node {
 }
 
 func (n *Node) IsLeaf() bool {
-	return n.children == nil || len(n.children) == 0
+	return n.children == nil || (len(n.children) == 0 && n.value != "")
 }
 
 func (n *Node) String(root bool) string {
@@ -59,38 +63,52 @@ func (n *Node) String(root bool) string {
 func (n *Node) Append(value string) {
 	n.children = append(n.children, *NewLeaf(value))
 	for i := len(n.children) - 2; i >= 0; i-- {
+		head := n.children[:i+1]
+		tail := n.children[i+1:]
+
+		if elems(head) < elems(tail) {
+			break
+		}
 		if n.children[i].last().value != value {
 			continue
 		}
 
-		s := n.children[i+1:]
-		for j := i; j >= 0; j-- {
-			// Check if n.children[j:i+1] equals s
-			if mergedNode, ok := Merge(n.children[j:i+1], s); ok {
-				n.elems += -elems(n.children[j:]) + mergedNode.elems
-				n.children = n.children[:j+1]
-				n.children[j] = *mergedNode
-				return
-			}
-
-			// Check if n.children[i]'s tail matches s
-			if i == j && n.children[i].elems > elems(s) {
-				for k := len(n.children[i].children) - 1; k >= 0; k-- {
-					if mergedNode, ok := Merge(n.children[i].children[k:], s); ok {
-						n.children[i].elems += -elems(n.children[i].children[k:]) + mergedNode.elems
-						n.children[i].children = n.children[i].children[:k+1]
-						n.children[i].children[k] = *mergedNode
-						n.elems -= elems(n.children[i+1:])
-						n.children = n.children[:i+1]
-						return
-					}
-				}
-			}
-
+		n.children = n.children[:i+1]
+		if n.append(tail) {
+			n.elems = elems(n.children)
+			return
+		} else {
+			n.children = append(n.children, tail...)
 		}
 	}
 
 	n.elems += 1
+}
+
+func (n *Node) append(nodes []Node) bool {
+	if n.last().value != nodes[len(nodes)-1].last().value {
+		return false
+	}
+
+	if n.children[len(n.children)-1].elems > elems(nodes) {
+		return n.children[len(n.children)-1].append(nodes)
+	}
+
+	for i := len(n.children) - 1; i >= 0; i-- {
+		if elems(n.children[i:]) == elems(nodes) {
+			node, ok := Merge(n.children[i:], nodes)
+			if ok {
+				n.elems -= elems(n.children[i:])
+				n.elems += node.elems
+				n.children = n.children[:i+1]
+				n.children[i] = *node
+			}
+			return ok
+		} else if elems(n.children[i:]) > elems(nodes) {
+			return false
+		}
+	}
+	return false
 }
 
 func Merge(src, dest []Node) (*Node, bool) {

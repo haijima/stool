@@ -57,6 +57,10 @@ func Test_pattern(t *testing.T) {
 		endpoints: []string{"A", "B", "C", "B", "C", "A", "B", "C", "B", "C", "D"},
 		want:      "(A -> (B -> C)*)* -> D",
 	}, {
+		name:      "repeat the tails of pattern3",
+		endpoints: []string{"A", "B", "C", "D", "E", "B", "C", "D", "E", "C", "D", "E", "D", "E"},
+		want:      "A -> (B -> (C -> (D -> E)*)*)*",
+	}, {
 		name:      "count Merge",
 		endpoints: []string{"A", "B", "B", "C", "A", "A", "B", "C", "C", "D"},
 		want:      "((A)* -> (B)* -> (C)*)* -> D",
@@ -92,18 +96,19 @@ func Test_pattern(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			root := Node{}
+			root := NewRoot()
 			for _, endpoint := range tt.endpoints {
 				root.Append(endpoint)
 			}
 
 			assert.Equal(t, tt.want, root.String(true))
+			assert.NoError(t, validateElem(root))
 		})
 	}
 }
 
 func Test(t *testing.T) {
-	root := Node{}
+	root := NewRoot()
 	for i, p := range []string{"A", "B", "C", "B", "C", "A", "B", "A", "B", "C", "D"} {
 		root.Append(p)
 		fmt.Printf("%2d: %s\n", i, root.String(true))
@@ -112,7 +117,7 @@ func Test(t *testing.T) {
 
 func BenchmarkNode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		root := Node{}
+		root := NewRoot()
 		for _, p := range []string{"A", "B", "C", "B", "C", "A", "B", "A", "B", "C", "D"} {
 			root.Append(p)
 		}
@@ -122,10 +127,31 @@ func BenchmarkNode(b *testing.B) {
 
 func BenchmarkDeepNode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		root := Node{}
+		root := NewRoot()
 		for _, p := range []string{"A", "A", "B", "A", "B", "C", "A", "B", "C", "D", "A", "B", "C", "D", "E", "A", "B", "C", "D", "E", "F", "A", "B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "H", "A", "B", "C", "D", "E", "F", "G", "H", "I", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"} {
 			root.Append(p)
 		}
 		root.String(true)
 	}
+}
+
+func validateElem(node Node) error {
+	if node.IsLeaf() {
+		if node.elems != 1 {
+			return fmt.Errorf("node elem should be 1 but: %d, node.String() = %s", node.elems, node.String(false))
+		}
+		return nil
+	}
+
+	if node.elems != elems(node.children) {
+		return fmt.Errorf("node elem should be %d but: %d, node.String() = %s", elems(node.children), node.elems, node.String(false))
+	}
+
+	for _, child := range node.children {
+		err := validateElem(child)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
