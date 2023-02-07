@@ -33,7 +33,7 @@ func (n *Node) last() *Node {
 }
 
 func (n *Node) IsLeaf() bool {
-	return n.children == nil || len(n.children) == 0
+	return n.children == nil || (len(n.children) == 0 && n.value != "")
 }
 
 func (n *Node) String(root bool) string {
