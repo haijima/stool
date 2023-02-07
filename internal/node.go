@@ -10,6 +10,10 @@ type Node struct {
 	elems    int
 }
 
+func NewRoot() Node {
+	return Node{children: []Node{}}
+}
+
 func NewNode(children []Node) *Node {
 	return &Node{children: children, elems: elems(children)}
 }
