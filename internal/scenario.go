@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"regexp"
 	"time"
@@ -22,11 +21,19 @@ type ScenarioOption struct {
 	TimeFormat     string
 }
 
+type ScenarioStruct struct {
+	Hash     string
+	Count    int
+	FirstReq int
+	LastReq  int
+	Pattern  *Node
+}
+
 func NewScenarioProfiler() *ScenarioProfiler {
 	return &ScenarioProfiler{}
 }
 
-func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Node, error) {
+func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) ([]ScenarioStruct, error) {
 	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
 	for i, mg := range opt.MatchingGroups {
 		p, err := regexp.Compile(mg)
@@ -90,108 +97,70 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) (*Node, err
 				result[uidGot] = &Node{}
 			}
 			result[uidGot].Append(k)
-			//result[uidGot].Append(fmt.Sprintf("%d", endpointToInt[k]))
 			lastCalls[uidGot] = reqTimeSec
 		} else if uidSet != "" && uidSet != "-" {
 			// new user
 			result[uidSet] = &Node{}
 			result[uidSet].Append(k)
-			//result[uidSet].Append(fmt.Sprintf("%d", endpointToInt[k]))
 			firstCalls[uidSet] = reqTimeSec
 			lastCalls[uidSet] = reqTimeSec
 		}
 	}
 
-	//fmt.Println("====================")
-	//ks := lo.Keys(intToEndpoint)
-	//slices.Sort(ks)
-	//for _, i := range ks {
-	//	fmt.Printf("%2d %s\n", i, intToEndpoint[i])
-	//}
-	//fmt.Println("====================")
-
-	fmt.Printf("uids: %d\n", len(result))
-
-	type scenarioStruct struct {
-		hash     string
-		count    int
-		firstReq int
-		lastReq  int
-		pattern  *Node
-	}
-	scenarios := map[string]scenarioStruct{}
+	scenarios := map[string]ScenarioStruct{}
 	for uid, scenario := range result {
 		if s, ok := scenarios[scenario.String(true)]; ok {
-			s.count += 1
-			if firstCalls[uid] < s.firstReq {
-				s.firstReq = firstCalls[uid]
+			s.Count += 1
+			if firstCalls[uid] < s.FirstReq {
+				s.FirstReq = firstCalls[uid]
 			}
-			if s.lastReq < lastCalls[uid] {
-				s.lastReq = lastCalls[uid]
-
+			if s.LastReq < lastCalls[uid] {
+				s.LastReq = lastCalls[uid]
 			}
 			scenarios[scenario.String(true)] = s
 		} else {
-			scenarios[scenario.String(true)] = scenarioStruct{
-				hash:     scenario.String(true),
-				count:    1,
-				firstReq: firstCalls[uid],
-				lastReq:  lastCalls[uid],
-				pattern:  scenario,
+			scenarios[scenario.String(true)] = ScenarioStruct{
+				Hash:     scenario.String(true),
+				Count:    1,
+				FirstReq: firstCalls[uid],
+				LastReq:  lastCalls[uid],
+				Pattern:  scenario,
 			}
 		}
 	}
 
-	//// merge patterns
-	//ss := lo.Values(scenarios)
-	//tt := make([]scenarioStruct, 0)
-	//for _, s := range ss {
-	//	match := false
-	//	for i, t := range tt {
-	//		if p, ok := merge([]node{*s.pattern}, []node{*t.pattern}); ok {
-	//			tt[i] = scenarioStruct{
-	//				hash:     p.String(true),
-	//				count:    tt[i].count + s.count,
-	//				firstReq: lo.Min([]int{tt[i].firstReq, s.firstReq}),
-	//				lastReq:  lo.Max([]int{tt[i].lastReq, s.lastReq}),
-	//				pattern:  p,
-	//			}
-	//			match = true
-	//			break
-	//		}
-	//	}
-	//	if !match {
-	//		tt = append(tt, s)
-	//	}
-	//}
-	//
-	//slices.SortFunc(tt, func(a, b scenarioStruct) bool {
-	//	if a.firstReq != b.firstReq {
-	//		return a.firstReq < b.firstReq
-	//	}
-	//	if a.count != b.count {
-	//		return a.count > b.count
-	//	}
-	//	return a.pattern.String(true) > b.pattern.String(true)
-	//})
-	//fmt.Println("first call[s],last call[s],count,scenario node")
-	//for _, s := range tt {
-	//	fmt.Printf("%d,%d,%d,%s\n", s.firstReq, s.lastReq, s.count, s.pattern.String(true))
-	//}
-	vals := lo.Values(scenarios)
-	slices.SortFunc(vals, func(a, b scenarioStruct) bool {
-		if a.firstReq != b.firstReq {
-			return a.firstReq < b.firstReq
+	// merge patterns
+	ss := lo.Values(scenarios)
+	tt := make([]ScenarioStruct, 0)
+	for _, s := range ss {
+		match := false
+		for i, t := range tt {
+			if p, ok := Merge([]Node{*s.Pattern}, []Node{*t.Pattern}); ok {
+				tt[i] = ScenarioStruct{
+					Hash:     p.String(true),
+					Count:    s.Count + t.Count,
+					FirstReq: lo.Min([]int{s.FirstReq, t.FirstReq}),
+					LastReq:  lo.Max([]int{s.LastReq, t.LastReq}),
+					Pattern:  p,
+				}
+				match = true
+				break
+			}
 		}
-		if a.count != b.count {
-			return a.count > b.count
+		if !match {
+			tt = append(tt, s)
 		}
-		return a.pattern.String(true) > b.pattern.String(true)
-	})
-	fmt.Println("first call[s],last call[s],count,scenario node")
-	for _, s := range vals {
-		fmt.Printf("%d,%d,%d,%s\n", s.firstReq, s.lastReq, s.count, s.pattern.String(true))
 	}
 
-	return nil, nil
+	slices.SortFunc(tt, func(a, b ScenarioStruct) bool {
+		if a.FirstReq != b.FirstReq {
+			return a.FirstReq < b.FirstReq
+		}
+		if a.Count != b.Count {
+			return a.Count > b.Count
+		}
+		return a.Pattern.String(true) > b.Pattern.String(true)
+	})
+
+	return tt, nil
 }
