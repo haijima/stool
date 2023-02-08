@@ -64,14 +64,14 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 	format := v.GetString("format")
 	switch strings.ToLower(format) {
 	case "dot":
-		return createDot(cmd, result, fs)
+		return createTransitionDot(cmd, result, fs)
 	case "csv":
 		return printTransitionCsv(cmd, result)
 	}
 	return fmt.Errorf("invalid format flag: %s", format)
 }
 
-func createDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
+func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
 	graph := gographviz.NewEscape()
 	if err := graph.SetName("stool transition"); err != nil {
 		return err

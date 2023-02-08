@@ -137,14 +137,14 @@ func BenchmarkDeepNode(b *testing.B) {
 
 func validateElem(node Node) error {
 	if node.IsLeaf() {
-		if node.elems != 1 {
-			return fmt.Errorf("node elem should be 1 but: %d, node.String() = %s", node.elems, node.String(false))
+		if node.leaves != 1 {
+			return fmt.Errorf("node elem should be 1 but: %d, node.String() = %s", node.leaves, node.String(false))
 		}
 		return nil
 	}
 
-	if node.elems != elems(node.children) {
-		return fmt.Errorf("node elem should be %d but: %d, node.String() = %s", elems(node.children), node.elems, node.String(false))
+	if node.leaves != leaves(node.children) {
+		return fmt.Errorf("node elem should be %d but: %d, node.String() = %s", leaves(node.children), node.leaves, node.String(false))
 	}
 
 	for _, child := range node.children {
