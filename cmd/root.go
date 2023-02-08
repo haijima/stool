@@ -13,8 +13,10 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 		Use:          "stool",
 		Short:        "stool is access log profiler",
 		SilenceUsage: true, // don't show help content when error occurred
+		Version:      version(),
 	}
 
+	rootCmd.Flags().Bool("version", false, "Show the version of this command")
 	addLoggingOption(rootCmd, v)
 	useConfig(rootCmd, v)
 
@@ -24,19 +26,9 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
-	rootCmd.AddCommand(versionCmd)
 
-	// Split commands into main command group and utility command group
-	main := cobra.Group{ID: "main", Title: "Available Commands:"}
-	util := cobra.Group{ID: "util", Title: "Utility Commands:"}
-	rootCmd.AddGroup(&main)
-	rootCmd.AddGroup(&util)
-	for _, command := range rootCmd.Commands() {
-		command.GroupID = main.ID
-	}
-	rootCmd.SetHelpCommandGroupID(util.ID)
-	rootCmd.SetCompletionCommandGroupID(util.ID)
-	versionCmd.GroupID = util.ID
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
 	return rootCmd
 }
