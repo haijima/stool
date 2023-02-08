@@ -4,6 +4,7 @@ github.com/deckarep/golang-set/v2,https://github.com/deckarep/golang-set/blob/v2
 github.com/fsnotify/fsnotify,https://github.com/fsnotify/fsnotify/blob/v1.6.0/LICENSE,BSD-3-Clause
 github.com/haijima/stool,https://github.com/haijima/stool/blob/HEAD/LICENSE,MIT
 github.com/hashicorp/hcl,https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE,MPL-2.0
+github.com/lucasb-eyer/go-colorful,https://github.com/lucasb-eyer/go-colorful/blob/v1.2.0/LICENSE,MIT
 github.com/magiconair/properties,https://github.com/magiconair/properties/blob/v1.8.7/LICENSE.md,BSD-2-Clause
 github.com/mitchellh/mapstructure,https://github.com/mitchellh/mapstructure/blob/v1.5.0/LICENSE,MIT
 github.com/pelletier/go-toml/v2,https://github.com/pelletier/go-toml/blob/v2.0.6/LICENSE,MIT
@@ -18,7 +19,7 @@ github.com/subosito/gotenv,https://github.com/subosito/gotenv/blob/v1.4.2/LICENS
 go.uber.org/atomic,https://github.com/uber-go/atomic/blob/v1.9.0/LICENSE.txt,MIT
 go.uber.org/multierr,https://github.com/uber-go/multierr/blob/v1.8.0/LICENSE.txt,MIT
 go.uber.org/zap,https://github.com/uber-go/zap/blob/v1.21.0/LICENSE.txt,MIT
-golang.org/x/exp/constraints,https://cs.opensource.google/go/x/exp/+/bbda1eaf:LICENSE,BSD-3-Clause
+golang.org/x/exp,https://cs.opensource.google/go/x/exp/+/bbda1eaf:LICENSE,BSD-3-Clause
 golang.org/x/sys/unix,https://cs.opensource.google/go/x/sys/+/v0.3.0:LICENSE,BSD-3-Clause
 golang.org/x/text,https://cs.opensource.google/go/x/text/+/v0.5.0:LICENSE,BSD-3-Clause
 golang.org/x/xerrors,https://cs.opensource.google/go/x/xerrors/+/04be3eba:LICENSE,BSD-3-Clause
