@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/awalterschulze/gographviz"
+	"github.com/dustin/go-humanize"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -73,7 +74,22 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 
 func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
 	graph := gographviz.NewEscape()
-	if err := graph.SetName("stool transition"); err != nil {
+	if err := graph.SetName("root"); err != nil {
+		return err
+	}
+	if err := graph.AddAttr("root", "label", "stool transition"); err != nil {
+		return err
+	}
+	if err := graph.AddAttr("root", "tooltip", "stool transition"); err != nil {
+		return err
+	}
+	if err := graph.AddAttr("root", "labelloc", "t"); err != nil {
+		return err
+	}
+	if err := graph.AddAttr("root", "fontname", "Courier"); err != nil {
+		return err
+	}
+	if err := graph.AddAttr("root", "margin", "20"); err != nil {
 		return err
 	}
 	if err := graph.SetDir(true); err != nil {
@@ -83,11 +99,48 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 	eps := result.Endpoints.ToSlice()
 	sort.Strings(eps)
 
+	// Calculate the total of calls for each endpoint
+	totalSum := 0
+	for _, e := range eps {
+		totalSum += result.Sum[e]
+	}
+
+	// Add "start" and "end" nodes
+	for _, name := range []string{"start", "end"} {
+		if err := graph.AddNode("", name, map[string]string{
+			"shape":    "plaintext",
+			"fontname": "Courier",
+			"label":    name,
+		}); err != nil {
+			return err
+		}
+	}
+	// Add each endpoint as a node
 	for _, e := range eps {
 		if e == "" {
 			continue
 		}
-		err := graph.AddNode("G", e, nil)
+
+		sum := result.Sum[e]
+
+		shape := "box"
+		penwidth := "1"
+		margin := "0.2"
+		fontSize, _ := logNorm(sum, totalSum, 16)
+		fontSize += 8
+
+		err := graph.AddNode("", e, map[string]string{
+			"shape":     shape,
+			"style":     "\"solid,filled\"",
+			"color":     internal.Colorize(float64(sum)/float64(totalSum), false),
+			"fillcolor": internal.Colorize(float64(sum)/float64(totalSum), true),
+			"fontsize":  strconv.Itoa(int(fontSize)),
+			"fontname":  "Courier",
+			"penwidth":  penwidth,
+			"margin":    margin,
+			"label":     fmt.Sprintf("%s\nCall: %s (%s%%)", e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2)),
+			"tooltip":   fmt.Sprintf("%s\nCall: %s (%s%%)", e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2)),
+		})
 		if err != nil {
 			return err
 		}
@@ -95,9 +148,6 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 
 	for _, source := range eps {
 		for _, target := range eps {
-			if source == "" || target == "" {
-				continue
-			}
 			if result.Data[source] == nil {
 				continue
 			}
@@ -105,7 +155,27 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 			if count == 0 {
 				continue
 			}
-			err := graph.AddEdge(source, target, true, nil)
+
+			s := source
+			if source == "" {
+				s = "start"
+			}
+			t := target
+			if target == "" {
+				t = "end"
+			}
+
+			weight, _ := logNorm(count, totalSum, 1000)
+			weight += 1
+			width, _ := logNorm(count, totalSum, 7)
+			width += 1
+			err := graph.AddEdge(s, t, true, map[string]string{
+				"color":    internal.Colorize(float64(count)/float64(totalSum), false),
+				"penwidth": strconv.Itoa(int(width)),
+				"weight":   strconv.Itoa(int(weight)),
+				"len":      "3",
+				"label":    humanize.Comma(int64(count)),
+			})
 			if err != nil {
 				return err
 			}

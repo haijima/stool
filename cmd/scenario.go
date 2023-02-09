@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/awalterschulze/gographviz"
+	"github.com/dustin/go-humanize"
 	"github.com/haijima/stool/internal"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/spf13/afero"
@@ -28,6 +29,7 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 	scenarioCmd.PersistentFlags().StringSlice("ignore_patterns", []string{}, "comma-separated list of regular expression patterns to ignore URIs")
 	scenarioCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	scenarioCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
+	scenarioCmd.PersistentFlags().Bool("palette", false, "use color palette for each endpoint")
 	_ = v.BindPFlags(scenarioCmd.PersistentFlags())
 	v.SetFs(fs)
 
@@ -40,6 +42,7 @@ func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Vipe
 	ignorePatterns := v.GetStringSlice("ignore_patterns")
 	timeFormat := v.GetString("time_format")
 	format := v.GetString("format")
+	palette := v.GetBool("palette")
 	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	f, err := fs.Open(file)
@@ -61,7 +64,7 @@ func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Vipe
 
 	switch strings.ToLower(format) {
 	case "dot":
-		return createScenarioDot(cmd, scenarios, fs)
+		return createScenarioDot(cmd, scenarios, fs, palette)
 	case "csv":
 		return printScenarioCSV(scenarios)
 	}
@@ -82,7 +85,7 @@ type edge struct {
 	Weight int
 }
 
-func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, fs afero.Fs) error {
+func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, fs afero.Fs, usePalette bool) error {
 	graph := gographviz.NewEscape()
 	if err := graph.SetName("root"); err != nil {
 		return err
@@ -91,6 +94,9 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		return err
 	}
 	if err := graph.AddAttr("root", "label", "stool scenario"); err != nil {
+		return err
+	}
+	if err := graph.AddAttr("root", "tooltip", "stool scenario"); err != nil {
 		return err
 	}
 	if err := graph.AddAttr("root", "labelloc", "t"); err != nil {
@@ -114,11 +120,30 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		sumCount += scenario.Count
 	}
 
+	// create palette
+	palette := make(map[string]string, 0)
+	for _, scenarioStruct := range scenarioStructs {
+		for _, s := range internal.Flatten([]internal.Node{*scenarioStruct.Pattern}, make([]string, scenarioStruct.Pattern.Leaves())) {
+			if _, ok := palette[s]; !ok {
+				palette[s] = ""
+			}
+		}
+	}
+	p, err := colorful.HappyPalette(len(palette))
+	if err != nil {
+		return err
+	}
+	i := 0
+	for k := range palette {
+		palette[k] = p[i].Hex()
+		i++
+	}
+
 	for i, scenario := range scenarioStructs {
 		subGraphName := fmt.Sprintf("cluster_%d", i)
 		if err := graph.AddSubGraph("root", subGraphName, map[string]string{
-			"label":     fmt.Sprintf("Scenario #%d  (count: %d, req: %d - %d [s])", i+1, scenario.Count, scenario.FirstReq, scenario.LastReq),
-			"tooltip":   fmt.Sprintf("Scenario #%d  (count: %d, req: %d - %d [s])", i+1, scenario.Count, scenario.FirstReq, scenario.LastReq),
+			"label":     fmt.Sprintf("Scenario #%d  (count: %s, req: %d - %d [s])", i+1, humanize.Comma(int64(scenario.Count)), scenario.FirstReq, scenario.LastReq),
+			"tooltip":   fmt.Sprintf("Scenario #%d  (count: %s, req: %d - %d [s])", i+1, humanize.Comma(int64(scenario.Count)), scenario.FirstReq, scenario.LastReq),
 			"style":     "filled",
 			"labelloc":  "t",
 			"labeljust": "l",
@@ -134,6 +159,9 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		edges := make([]edge, 0, scenario.Pattern.Leaves())
 		patternToNodeAndEdge(*scenario.Pattern, nodes, &edges, 0)
 
+		color := internal.Colorize(float64(scenario.Count)/float64(sumCount), false)
+		fillcolor := internal.Colorize(float64(scenario.Count)/float64(sumCount), true)
+
 		for _, v := range []string{"start", "end"} {
 			if err := graph.AddNode(subGraphName, fmt.Sprintf("%d-%s", i, v), map[string]string{
 				"shape":    "plaintext",
@@ -144,11 +172,15 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 			}
 		}
 		for j, v := range nodes {
+			if usePalette {
+				color = "#333333"
+				fillcolor = palette[v]
+			}
 			if err := graph.AddNode(subGraphName, fmt.Sprintf("%d-%d", i, j), map[string]string{
 				"shape":     "box",
 				"style":     "filled",
-				"color":     colorize(float64(scenario.Count)/float64(sumCount), false),
-				"fillcolor": colorize(float64(scenario.Count)/float64(sumCount), true),
+				"color":     color,
+				"fillcolor": fillcolor,
 				"fontname":  "Courier",
 				"label":     v,
 				"tooltip":   v,
@@ -161,14 +193,14 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		if err := graph.AddEdge(fmt.Sprintf("%d-start", i), fmt.Sprintf("%d-%d", i, 0), true, map[string]string{
 			"penwidth": strconv.Itoa(penWidth),
 			"weight":   strconv.Itoa(1000),
-			"color":    colorize(float64(scenario.Count)/float64(sumCount), false),
+			"color":    color,
 		}); err != nil {
 			return err
 		}
 		if err := graph.AddEdge(fmt.Sprintf("%d-%d", i, scenario.Pattern.Leaves()-1), fmt.Sprintf("%d-end", i), true, map[string]string{
 			"penwidth": strconv.Itoa(penWidth),
 			"weight":   strconv.Itoa(1000),
-			"color":    colorize(float64(scenario.Count)/float64(sumCount), false),
+			"color":    color,
 		}); err != nil {
 			return err
 		}
@@ -185,7 +217,7 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 					"dir":      dir,
 					"penwidth": strconv.Itoa(penWidth),
 					"weight":   strconv.Itoa(edge.Weight),
-					"color":    colorize(float64(scenario.Count)/float64(sumCount), false),
+					"color":    color,
 				})
 			if err != nil {
 				return err
@@ -216,28 +248,4 @@ func patternToNodeAndEdge(n internal.Node, nodes map[int]string, edges *[]edge, 
 			*edges = append(*edges, edge{From: base + offset - 1, To: base, Weight: 1})
 		}
 	}
-}
-
-func colorize(score float64, isBackground bool) string {
-	if score < 0 {
-		score = 0
-	}
-	if score > 1 {
-		score = 1
-	}
-
-	score = score * score * score
-
-	var color colorful.Color
-
-	if isBackground {
-		from, _ := colorful.Hex("#e8e8e7")
-		to, _ := colorful.Hex("#ffaaaa")
-		color = from.BlendHcl(to, score)
-	} else {
-		from, _ := colorful.Hex("#999998")
-		to, _ := colorful.Hex("#b82601")
-		color = from.BlendHcl(to, score)
-	}
-	return color.Hex()
 }

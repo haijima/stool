@@ -6,6 +6,7 @@ require (
 	github.com/Wing924/ltsv v0.3.1
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/deckarep/golang-set/v2 v2.1.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/samber/lo v1.37.0
 	github.com/spf13/afero v1.9.3
