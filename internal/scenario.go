@@ -131,6 +131,9 @@ func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) ([]Scenario
 
 	// merge patterns
 	ss := lo.Values(scenarios)
+	slices.SortFunc(ss, func(a, b ScenarioStruct) bool {
+		return a.Pattern.String(true) > b.Pattern.String(true)
+	})
 	tt := make([]ScenarioStruct, 0)
 	for _, s := range ss {
 		match := false

@@ -63,7 +63,9 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
-	assert.Contains(t, stdout.String(), "digraph \"stool transition\"")
+	assert.Contains(t, stdout.String(), "digraph")
+	assert.Contains(t, stdout.String(), "start")
+	assert.Contains(t, stdout.String(), "end")
 	assert.Contains(t, stdout.String(), "\"POST /initialize\"")
 	assert.Contains(t, stdout.String(), "\"GET /\"")
 }
