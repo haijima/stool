@@ -1,6 +1,6 @@
 github.com/Wing924/ltsv,https://github.com/Wing924/ltsv/blob/v0.3.1/LICENSE,Apache-2.0
 github.com/awalterschulze/gographviz,https://github.com/awalterschulze/gographviz/blob/v2.0.3/LICENSE,BSD-3-Clause
-github.com/deckarep/golang-set/v2,https://github.com/deckarep/golang-set/blob/v2.1.0/LICENSE,MIT
+github.com/dustin/go-humanize,https://github.com/dustin/go-humanize/blob/v1.0.1/LICENSE,MIT
 github.com/fsnotify/fsnotify,https://github.com/fsnotify/fsnotify/blob/v1.6.0/LICENSE,BSD-3-Clause
 github.com/haijima/stool,https://github.com/haijima/stool/blob/HEAD/LICENSE,MIT
 github.com/hashicorp/hcl,https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE,MPL-2.0
