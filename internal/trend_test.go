@@ -10,13 +10,12 @@ import (
 func TestTrendProfiler_Profile(t *testing.T) {
 	p := NewTrendProfiler()
 	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:06 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-\n")
-	opt := TrendOption{
-		Interval:       5,
+	logReader, _ := NewLTSVReader(stdin, LTSVReadOpt{
 		TimeFormat:     "02/Jan/2006:15:04:05 -0700",
 		MatchingGroups: []string{"^/api/user/[^\\/]+$", "^/api/group/[^\\/]+$"},
-	}
+	})
 
-	trend, err := p.Profile(stdin, opt)
+	trend, err := p.Profile(logReader, 5)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, trend)
@@ -27,30 +26,14 @@ func TestTrendProfiler_Profile(t *testing.T) {
 func TestTrendProfiler_Profile_invalid_TimeFormat(t *testing.T) {
 	p := NewTrendProfiler()
 	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:06 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-\n")
-	opt := TrendOption{
-		Interval:       5,
+	logReader, _ := NewLTSVReader(stdin, LTSVReadOpt{
 		TimeFormat:     "02/01/2006:15:04:05 -0700", // invalid
 		MatchingGroups: []string{"^/api/user/[^\\/]+$", "^/api/group/[^\\/]+$"},
-	}
+	})
 
-	trend, err := p.Profile(stdin, opt)
+	trend, err := p.Profile(logReader, 5)
 
 	assert.ErrorContains(t, err, "cannot parse")
-	assert.Nil(t, trend)
-}
-
-func TestTrendProfiler_Profile_invalid_regexp(t *testing.T) {
-	p := NewTrendProfiler()
-	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\n")
-	opt := TrendOption{
-		Interval:       5,
-		TimeFormat:     "02/Jan/2006:15:04:05 -0700",
-		MatchingGroups: []string{"^/api/user/[^\\/+$"}, // invalid
-	}
-
-	trend, err := p.Profile(stdin, opt)
-
-	assert.ErrorContains(t, err, "error parsing regexp")
 	assert.Nil(t, trend)
 }
 
@@ -58,13 +41,12 @@ func TestTrendProfiler_Profile_invalid_ltsv_format(t *testing.T) {
 	p := NewTrendProfiler()
 	// invalid ltsv format
 	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost=192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\n")
-	opt := TrendOption{
-		Interval:       5,
+	logReader, _ := NewLTSVReader(stdin, LTSVReadOpt{
 		TimeFormat:     "02/Jan/2006:15:04:05 -0700",
 		MatchingGroups: []string{"^/api/user/[^\\/]+$"},
-	}
+	})
 
-	trend, err := p.Profile(stdin, opt)
+	trend, err := p.Profile(logReader, 5)
 
 	assert.ErrorContains(t, err, "bad line syntax")
 	assert.Nil(t, trend)

@@ -1,13 +1,8 @@
 package internal
 
 import (
-	"bufio"
-	"io"
-	"regexp"
 	"time"
 
-	"github.com/Wing924/ltsv"
-	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 )
@@ -33,77 +28,47 @@ func NewScenarioProfiler() *ScenarioProfiler {
 	return &ScenarioProfiler{}
 }
 
-func (p *ScenarioProfiler) Profile(in io.Reader, opt ScenarioOption) ([]ScenarioStruct, error) {
-	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
-	for i, mg := range opt.MatchingGroups {
-		p, err := regexp.Compile(mg)
-		if err != nil {
-			return nil, err
-		}
-		patterns[i] = p
-	}
-	ignorePatterns := make([]*regexp.Regexp, len(opt.IgnorePatterns))
-	for i, ip := range opt.IgnorePatterns {
-		p, err := regexp.Compile(ip)
-		if err != nil {
-			return nil, err
-		}
-		ignorePatterns[i] = p
-	}
-
-	scanner := bufio.NewScanner(in)
-	scanner.Split(bufio.ScanLines)
-
+func (p *ScenarioProfiler) Profile(reader *LTSVReader) ([]ScenarioStruct, error) {
 	var result = map[string]*Node{}
-	endpoints := mapset.NewSet[string]()
+	endpoints := map[string]struct{}{}
 	intToEndpoint := map[int]string{}
 	endpointToInt := map[string]int{}
 	firstCalls := map[string]int{}
 	lastCalls := map[string]int{}
+
 	i := 0
 	var startTime time.Time
-	for scanner.Scan() {
-		row := make(map[string]string)
-		row, err := ltsv.DefaultParser.ParseLineAsMap(scanner.Bytes(), row)
+	for reader.Read() {
+		entry, err := reader.Parse()
 		if err != nil {
 			return nil, err
 		}
-
-		reqTime, err := time.Parse(opt.TimeFormat, row["time"])
-		if err != nil {
-			return nil, err
-		}
-		if startTime.IsZero() {
-			startTime = reqTime
-		}
-		reqTimeSec := int(reqTime.Sub(startTime).Seconds())
-		uidSet := row["uidset"]
-		uidGot := row["uidgot"]
-		k := key(row["req"], patterns)
-		if isIgnored(row["req"], ignorePatterns) {
+		if entry.IsIgnored {
 			continue
 		}
 
-		added := endpoints.Add(k)
-		if added {
+		k := entry.Key()
+
+		if startTime.IsZero() {
+			startTime = entry.Time
+		}
+		reqTimeSec := int(entry.Time.Sub(startTime).Seconds())
+
+		_, exists := endpoints[k]
+		if !exists {
+			endpoints[k] = struct{}{}
 			intToEndpoint[i] = k
 			endpointToInt[k] = i
 			i++
 		}
 
-		if uidGot != "" && uidGot != "-" {
-			// revisiting user
-			if _, ok := result[uidGot]; !ok {
-				result[uidGot] = &Node{}
+		if entry.Uid != "" {
+			if entry.SetNewUid {
+				result[entry.Uid] = &Node{}
+				firstCalls[entry.Uid] = reqTimeSec
 			}
-			result[uidGot].Append(k)
-			lastCalls[uidGot] = reqTimeSec
-		} else if uidSet != "" && uidSet != "-" {
-			// new user
-			result[uidSet] = &Node{}
-			result[uidSet].Append(k)
-			firstCalls[uidSet] = reqTimeSec
-			lastCalls[uidSet] = reqTimeSec
+			result[entry.Uid].Append(k)
+			lastCalls[entry.Uid] = reqTimeSec
 		}
 	}
 

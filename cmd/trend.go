@@ -49,14 +49,15 @@ func runTrend(cmd *cobra.Command, p *internal.TrendProfiler, v *viper.Viper, fs 
 		return err
 	}
 	defer f.Close()
-
-	opt := internal.TrendOption{
+	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
-		Interval:       interval,
+	})
+	if err != nil {
+		return err
 	}
 
-	result, err := p.Profile(f, opt)
+	result, err := p.Profile(logReader, interval)
 	if err != nil {
 		return err
 	}
