@@ -50,14 +50,16 @@ func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Vipe
 		return err
 	}
 	defer f.Close()
-
-	opt := internal.ScenarioOption{
+	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
+	})
+	if err != nil {
+		return err
 	}
 
-	scenarios, err := p.Profile(f, opt)
+	scenarios, err := p.Profile(logReader)
 	if err != nil {
 		return err
 	}

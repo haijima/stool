@@ -1,13 +1,9 @@
 package internal
 
 import (
-	"bufio"
-	"io"
-	"regexp"
 	"sort"
 	"time"
 
-	"github.com/Wing924/ltsv"
 	"github.com/samber/lo"
 )
 
@@ -18,49 +14,32 @@ func NewTrendProfiler() *TrendProfiler {
 	return &TrendProfiler{}
 }
 
-func (p *TrendProfiler) Profile(in io.Reader, opt TrendOption) (*Trend, error) {
-	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
-	for i, mg := range opt.MatchingGroups {
-		p, err := regexp.Compile(mg)
-		if err != nil {
-			return nil, err
-		}
-		patterns[i] = p
-	}
-
-	scanner := bufio.NewScanner(in)
-	scanner.Split(bufio.ScanLines)
-
+func (p *TrendProfiler) Profile(reader *LTSVReader, interval int) (*Trend, error) {
 	var result = map[string]map[int]int{}
 	var startTime time.Time
 	step := 0
-	for scanner.Scan() {
-		row := make(map[string]string)
-		row, err := ltsv.DefaultParser.ParseLineAsMap(scanner.Bytes(), row)
+
+	for reader.Read() {
+		entry, err := reader.Parse()
 		if err != nil {
 			return nil, err
 		}
 
-		reqTime, err := time.Parse(opt.TimeFormat, row["time"])
-		if err != nil {
-			return nil, err
-		}
-
-		k := key(row["req"], patterns)
+		k := entry.Key()
 		if result[k] == nil {
 			result[k] = map[int]int{}
 		}
 
 		if startTime.IsZero() {
-			startTime = reqTime
+			startTime = entry.Time
 		}
-		t := int(reqTime.Sub(startTime).Seconds()) / opt.Interval
+		t := int(entry.Time.Sub(startTime).Seconds()) / interval
 		step = t + 1
 
 		result[k][t] += 1
 	}
 
-	res := NewTrend(result, opt.Interval, step)
+	res := NewTrend(result, interval, step)
 	return res, nil
 }
 

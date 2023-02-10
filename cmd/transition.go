@@ -50,14 +50,16 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 		return err
 	}
 	defer f.Close()
-
-	opt := internal.TransitionOption{
+	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
+	})
+	if err != nil {
+		return err
 	}
 
-	result, err := p.Profile(f, opt)
+	result, err := p.Profile(logReader)
 	if err != nil {
 		return err
 	}
@@ -96,7 +98,7 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 		return err
 	}
 
-	eps := result.Endpoints.ToSlice()
+	eps := result.Endpoints
 	sort.Strings(eps)
 
 	// Calculate the total of calls for each endpoint
@@ -189,7 +191,7 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 func printTransitionCsv(cmd *cobra.Command, result *internal.Transition) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
-	eps := result.Endpoints.ToSlice()
+	eps := result.Endpoints
 	sort.Strings(eps)
 
 	// header

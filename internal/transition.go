@@ -1,12 +1,7 @@
 package internal
 
 import (
-	"bufio"
-	"io"
-	"regexp"
-
-	"github.com/Wing924/ltsv"
-	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/samber/lo"
 )
 
 type TransitionProfiler struct {
@@ -16,61 +11,35 @@ func NewTransitionProfiler() *TransitionProfiler {
 	return &TransitionProfiler{}
 }
 
-func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Transition, error) {
-	patterns := make([]*regexp.Regexp, len(opt.MatchingGroups))
-	for i, mg := range opt.MatchingGroups {
-		p, err := regexp.Compile(mg)
-		if err != nil {
-			return nil, err
-		}
-		patterns[i] = p
-	}
-	ignorePatterns := make([]*regexp.Regexp, len(opt.IgnorePatterns))
-	for i, ip := range opt.IgnorePatterns {
-		p, err := regexp.Compile(ip)
-		if err != nil {
-			return nil, err
-		}
-		ignorePatterns[i] = p
-	}
-
-	scanner := bufio.NewScanner(in)
-	scanner.Split(bufio.ScanLines)
-
+func (p *TransitionProfiler) Profile(reader *LTSVReader) (*Transition, error) {
 	var result = map[string]map[string]int{}
 	result[""] = map[string]int{}
 	var lastVisit = map[string]string{}
 	var sum = map[string]int{}
-	endpoints := mapset.NewSet[string]()
-	endpoints.Add("")
-	for scanner.Scan() {
-		row := make(map[string]string)
-		row, err := ltsv.DefaultParser.ParseLineAsMap(scanner.Bytes(), row)
+	endpoints := map[string]struct{}{}
+	endpoints[""] = struct{}{}
+
+	for reader.Read() {
+		entry, err := reader.Parse()
 		if err != nil {
 			return nil, err
 		}
-
-		uidSet := row["uidset"]
-		uidGot := row["uidgot"]
-		k := key(row["req"], patterns)
-		if isIgnored(row["req"], ignorePatterns) {
+		if entry.IsIgnored {
 			continue
 		}
 
-		endpoints.Add(k)
+		k := entry.Key()
+
+		endpoints[k] = struct{}{}
 		sum[k] += 1
 
-		if uidGot != "" && uidGot != "-" {
-			// revisiting user
-			if result[lastVisit[uidGot]] == nil {
-				result[lastVisit[uidGot]] = map[string]int{}
+		if entry.Uid != "" {
+			lv := lastVisit[entry.Uid]
+			if result[lv] == nil {
+				result[lv] = map[string]int{}
 			}
-			result[lastVisit[uidGot]][k] += 1
-			lastVisit[uidGot] = k
-		} else if uidSet != "" && uidSet != "-" {
-			// new user
-			result[""][k] += 1
-			lastVisit[uidSet] = k
+			result[lv][k] += 1
+			lastVisit[entry.Uid] = k
 		}
 	}
 
@@ -81,7 +50,7 @@ func (p *TransitionProfiler) Profile(in io.Reader, opt TransitionOption) (*Trans
 		result[lv][""] += 1
 	}
 
-	res := NewTransition(result, endpoints, sum)
+	res := NewTransition(result, lo.Keys(endpoints), sum)
 	return res, nil
 }
 
@@ -93,11 +62,11 @@ type TransitionOption struct {
 
 type Transition struct {
 	Data      map[string]map[string]int
-	Endpoints mapset.Set[string]
+	Endpoints []string
 	Sum       map[string]int
 }
 
-func NewTransition(data map[string]map[string]int, endpoints mapset.Set[string], sum map[string]int) *Transition {
+func NewTransition(data map[string]map[string]int, endpoints []string, sum map[string]int) *Transition {
 	return &Transition{
 		Data:      data,
 		Endpoints: endpoints,

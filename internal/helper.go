@@ -19,15 +19,3 @@ func key(req string, patterns []*regexp.Regexp) string {
 	}
 	return fmt.Sprintf("%s %s", method, uri)
 }
-
-func isIgnored(req string, ignorePatterns []*regexp.Regexp) bool {
-	splitted := strings.Split(req, " ")
-	uri := strings.Split(splitted[1], "?")[0]
-
-	for _, p := range ignorePatterns {
-		if p.MatchString(uri) {
-			return true
-		}
-	}
-	return false
-}

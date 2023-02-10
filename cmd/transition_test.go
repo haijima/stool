@@ -55,7 +55,7 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	fileName := "./access.log"
 	v.Set("file", fileName)
 	_, _ = fs.Create(fileName)
-	_ = afero.WriteFile(fs, fileName, []byte("req:POST /initialize HTTP/2.0\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\nreq:GET / HTTP/2.0\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\nreq:GET / HTTP/2.0\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
+	_ = afero.WriteFile(fs, fileName, []byte("time:01/Jan/2023:12:00:01 +0900\treq:POST /initialize HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\ntime:01/Jan/2023:12:00:02 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\ntime:01/Jan/2023:12:00:03 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
 
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
@@ -94,7 +94,7 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	v.Set("file", fileName)
 	v.Set("format", "csv")
 	_, _ = fs.Create(fileName)
-	_ = afero.WriteFile(fs, fileName, []byte("req:POST /initialize HTTP/2.0\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\nreq:GET / HTTP/2.0\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\nreq:GET / HTTP/2.0\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
+	_ = afero.WriteFile(fs, fileName, []byte("time:01/Jan/2023:12:00:01 +0900\treq:POST /initialize HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\ntime:01/Jan/2023:12:00:02 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\ntime:01/Jan/2023:12:00:03 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
 
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
@@ -115,7 +115,7 @@ func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	v.Set("file", fileName)
 	v.Set("format", "hoge")
 	_, _ = fs.Create(fileName)
-	_ = afero.WriteFile(fs, fileName, []byte("req:POST /initialize HTTP/2.0\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\nreq:GET / HTTP/2.0\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\nreq:GET / HTTP/2.0\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
+	_ = afero.WriteFile(fs, fileName, []byte("time:01/Jan/2023:12:00:01 +0900\treq:POST /initialize HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\ntime:01/Jan/2023:12:00:02 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\ntime:01/Jan/2023:12:00:03 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
 
 	err := cmd.RunE(cmd, []string{})
 
