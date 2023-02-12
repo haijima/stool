@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/haijima/stool/internal"
@@ -135,4 +136,23 @@ func Test_printTrendCsv(t *testing.T) {
 GET,/,1,2,3,4,0
 POST,/,1,0,0,0,0
 `, stdout.String())
+}
+
+func BenchmarkTrendCommand_RunE(b *testing.B) {
+	p := internal.NewTrendProfiler()
+	v := viper.New()
+	fs := afero.NewOsFs()
+	cmd := NewTrendCommand(p, v, fs)
+
+	dir, _ := os.Getwd()
+	fileName := dir + "/testdata/access.log"
+	v.Set("file", fileName)
+	v.Set("interval", "5")
+
+	stdout := new(bytes.Buffer)
+	cmd.SetOut(stdout)
+
+	for i := 0; i < b.N; i++ {
+		_ = cmd.RunE(cmd, []string{})
+	}
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/haijima/stool/internal"
@@ -190,5 +191,24 @@ func Test_logNorm(t *testing.T) {
 			}
 			assert.InDeltaf(t, tt.want, got, 0.0000000001, "logNorm(%v, %v, %v)", tt.args.num, tt.args.src, tt.args.target)
 		})
+	}
+}
+
+func BenchmarkTransitionCommand_RunE(b *testing.B) {
+	p := internal.NewTransitionProfiler()
+	v := viper.New()
+	fs := afero.NewOsFs()
+	cmd := NewTransitionCmd(p, v, fs)
+
+	dir, _ := os.Getwd()
+	fileName := dir + "/testdata/access.log"
+	v.Set("file", fileName)
+	v.Set("interval", "5")
+
+	stdout := new(bytes.Buffer)
+	cmd.SetOut(stdout)
+
+	for i := 0; i < b.N; i++ {
+		_ = cmd.RunE(cmd, []string{})
 	}
 }
