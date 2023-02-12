@@ -203,7 +203,6 @@ func BenchmarkTransitionCommand_RunE(b *testing.B) {
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"
 	v.Set("file", fileName)
-	v.Set("interval", "5")
 
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
