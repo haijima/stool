@@ -3,7 +3,7 @@ before:
     - go mod tidy
     #- go generate ./...
 builds:
-  - main: ./cmd/stool/main.go
+  - main: ./main.go
     binary: stool
     ldflags:
       - -s -w
