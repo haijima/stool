@@ -8,7 +8,7 @@ stool is a CLI tool to analyze access pattern from Nginx access log.
 ## Installation
 
 ```
-go install github.com/haijima/stool/cmd/stool@latest
+go install github.com/haijima/stool@latest
 ```
 or you can download binaries from [Releases](https://github.com/haijima/stool/releases).
 
