@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/haijima/stool/internal/log"
 	"github.com/samber/lo"
 )
 
@@ -11,7 +12,7 @@ func NewTransitionProfiler() *TransitionProfiler {
 	return &TransitionProfiler{}
 }
 
-func (p *TransitionProfiler) Profile(reader *LTSVReader) (*Transition, error) {
+func (p *TransitionProfiler) Profile(reader *log.LTSVReader) (*Transition, error) {
 	var result = map[string]map[string]int{}
 	result[""] = map[string]int{}
 	var lastVisit = map[string]string{}

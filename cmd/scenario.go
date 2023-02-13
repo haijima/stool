@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/haijima/stool/internal/graphviz"
+	"github.com/haijima/stool/internal/log"
+	"github.com/haijima/stool/internal/pattern"
 	"strconv"
 	"strings"
 
@@ -50,7 +53,7 @@ func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Vipe
 		return err
 	}
 	defer f.Close()
-	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
@@ -125,7 +128,7 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 	// create palette
 	palette := make(map[string]string, 0)
 	for _, scenarioStruct := range scenarioStructs {
-		for _, s := range internal.Flatten([]internal.Node{*scenarioStruct.Pattern}, make([]string, scenarioStruct.Pattern.Leaves())) {
+		for _, s := range pattern.Flatten([]pattern.Node{*scenarioStruct.Pattern}, make([]string, scenarioStruct.Pattern.Leaves())) {
 			if _, ok := palette[s]; !ok {
 				palette[s] = ""
 			}
@@ -161,8 +164,8 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		edges := make([]edge, 0, scenario.Pattern.Leaves())
 		patternToNodeAndEdge(*scenario.Pattern, nodes, &edges, 0)
 
-		color := internal.Colorize(float64(scenario.Count)/float64(sumCount), false)
-		fillcolor := internal.Colorize(float64(scenario.Count)/float64(sumCount), true)
+		color := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), false)
+		fillcolor := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), true)
 
 		for _, v := range []string{"start", "end"} {
 			if err := graph.AddNode(subGraphName, fmt.Sprintf("%d-%s", i, v), map[string]string{
@@ -231,7 +234,7 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 	return nil
 }
 
-func patternToNodeAndEdge(n internal.Node, nodes map[int]string, edges *[]edge, base int) {
+func patternToNodeAndEdge(n pattern.Node, nodes map[int]string, edges *[]edge, base int) {
 	if n.IsLeaf() {
 		nodes[base] = n.Value()
 		return

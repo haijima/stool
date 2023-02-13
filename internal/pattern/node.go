@@ -1,4 +1,4 @@
-package internal
+package pattern
 
 import (
 	"golang.org/x/exp/slices"

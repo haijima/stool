@@ -3,6 +3,8 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/haijima/stool/internal/graphviz"
+	"github.com/haijima/stool/internal/log"
 	"math"
 	"sort"
 	"strconv"
@@ -50,7 +52,7 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 		return err
 	}
 	defer f.Close()
-	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
@@ -134,8 +136,8 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 		err := graph.AddNode("", e, map[string]string{
 			"shape":     shape,
 			"style":     "\"solid,filled\"",
-			"color":     internal.Colorize(float64(sum)/float64(totalSum), false),
-			"fillcolor": internal.Colorize(float64(sum)/float64(totalSum), true),
+			"color":     graphviz.Colorize(float64(sum)/float64(totalSum), false),
+			"fillcolor": graphviz.Colorize(float64(sum)/float64(totalSum), true),
 			"fontsize":  strconv.Itoa(int(fontSize)),
 			"fontname":  "Courier",
 			"penwidth":  penwidth,
@@ -172,7 +174,7 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 			width, _ := logNorm(count, totalSum, 7)
 			width += 1
 			err := graph.AddEdge(s, t, true, map[string]string{
-				"color":    internal.Colorize(float64(count)/float64(totalSum), false),
+				"color":    graphviz.Colorize(float64(count)/float64(totalSum), false),
 				"penwidth": strconv.Itoa(int(width)),
 				"weight":   strconv.Itoa(int(weight)),
 				"len":      "3",
