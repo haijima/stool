@@ -5,10 +5,8 @@ import (
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
 	"github.com/haijima/stool/internal/pattern"
-	"strconv"
 	"strings"
 
-	"github.com/awalterschulze/gographviz"
 	"github.com/dustin/go-humanize"
 	"github.com/haijima/stool/internal"
 	"github.com/lucasb-eyer/go-colorful"
@@ -87,36 +85,12 @@ func printScenarioCSV(scenarioStructs []internal.ScenarioStruct) error {
 type edge struct {
 	From   int
 	To     int
-	Weight int
+	Weight float64
 }
 
 func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, fs afero.Fs, usePalette bool) error {
-	graph := gographviz.NewEscape()
-	if err := graph.SetName("root"); err != nil {
-		return err
-	}
-	if err := graph.SetDir(true); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "label", "stool scenario"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "tooltip", "stool scenario"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "labelloc", "t"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "labeljust", "l"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "rankdir", "LR"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "fontname", "Courier"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "margin", "20"); err != nil {
+	graph, err := graphviz.NewEscapedDirectedGraph("stool scenario", true)
+	if err != nil {
 		return err
 	}
 
@@ -146,17 +120,8 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 
 	for i, scenario := range scenarioStructs {
 		subGraphName := fmt.Sprintf("cluster_%d", i)
-		if err := graph.AddSubGraph("root", subGraphName, map[string]string{
-			"label":     fmt.Sprintf("Scenario #%d  (count: %s, req: %d - %d [s])", i+1, humanize.Comma(int64(scenario.Count)), scenario.FirstReq, scenario.LastReq),
-			"tooltip":   fmt.Sprintf("Scenario #%d  (count: %s, req: %d - %d [s])", i+1, humanize.Comma(int64(scenario.Count)), scenario.FirstReq, scenario.LastReq),
-			"style":     "filled",
-			"labelloc":  "t",
-			"labeljust": "l",
-			"color":     "#cccccc",
-			"fillcolor": "#ffffff",
-			"sep":       "20",
-			"rank":      "min",
-		}); err != nil {
+		subGraphTitle := fmt.Sprintf("Scenario #%d  (count: %s, req: %d - %d [s])", i+1, humanize.Comma(int64(scenario.Count)), scenario.FirstReq, scenario.LastReq)
+		if err := graphviz.AddSubgraph(graph, subGraphName, subGraphTitle); err != nil {
 			return err
 		}
 
@@ -165,66 +130,33 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		patternToNodeAndEdge(*scenario.Pattern, nodes, &edges, 0)
 
 		color := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), false)
-		fillcolor := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), true)
+		fillColor := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), true)
 
 		for _, v := range []string{"start", "end"} {
-			if err := graph.AddNode(subGraphName, fmt.Sprintf("%d-%s", i, v), map[string]string{
-				"shape":    "plaintext",
-				"fontname": "Courier",
-				"label":    v,
-			}); err != nil {
+			if err := graphviz.AddTextNode(graph, subGraphName, fmt.Sprintf("%d-%s", i, v), v); err != nil {
 				return err
 			}
 		}
 		for j, v := range nodes {
 			if usePalette {
 				color = "#333333"
-				fillcolor = palette[v]
+				fillColor = palette[v]
 			}
-			if err := graph.AddNode(subGraphName, fmt.Sprintf("%d-%d", i, j), map[string]string{
-				"shape":     "box",
-				"style":     "filled",
-				"color":     color,
-				"fillcolor": fillcolor,
-				"fontname":  "Courier",
-				"label":     v,
-				"tooltip":   v,
-			}); err != nil {
+			if err := graphviz.AddBoxNode(graph, subGraphName, fmt.Sprintf("%d-%d", i, j), v, color, fillColor, 14); err != nil {
 				return err
 			}
 		}
 
-		penWidth := int(float64(scenario.Count)*10/float64(sumCount)) + 1
-		if err := graph.AddEdge(fmt.Sprintf("%d-start", i), fmt.Sprintf("%d-%d", i, 0), true, map[string]string{
-			"penwidth": strconv.Itoa(penWidth),
-			"weight":   strconv.Itoa(1000),
-			"color":    color,
-		}); err != nil {
+		penWidth := float64(scenario.Count)*10/float64(sumCount) + 1
+
+		if err := graphviz.AddEdge(graph, fmt.Sprintf("%d-start", i), fmt.Sprintf("%d-%d", i, 0), color, penWidth, 1000); err != nil {
 			return err
 		}
-		if err := graph.AddEdge(fmt.Sprintf("%d-%d", i, scenario.Pattern.Leaves()-1), fmt.Sprintf("%d-end", i), true, map[string]string{
-			"penwidth": strconv.Itoa(penWidth),
-			"weight":   strconv.Itoa(1000),
-			"color":    color,
-		}); err != nil {
+		if err := graphviz.AddEdge(graph, fmt.Sprintf("%d-%d", i, scenario.Pattern.Leaves()-1), fmt.Sprintf("%d-end", i), color, penWidth, 1000); err != nil {
 			return err
 		}
 		for _, edge := range edges {
-			dir := "forward"
-			if edge.From == edge.To {
-				dir = "back"
-			}
-			err := graph.AddEdge(
-				fmt.Sprintf("%d-%d", i, edge.From),
-				fmt.Sprintf("%d-%d", i, edge.To),
-				true,
-				map[string]string{
-					"dir":      dir,
-					"penwidth": strconv.Itoa(penWidth),
-					"weight":   strconv.Itoa(edge.Weight),
-					"color":    color,
-				})
-			if err != nil {
+			if err := graphviz.AddEdge(graph, fmt.Sprintf("%d-%d", i, edge.From), fmt.Sprintf("%d-%d", i, edge.To), color, penWidth, edge.Weight); err != nil {
 				return err
 			}
 		}
