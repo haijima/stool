@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/haijima/stool/internal/log"
 	"sort"
 	"time"
 
@@ -14,7 +15,7 @@ func NewTrendProfiler() *TrendProfiler {
 	return &TrendProfiler{}
 }
 
-func (p *TrendProfiler) Profile(reader *LTSVReader, interval int) (*Trend, error) {
+func (p *TrendProfiler) Profile(reader *log.LTSVReader, interval int) (*Trend, error) {
 	var result = map[string]map[int]int{}
 	var startTime time.Time
 	step := 0

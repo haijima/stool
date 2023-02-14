@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/haijima/stool/internal/log"
 	"strconv"
 	"strings"
 
@@ -49,7 +50,7 @@ func runTrend(cmd *cobra.Command, p *internal.TrendProfiler, v *viper.Viper, fs 
 		return err
 	}
 	defer f.Close()
-	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
 	})

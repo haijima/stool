@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"github.com/haijima/stool/internal/log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 func TestTrendProfiler_Profile(t *testing.T) {
 	p := NewTrendProfiler()
 	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:06 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-\n")
-	logReader, _ := NewLTSVReader(stdin, LTSVReadOpt{
+	logReader, _ := log.NewLTSVReader(stdin, log.LTSVReadOpt{
 		TimeFormat:     "02/Jan/2006:15:04:05 -0700",
 		MatchingGroups: []string{"^/api/user/[^\\/]+$", "^/api/group/[^\\/]+$"},
 	})
@@ -26,7 +27,7 @@ func TestTrendProfiler_Profile(t *testing.T) {
 func TestTrendProfiler_Profile_invalid_TimeFormat(t *testing.T) {
 	p := NewTrendProfiler()
 	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:06 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-\n")
-	logReader, _ := NewLTSVReader(stdin, LTSVReadOpt{
+	logReader, _ := log.NewLTSVReader(stdin, log.LTSVReadOpt{
 		TimeFormat:     "02/01/2006:15:04:05 -0700", // invalid
 		MatchingGroups: []string{"^/api/user/[^\\/]+$", "^/api/group/[^\\/]+$"},
 	})
@@ -41,7 +42,7 @@ func TestTrendProfiler_Profile_invalid_ltsv_format(t *testing.T) {
 	p := NewTrendProfiler()
 	// invalid ltsv format
 	stdin := bytes.NewBufferString("time:20/Jan/2023:14:39:01 +0900\thost=192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\n")
-	logReader, _ := NewLTSVReader(stdin, LTSVReadOpt{
+	logReader, _ := log.NewLTSVReader(stdin, log.LTSVReadOpt{
 		TimeFormat:     "02/Jan/2006:15:04:05 -0700",
 		MatchingGroups: []string{"^/api/user/[^\\/]+$"},
 	})

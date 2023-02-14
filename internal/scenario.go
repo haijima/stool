@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"github.com/haijima/stool/internal/log"
+	"github.com/haijima/stool/internal/pattern"
 	"time"
 
 	"github.com/samber/lo"
@@ -21,15 +23,15 @@ type ScenarioStruct struct {
 	Count    int
 	FirstReq int
 	LastReq  int
-	Pattern  *Node
+	Pattern  *pattern.Node
 }
 
 func NewScenarioProfiler() *ScenarioProfiler {
 	return &ScenarioProfiler{}
 }
 
-func (p *ScenarioProfiler) Profile(reader *LTSVReader) ([]ScenarioStruct, error) {
-	var result = map[string]*Node{}
+func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, error) {
+	var result = map[string]*pattern.Node{}
 	endpoints := map[string]struct{}{}
 	intToEndpoint := map[int]string{}
 	endpointToInt := map[string]int{}
@@ -64,7 +66,7 @@ func (p *ScenarioProfiler) Profile(reader *LTSVReader) ([]ScenarioStruct, error)
 
 		if entry.Uid != "" {
 			if entry.SetNewUid {
-				result[entry.Uid] = &Node{}
+				result[entry.Uid] = &pattern.Node{}
 				firstCalls[entry.Uid] = reqTimeSec
 			}
 			result[entry.Uid].Append(k)
@@ -103,7 +105,7 @@ func (p *ScenarioProfiler) Profile(reader *LTSVReader) ([]ScenarioStruct, error)
 	for _, s := range ss {
 		match := false
 		for i, t := range tt {
-			if p, ok := Merge([]Node{*s.Pattern}, []Node{*t.Pattern}); ok {
+			if p, ok := pattern.Merge([]pattern.Node{*s.Pattern}, []pattern.Node{*t.Pattern}); ok {
 				tt[i] = ScenarioStruct{
 					Hash:     p.String(true),
 					Count:    s.Count + t.Count,

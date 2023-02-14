@@ -1,4 +1,4 @@
-package internal
+package graphviz
 
 import "github.com/lucasb-eyer/go-colorful"
 

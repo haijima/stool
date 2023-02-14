@@ -3,12 +3,13 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/haijima/stool/internal/graphviz"
+	"github.com/haijima/stool/internal/log"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/awalterschulze/gographviz"
 	"github.com/dustin/go-humanize"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
@@ -50,7 +51,7 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 		return err
 	}
 	defer f.Close()
-	logReader, err := internal.NewLTSVReader(f, internal.LTSVReadOpt{
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
@@ -75,26 +76,8 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 }
 
 func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
-	graph := gographviz.NewEscape()
-	if err := graph.SetName("root"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "label", "stool transition"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "tooltip", "stool transition"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "labelloc", "t"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "fontname", "Courier"); err != nil {
-		return err
-	}
-	if err := graph.AddAttr("root", "margin", "20"); err != nil {
-		return err
-	}
-	if err := graph.SetDir(true); err != nil {
+	graph, err := graphviz.NewEscapedDirectedGraph("stool transition", false)
+	if err != nil {
 		return err
 	}
 
@@ -109,11 +92,7 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 
 	// Add "start" and "end" nodes
 	for _, name := range []string{"start", "end"} {
-		if err := graph.AddNode("", name, map[string]string{
-			"shape":    "plaintext",
-			"fontname": "Courier",
-			"label":    name,
-		}); err != nil {
+		if err := graphviz.AddTextNode(graph, "root", name, name); err != nil {
 			return err
 		}
 	}
@@ -124,26 +103,13 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 		}
 
 		sum := result.Sum[e]
-
-		shape := "box"
-		penwidth := "1"
-		margin := "0.2"
 		fontSize, _ := logNorm(sum, totalSum, 16)
 		fontSize += 8
 
-		err := graph.AddNode("", e, map[string]string{
-			"shape":     shape,
-			"style":     "\"solid,filled\"",
-			"color":     internal.Colorize(float64(sum)/float64(totalSum), false),
-			"fillcolor": internal.Colorize(float64(sum)/float64(totalSum), true),
-			"fontsize":  strconv.Itoa(int(fontSize)),
-			"fontname":  "Courier",
-			"penwidth":  penwidth,
-			"margin":    margin,
-			"label":     fmt.Sprintf("%s\nCall: %s (%s%%)", e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2)),
-			"tooltip":   fmt.Sprintf("%s\nCall: %s (%s%%)", e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2)),
-		})
-		if err != nil {
+		nodeTitle := fmt.Sprintf("%s\nCall: %s (%s%%)", e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2))
+		color := graphviz.Colorize(float64(sum)/float64(totalSum), false)
+		fillColor := graphviz.Colorize(float64(sum)/float64(totalSum), true)
+		if err := graphviz.AddBoxNode(graph, "root", e, nodeTitle, color, fillColor, fontSize); err != nil {
 			return err
 		}
 	}
@@ -169,16 +135,10 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 
 			weight, _ := logNorm(count, totalSum, 1000)
 			weight += 1
-			width, _ := logNorm(count, totalSum, 7)
-			width += 1
-			err := graph.AddEdge(s, t, true, map[string]string{
-				"color":    internal.Colorize(float64(count)/float64(totalSum), false),
-				"penwidth": strconv.Itoa(int(width)),
-				"weight":   strconv.Itoa(int(weight)),
-				"len":      "3",
-				"label":    humanize.Comma(int64(count)),
-			})
-			if err != nil {
+			penWidth, _ := logNorm(count, totalSum, 7)
+			penWidth += 1
+			color := graphviz.Colorize(float64(count)/float64(totalSum), false)
+			if err := graphviz.AddEdge(graph, s, t, color, penWidth, weight); err != nil {
 				return err
 			}
 		}
