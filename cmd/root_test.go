@@ -20,6 +20,27 @@ func TestNewRootCmd(t *testing.T) {
 	assert.False(t, cmd.Runnable(), "RootCommand should not runnable.")
 }
 
+func TestNewRootCmd_Flag(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	v := viper.New()
+	cmd := NewRootCmd(v, fs)
+	fileFlag := cmd.PersistentFlags().Lookup("file")
+	matchingGroupsFlag := cmd.PersistentFlags().Lookup("matching_groups")
+	ignorePatternsFlag := cmd.PersistentFlags().Lookup("ignore_patterns")
+	timeFormatFlag := cmd.PersistentFlags().Lookup("time_format")
+
+	assert.True(t, cmd.HasAvailablePersistentFlags(), "transition command should have available flag")
+	assert.NotNil(t, fileFlag, "transition command should have \"file\" flag")
+	assert.Equal(t, "f", fileFlag.Shorthand, "\"file\" flag's shorthand is \"f\"")
+	assert.Equal(t, "string", fileFlag.Value.Type(), "\"file\" flag is string")
+	assert.NotNil(t, matchingGroupsFlag, "transition command should have \"matching_groups\" flag")
+	assert.Equal(t, "m", matchingGroupsFlag.Shorthand, "\"matching_groups\" flag's shorthand is \"m\"")
+	assert.Equal(t, "stringSlice", matchingGroupsFlag.Value.Type(), "\"matching_groups\" flag is string slice")
+	assert.NotNil(t, ignorePatternsFlag, "transition command should have \"ignore_patterns\" flag")
+	assert.Equal(t, "stringSlice", ignorePatternsFlag.Value.Type(), "\"ignore_patterns\" flag is string slice")
+	assert.NotNil(t, timeFormatFlag, "transition command should have \"time_format\" flag")
+	assert.Equal(t, "string", timeFormatFlag.Value.Type(), "\"time_format\" flag is string")
+}
 func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()

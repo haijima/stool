@@ -28,10 +28,6 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 		},
 	}
 
-	transitionCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
-	transitionCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
-	transitionCmd.PersistentFlags().StringSlice("ignore_patterns", []string{}, "comma-separated list of regular expression patterns to ignore URIs")
-	transitionCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	transitionCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
 	_ = v.BindPFlags(transitionCmd.PersistentFlags())
 	v.SetFs(fs)

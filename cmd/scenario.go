@@ -25,10 +25,6 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 			return runScenario(cmd, p, v, fs)
 		},
 	}
-	scenarioCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
-	scenarioCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
-	scenarioCmd.PersistentFlags().StringSlice("ignore_patterns", []string{}, "comma-separated list of regular expression patterns to ignore URIs")
-	scenarioCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	scenarioCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
 	scenarioCmd.PersistentFlags().Bool("palette", false, "use color palette for each endpoint")
 	_ = v.BindPFlags(scenarioCmd.PersistentFlags())
