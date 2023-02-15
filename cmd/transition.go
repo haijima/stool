@@ -3,8 +3,6 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/haijima/stool/internal/graphviz"
-	"github.com/haijima/stool/internal/log"
 	"math"
 	"sort"
 	"strconv"
@@ -12,6 +10,8 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/haijima/stool/internal"
+	"github.com/haijima/stool/internal/graphviz"
+	"github.com/haijima/stool/internal/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -72,10 +72,7 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 }
 
 func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
-	graph, err := graphviz.NewEscapedDirectedGraph("stool transition", false)
-	if err != nil {
-		return err
-	}
+	graph := graphviz.NewGraph("root", "stool transition")
 
 	eps := result.Endpoints
 	sort.Strings(eps)
@@ -88,7 +85,8 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 
 	// Add "start" and "end" nodes
 	for _, name := range []string{"start", "end"} {
-		if err := graphviz.AddTextNode(graph, "root", name, name); err != nil {
+		node := graphviz.NewTextNode(name, name)
+		if err := graph.AddTextNode(node); err != nil {
 			return err
 		}
 	}
@@ -103,9 +101,10 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 		fontSize += 8
 
 		nodeTitle := fmt.Sprintf("%s\nCall: %s (%s%%)", e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2))
-		color := graphviz.Colorize(float64(sum)/float64(totalSum), false)
-		fillColor := graphviz.Colorize(float64(sum)/float64(totalSum), true)
-		if err := graphviz.AddBoxNode(graph, "root", e, nodeTitle, color, fillColor, fontSize); err != nil {
+		node := graphviz.NewBoxNode(e, nodeTitle)
+		node.SetColorLevel(sum, totalSum)
+		node.FontSize = fontSize
+		if err := graph.AddBoxNode(node); err != nil {
 			return err
 		}
 	}
@@ -133,15 +132,17 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 			weight += 1
 			penWidth, _ := logNorm(count, totalSum, 7)
 			penWidth += 1
-			color := graphviz.Colorize(float64(count)/float64(totalSum), false)
-			if err := graphviz.AddEdge(graph, s, t, color, penWidth, weight); err != nil {
+			edge := graphviz.NewEdge(s, t)
+			edge.SetColorLevel(count, totalSum)
+			edge.PenWidth = penWidth
+			edge.Weight = weight
+			if err := graph.AddEdge(edge); err != nil {
 				return err
 			}
 		}
 	}
 
-	fmt.Fprintln(cmd.OutOrStdout(), graph.String())
-	return nil
+	return graph.Write(cmd.OutOrStdout())
 }
 
 func printTransitionCsv(cmd *cobra.Command, result *internal.Transition) error {

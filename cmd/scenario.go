@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/haijima/stool/internal/graphviz"
-	"github.com/haijima/stool/internal/log"
-	"github.com/haijima/stool/internal/pattern"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/haijima/stool/internal"
+	"github.com/haijima/stool/internal/graphviz"
+	"github.com/haijima/stool/internal/log"
+	"github.com/haijima/stool/internal/pattern"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -78,17 +78,9 @@ func printScenarioCSV(scenarioStructs []internal.ScenarioStruct) error {
 	return nil
 }
 
-type edge struct {
-	From   int
-	To     int
-	Weight float64
-}
-
 func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, fs afero.Fs, usePalette bool) error {
-	graph, err := graphviz.NewEscapedDirectedGraph("stool scenario", true)
-	if err != nil {
-		return err
-	}
+	graph := graphviz.NewGraph("root", "stool scenario")
+	graph.IsHorizontal = true
 
 	sumCount := 0
 	for _, scenario := range scenarioStructs {
@@ -117,7 +109,8 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 	for i, scenario := range scenarioStructs {
 		subGraphName := fmt.Sprintf("cluster_%d", i)
 		subGraphTitle := fmt.Sprintf("Scenario #%d  (count: %s, req: %d - %d [s])", i+1, humanize.Comma(int64(scenario.Count)), scenario.FirstReq, scenario.LastReq)
-		if err := graphviz.AddSubgraph(graph, subGraphName, subGraphTitle); err != nil {
+		subGraph := graphviz.NewGraph(subGraphName, subGraphTitle)
+		if err := graph.AddSubGraph(subGraph); err != nil {
 			return err
 		}
 
@@ -125,41 +118,59 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		edges := make([]edge, 0, scenario.Pattern.Leaves())
 		patternToNodeAndEdge(*scenario.Pattern, nodes, &edges, 0)
 
-		color := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), false)
-		fillColor := graphviz.Colorize(float64(scenario.Count)/float64(sumCount), true)
-
 		for _, v := range []string{"start", "end"} {
-			if err := graphviz.AddTextNode(graph, subGraphName, fmt.Sprintf("%d-%s", i, v), v); err != nil {
+			node := graphviz.NewTextNode(fmt.Sprintf("%d-%s", i, v), v)
+			if err := subGraph.AddTextNode(node); err != nil {
 				return err
 			}
 		}
 		for j, v := range nodes {
+			node := graphviz.NewBoxNode(fmt.Sprintf("%d-%d", i, j), v)
+			node.SetColorLevel(scenario.Count, sumCount)
 			if usePalette {
-				color = "#333333"
-				fillColor = palette[v]
+				node.FillColor = palette[v]
 			}
-			if err := graphviz.AddBoxNode(graph, subGraphName, fmt.Sprintf("%d-%d", i, j), v, color, fillColor, 14); err != nil {
+			if err := subGraph.AddBoxNode(node); err != nil {
 				return err
 			}
 		}
 
 		penWidth := float64(scenario.Count)*10/float64(sumCount) + 1
 
-		if err := graphviz.AddEdge(graph, fmt.Sprintf("%d-start", i), fmt.Sprintf("%d-%d", i, 0), color, penWidth, 1000); err != nil {
+		startEdge := graphviz.NewEdge(fmt.Sprintf("%d-start", i), fmt.Sprintf("%d-%d", i, 0))
+		startEdge.SetColorLevel(scenario.Count, sumCount)
+		startEdge.PenWidth = penWidth
+		startEdge.Weight = 1000
+		if err := subGraph.AddEdge(startEdge); err != nil {
 			return err
 		}
-		if err := graphviz.AddEdge(graph, fmt.Sprintf("%d-%d", i, scenario.Pattern.Leaves()-1), fmt.Sprintf("%d-end", i), color, penWidth, 1000); err != nil {
+		endEdge := graphviz.NewEdge(fmt.Sprintf("%d-%d", i, scenario.Pattern.Leaves()-1), fmt.Sprintf("%d-end", i))
+		endEdge.SetColorLevel(scenario.Count, sumCount)
+		endEdge.PenWidth = penWidth
+		endEdge.Weight = 1000
+		if err := subGraph.AddEdge(endEdge); err != nil {
 			return err
 		}
+
 		for _, edge := range edges {
-			if err := graphviz.AddEdge(graph, fmt.Sprintf("%d-%d", i, edge.From), fmt.Sprintf("%d-%d", i, edge.To), color, penWidth, edge.Weight); err != nil {
+			e := graphviz.NewEdge(fmt.Sprintf("%d-%d", i, edge.From), fmt.Sprintf("%d-%d", i, edge.To))
+			e.SetColorLevel(scenario.Count, sumCount)
+			e.PenWidth = penWidth
+			if edge.From < edge.To {
+				e.Weight = 1000
+			}
+			if err := subGraph.AddEdge(e); err != nil {
 				return err
 			}
 		}
 	}
 
-	fmt.Fprintln(cmd.OutOrStdout(), graph.String())
-	return nil
+	return graph.Write(cmd.OutOrStdout())
+}
+
+type edge struct {
+	From int
+	To   int
 }
 
 func patternToNodeAndEdge(n pattern.Node, nodes map[int]string, edges *[]edge, base int) {
@@ -173,12 +184,12 @@ func patternToNodeAndEdge(n pattern.Node, nodes map[int]string, edges *[]edge, b
 		patternToNodeAndEdge(child, nodes, edges, base+offset)
 		offset += child.Leaves()
 		if i < n.Degree()-1 {
-			*edges = append(*edges, edge{From: base + offset - 1, To: base + offset, Weight: 1000})
+			*edges = append(*edges, edge{From: base + offset - 1, To: base + offset})
 		} else {
 			if base == 0 && !n.IsLeaf() && (n.Degree() > 1 || n.Child(0).IsLeaf()) {
 				continue
 			}
-			*edges = append(*edges, edge{From: base + offset - 1, To: base, Weight: 1})
+			*edges = append(*edges, edge{From: base + offset - 1, To: base})
 		}
 	}
 }

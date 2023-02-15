@@ -1,30 +1,35 @@
 package graphviz
 
-import (
-	"fmt"
-	"github.com/awalterschulze/gographviz"
-)
+const DefaultFontSize = 14
+const DefaultNodeColor = "black"
+const DefaultNodeFillColor = "lightgrey"
 
-func AddBoxNode(graph *gographviz.Escape, parentName string, nodeName, nodeTitle, color, fillColor string, fontSize float64) error {
-	return graph.AddNode(parentName, nodeName, map[string]string{
-		"shape":     "box",
-		"style":     "filled",
-		"fontname":  "Courier",
-		"penwidth":  "1",
-		"margin":    "0.2",
-		"color":     color,
-		"fillcolor": fillColor,
-		"fontsize":  fmt.Sprintf("%f", fontSize),
-		"label":     nodeTitle,
-		"tooltip":   nodeTitle,
-	})
+type TextNode struct {
+	Name     string
+	Title    string
+	FontSize float64
 }
 
-func AddTextNode(graph *gographviz.Escape, parentName string, nodeName, nodeTitle string) error {
-	return graph.AddNode(parentName, nodeName, map[string]string{
-		"shape":    "plaintext",
-		"fontname": "Courier",
-		"label":    nodeTitle,
-		"tooltip":  nodeTitle,
-	})
+type BoxNode struct {
+	TextNode
+	Color     string
+	FillColor string
+}
+
+func NewTextNode(name string, title string) *TextNode {
+	return &TextNode{Name: name, Title: title, FontSize: DefaultFontSize}
+}
+
+func NewBoxNode(name string, title string) *BoxNode {
+	return &BoxNode{TextNode: TextNode{Name: name, Title: title, FontSize: DefaultFontSize}, Color: DefaultNodeColor, FillColor: DefaultNodeFillColor}
+}
+
+func (n *BoxNode) SetColors(color, fillColor string) {
+	n.Color = color
+	n.FillColor = fillColor
+}
+
+func (n *BoxNode) SetColorLevel(level, maxLevel int) {
+	n.Color = Colorize(float64(level)/float64(maxLevel), false)
+	n.FillColor = Colorize(float64(level)/float64(maxLevel), true)
 }
