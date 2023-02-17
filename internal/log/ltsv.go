@@ -136,10 +136,23 @@ func (r *LTSVReader) Parse() (*LogEntry, error) {
 }
 
 func parseReq(req string, patterns []regexp.Regexp) (string, string) {
-	splitted := strings.Split(req, " ")
-	method := splitted[0]
-	uri := strings.Split(splitted[1], "?")[0]
-
+	var method string
+	var uri string
+	i := strings.Index(req, " ")
+	if i >= 0 {
+		method = req[:i]
+		uri = req[i+1:]
+	} else {
+		return "", ""
+	}
+	i = strings.Index(uri, " ")
+	if i >= 0 {
+		uri = uri[:i]
+	}
+	i = strings.Index(uri, "?")
+	if i >= 0 {
+		uri = uri[:i]
+	}
 	for _, p := range patterns {
 		if p.MatchString(uri) {
 			uri = p.String()
@@ -150,8 +163,15 @@ func parseReq(req string, patterns []regexp.Regexp) (string, string) {
 }
 
 func isIgnored(req string, ignorePatterns []regexp.Regexp) bool {
-	splitted := strings.Split(req, " ")
-	uri := strings.Split(splitted[1], "?")[0]
+	uri := req
+	i := strings.Index(req, " ")
+	if i >= 0 {
+		uri = req[i+1:]
+	}
+	i = strings.Index(req, "?")
+	if i >= 0 {
+		uri = uri[:i]
+	}
 
 	for _, p := range ignorePatterns {
 		if p.MatchString(uri) {
