@@ -2,7 +2,6 @@ package log
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -80,80 +79,98 @@ func (r *LTSVReader) Read() bool {
 	return r.r.Scan()
 }
 
-func (r *LTSVReader) Parse() (*LogEntry, error) {
-	row := make(map[string]string)
-	row, err := ltsv.DefaultParser.ParseLineAsMap(r.r.Bytes(), row)
+// Parse parses one line of log file into LogEntry struct
+// For reducing memory allocation, you can pass a LogEntry to record to reuse the given one.
+func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
+	if entry == nil {
+		entry = &LogEntry{}
+	}
+	entry.Req = ""
+	entry.Method = ""
+	entry.Uri = ""
+	entry.IsIgnored = false
+	entry.Status = 0
+	entry.Time = time.Time{}
+	entry.Uid = ""
+	entry.SetNewUid = false
+
+	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label, value []byte) error {
+		switch string(label) {
+		case "req":
+			entry.Req = string(value)
+			method, uri := parseReq(string(value), r.matchingPatterns)
+			entry.Method = method
+			entry.Uri = uri
+			entry.IsIgnored = isIgnored(uri, r.ignorePatterns)
+
+		case "status":
+			status, err := strconv.Atoi(string(value))
+			if err != nil {
+				return err
+			}
+			entry.Status = status
+
+		case "time":
+			reqTime, err := time.Parse(r.timeFormat, string(value))
+			if err != nil {
+				return err
+			}
+			entry.Time = reqTime
+
+		case "uidset":
+			if string(value) != "" && string(value) != "-" {
+				if i := strings.Index(string(value), "="); i >= 0 {
+					entry.Uid = string(value)[i+1:]
+				} else {
+					entry.Uid = string(value)
+				}
+				entry.SetNewUid = true
+			}
+
+		case "uidgot":
+			if string(value) != "" && string(value) != "-" {
+				if i := strings.Index(string(value), "="); i >= 0 {
+					entry.Uid = string(value)[i+1:]
+				} else {
+					entry.Uid = string(value)
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	var entry LogEntry
-
-	req, ok := row["req"]
-	if !ok {
-		return nil, fmt.Errorf("\"req\" field is not found on each log entry")
-	}
-	entry.Req = req
-	method, uri := parseReq(req, r.matchingPatterns)
-	entry.Method = method
-	entry.Uri = uri
-	isIgnored := isIgnored(req, r.ignorePatterns)
-	entry.IsIgnored = isIgnored
-	status, ok := row["status"]
-	if !ok {
-		return nil, fmt.Errorf("\"status\" field is not found on each log entry")
-	}
-	statusInt, err := strconv.Atoi(status)
-	if err != nil {
-		return nil, err
-	}
-	entry.Status = statusInt
-	t, ok := row["time"]
-	if !ok {
-		return nil, fmt.Errorf("\"time\" field is not found on each log entry")
-	}
-	reqTime, err := time.Parse(r.timeFormat, t)
-	if err != nil {
-		return nil, err
-	}
-	entry.Time = reqTime
-	uidSet, ok := row["uidset"]
-	if !ok {
-		return nil, fmt.Errorf("\"uidset\" field is not found on each log entry")
-	}
-	if uidSet != "" && uidSet != "-" {
-		entry.Uid = strings.Split(uidSet, "=")[1]
-		entry.SetNewUid = true
-	}
-	uidGot, ok := row["uidgot"]
-	if !ok {
-		return nil, fmt.Errorf("\"uidgot\" field is not found on each log entry")
-	}
-	if entry.Uid == "" && uidGot != "" && uidGot != "-" {
-		entry.Uid = strings.Split(uidGot, "=")[1]
-	}
-
-	return &entry, nil
+	return entry, nil
 }
 
 func parseReq(req string, patterns []regexp.Regexp) (string, string) {
-	splitted := strings.Split(req, " ")
-	method := splitted[0]
-	uri := strings.Split(splitted[1], "?")[0]
-
+	var method string
+	var uri string
+	i := strings.Index(req, " ")
+	if i >= 0 {
+		method = req[:i]
+		uri = req[i+1:]
+	} else {
+		return "", ""
+	}
+	i = strings.Index(uri, " ")
+	if i >= 0 {
+		uri = uri[:i]
+	}
+	i = strings.Index(uri, "?")
+	if i >= 0 {
+		uri = uri[:i]
+	}
 	for _, p := range patterns {
 		if p.MatchString(uri) {
-			uri = p.String()
-			return method, uri
+			return method, p.String()
 		}
 	}
 	return method, uri
 }
 
-func isIgnored(req string, ignorePatterns []regexp.Regexp) bool {
-	splitted := strings.Split(req, " ")
-	uri := strings.Split(splitted[1], "?")[0]
-
+func isIgnored(uri string, ignorePatterns []regexp.Regexp) bool {
 	for _, p := range ignorePatterns {
 		if p.MatchString(uri) {
 			return true
