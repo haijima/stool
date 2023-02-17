@@ -87,23 +87,25 @@ func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioSt
 		sumCount += scenario.Count
 	}
 
-	// create palette
 	palette := make(map[string]string, 0)
-	for _, scenarioStruct := range scenarioStructs {
-		for _, s := range pattern.Flatten([]pattern.Node{*scenarioStruct.Pattern}, make([]string, scenarioStruct.Pattern.Leaves())) {
-			if _, ok := palette[s]; !ok {
-				palette[s] = ""
+	if usePalette {
+		// create palette
+		for _, scenarioStruct := range scenarioStructs {
+			for _, s := range pattern.Flatten([]pattern.Node{*scenarioStruct.Pattern}, make([]string, scenarioStruct.Pattern.Leaves())) {
+				if _, ok := palette[s]; !ok {
+					palette[s] = ""
+				}
 			}
 		}
-	}
-	p, err := colorful.HappyPalette(len(palette))
-	if err != nil {
-		return err
-	}
-	i := 0
-	for k := range palette {
-		palette[k] = p[i].Hex()
-		i++
+		p, err := colorful.HappyPalette(len(palette))
+		if err != nil {
+			return err
+		}
+		i := 0
+		for k := range palette {
+			palette[k] = p[i].Hex()
+			i++
+		}
 	}
 
 	for i, scenario := range scenarioStructs {
