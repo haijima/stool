@@ -2,7 +2,6 @@ package log
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -81,58 +80,58 @@ func (r *LTSVReader) Read() bool {
 }
 
 func (r *LTSVReader) Parse() (*LogEntry, error) {
-	row := make(map[string]string)
-	row, err := ltsv.DefaultParser.ParseLineAsMap(r.r.Bytes(), row)
-	if err != nil {
-		return nil, err
-	}
-
 	var entry LogEntry
+	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label []byte, value []byte) error {
+		l := string(label)
+		v := string(value)
 
-	req, ok := row["req"]
-	if !ok {
-		return nil, fmt.Errorf("\"req\" field is not found on each log entry")
-	}
-	entry.Req = req
-	method, uri := parseReq(req, r.matchingPatterns)
-	entry.Method = method
-	entry.Uri = uri
-	isIgnored := isIgnored(req, r.ignorePatterns)
-	entry.IsIgnored = isIgnored
-	status, ok := row["status"]
-	if !ok {
-		return nil, fmt.Errorf("\"status\" field is not found on each log entry")
-	}
-	statusInt, err := strconv.Atoi(status)
+		switch l {
+		case "req":
+			entry.Req = v
+			method, uri := parseReq(v, r.matchingPatterns)
+			entry.Method = method
+			entry.Uri = uri
+			isIgnored := isIgnored(v, r.ignorePatterns)
+			entry.IsIgnored = isIgnored
+
+		case "status":
+			status, err := strconv.Atoi(v)
+			if err != nil {
+				return err
+			}
+			entry.Status = status
+
+		case "time":
+			reqTime, err := time.Parse(r.timeFormat, v)
+			if err != nil {
+				return err
+			}
+			entry.Time = reqTime
+
+		case "uidset":
+			if v != "" && v != "-" {
+				if i := strings.Index(v, "="); i >= 0 {
+					entry.Uid = v[i+1:]
+				} else {
+					entry.Uid = v
+				}
+				entry.SetNewUid = true
+			}
+
+		case "uidgot":
+			if v != "" && v != "-" {
+				if i := strings.Index(v, "="); i >= 0 {
+					entry.Uid = v[i+1:]
+				} else {
+					entry.Uid = v
+				}
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	entry.Status = statusInt
-	t, ok := row["time"]
-	if !ok {
-		return nil, fmt.Errorf("\"time\" field is not found on each log entry")
-	}
-	reqTime, err := time.Parse(r.timeFormat, t)
-	if err != nil {
-		return nil, err
-	}
-	entry.Time = reqTime
-	uidSet, ok := row["uidset"]
-	if !ok {
-		return nil, fmt.Errorf("\"uidset\" field is not found on each log entry")
-	}
-	if uidSet != "" && uidSet != "-" {
-		entry.Uid = strings.Split(uidSet, "=")[1]
-		entry.SetNewUid = true
-	}
-	uidGot, ok := row["uidgot"]
-	if !ok {
-		return nil, fmt.Errorf("\"uidgot\" field is not found on each log entry")
-	}
-	if entry.Uid == "" && uidGot != "" && uidGot != "-" {
-		entry.Uid = strings.Split(uidGot, "=")[1]
-	}
-
 	return &entry, nil
 }
 
