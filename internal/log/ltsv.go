@@ -79,8 +79,21 @@ func (r *LTSVReader) Read() bool {
 	return r.r.Scan()
 }
 
-func (r *LTSVReader) Parse() (*LogEntry, error) {
-	var entry LogEntry
+// Parse parses one line of log file into LogEntry struct
+// For reducing memory allocation, you can pass a LogEntry to record to reuse the given one.
+func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
+	if entry == nil {
+		entry = &LogEntry{}
+	}
+	entry.Req = ""
+	entry.Method = ""
+	entry.Uri = ""
+	entry.IsIgnored = false
+	entry.Status = 0
+	entry.Time = time.Time{}
+	entry.Uid = ""
+	entry.SetNewUid = false
+
 	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label []byte, value []byte) error {
 		l := string(label)
 		v := string(value)
@@ -132,7 +145,7 @@ func (r *LTSVReader) Parse() (*LogEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &entry, nil
+	return entry, nil
 }
 
 func parseReq(req string, patterns []regexp.Regexp) (string, string) {

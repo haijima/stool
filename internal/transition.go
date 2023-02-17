@@ -20,8 +20,9 @@ func (p *TransitionProfiler) Profile(reader *log.LTSVReader) (*Transition, error
 	endpoints := map[string]struct{}{}
 	endpoints[""] = struct{}{}
 
+	var entry log.LogEntry
 	for reader.Read() {
-		entry, err := reader.Parse()
+		_, err := reader.Parse(&entry)
 		if err != nil {
 			return nil, err
 		}

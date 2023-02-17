@@ -20,8 +20,9 @@ func (p *TrendProfiler) Profile(reader *log.LTSVReader, interval int) (*Trend, e
 	var startTime time.Time
 	step := 0
 
+	var entry log.LogEntry
 	for reader.Read() {
-		entry, err := reader.Parse()
+		_, err := reader.Parse(&entry)
 		if err != nil {
 			return nil, err
 		}

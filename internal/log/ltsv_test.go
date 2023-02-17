@@ -32,8 +32,9 @@ func BenchmarkLTSVReader(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		f, _ := fs.Open(fileName)
 		logReader, _ := NewLTSVReader(f, LTSVReadOpt{MatchingGroups: matchingGroups})
+		var entry LogEntry
 		for logReader.Read() {
-			_, _ = logReader.Parse()
+			_, _ = logReader.Parse(&entry)
 		}
 		_ = f.Close()
 	}

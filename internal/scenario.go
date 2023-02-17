@@ -40,8 +40,9 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 
 	i := 0
 	var startTime time.Time
+	var entry log.LogEntry
 	for reader.Read() {
-		entry, err := reader.Parse()
+		_, err := reader.Parse(&entry)
 		if err != nil {
 			return nil, err
 		}
