@@ -94,49 +94,45 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	entry.Uid = ""
 	entry.SetNewUid = false
 
-	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label []byte, value []byte) error {
-		l := string(label)
-		v := string(value)
-
-		switch l {
+	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label, value []byte) error {
+		switch string(label) {
 		case "req":
-			entry.Req = v
-			method, uri := parseReq(v, r.matchingPatterns)
+			entry.Req = string(value)
+			method, uri := parseReq(string(value), r.matchingPatterns)
 			entry.Method = method
 			entry.Uri = uri
-			isIgnored := isIgnored(v, r.ignorePatterns)
-			entry.IsIgnored = isIgnored
+			entry.IsIgnored = isIgnored(string(value), r.ignorePatterns)
 
 		case "status":
-			status, err := strconv.Atoi(v)
+			status, err := strconv.Atoi(string(value))
 			if err != nil {
 				return err
 			}
 			entry.Status = status
 
 		case "time":
-			reqTime, err := time.Parse(r.timeFormat, v)
+			reqTime, err := time.Parse(r.timeFormat, string(value))
 			if err != nil {
 				return err
 			}
 			entry.Time = reqTime
 
 		case "uidset":
-			if v != "" && v != "-" {
-				if i := strings.Index(v, "="); i >= 0 {
-					entry.Uid = v[i+1:]
+			if string(value) != "" && string(value) != "-" {
+				if i := strings.Index(string(value), "="); i >= 0 {
+					entry.Uid = string(value)[i+1:]
 				} else {
-					entry.Uid = v
+					entry.Uid = string(value)
 				}
 				entry.SetNewUid = true
 			}
 
 		case "uidgot":
-			if v != "" && v != "-" {
-				if i := strings.Index(v, "="); i >= 0 {
-					entry.Uid = v[i+1:]
+			if string(value) != "" && string(value) != "-" {
+				if i := strings.Index(string(value), "="); i >= 0 {
+					entry.Uid = string(value)[i+1:]
 				} else {
-					entry.Uid = v
+					entry.Uid = string(value)
 				}
 			}
 		}
