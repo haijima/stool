@@ -101,7 +101,7 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 			method, uri := parseReq(string(value), r.matchingPatterns)
 			entry.Method = method
 			entry.Uri = uri
-			entry.IsIgnored = isIgnored(string(value), r.ignorePatterns)
+			entry.IsIgnored = isIgnored(uri, r.ignorePatterns)
 
 		case "status":
 			status, err := strconv.Atoi(string(value))
@@ -164,24 +164,13 @@ func parseReq(req string, patterns []regexp.Regexp) (string, string) {
 	}
 	for _, p := range patterns {
 		if p.MatchString(uri) {
-			uri = p.String()
-			return method, uri
+			return method, p.String()
 		}
 	}
 	return method, uri
 }
 
-func isIgnored(req string, ignorePatterns []regexp.Regexp) bool {
-	uri := req
-	i := strings.Index(req, " ")
-	if i >= 0 {
-		uri = req[i+1:]
-	}
-	i = strings.Index(req, "?")
-	if i >= 0 {
-		uri = uri[:i]
-	}
-
+func isIgnored(uri string, ignorePatterns []regexp.Regexp) bool {
 	for _, p := range ignorePatterns {
 		if p.MatchString(uri) {
 			return true
