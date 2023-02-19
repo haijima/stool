@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/haijima/stool/internal/log"
+	"io"
 	"strconv"
 	"strings"
 
@@ -42,12 +43,18 @@ func runTrend(cmd *cobra.Command, p *internal.TrendProfiler, v *viper.Viper, fs 
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
 
-	f, err := fs.Open(file)
-	if err != nil {
-		return err
+	var r io.Reader
+	if file != "" {
+		f, err := fs.Open(file)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		r = f
+	} else {
+		r = cmd.InOrStdin()
 	}
-	defer f.Close()
-	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
+	logReader, err := log.NewLTSVReader(r, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
 	})

@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"math"
 	"sort"
 	"strconv"
@@ -42,12 +43,18 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 	timeFormat := v.GetString("time_format")
 	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
-	f, err := fs.Open(file)
-	if err != nil {
-		return err
+	var r io.Reader
+	if file != "" {
+		f, err := fs.Open(file)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		r = f
+	} else {
+		r = cmd.InOrStdin()
 	}
-	defer f.Close()
-	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
+	logReader, err := log.NewLTSVReader(r, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
