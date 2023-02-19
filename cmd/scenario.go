@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -65,16 +67,23 @@ func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Vipe
 	case "dot":
 		return createScenarioDot(cmd, scenarios, fs, palette)
 	case "csv":
-		return printScenarioCSV(scenarios)
+		return printScenarioCSV(cmd, scenarios)
 	}
 	return fmt.Errorf("invalid format flag: %s", format)
 }
 
-func printScenarioCSV(scenarioStructs []internal.ScenarioStruct) error {
-	fmt.Println("first call[s],last call[s],count,scenario node")
+func printScenarioCSV(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct) error {
+	writer := csv.NewWriter(cmd.OutOrStdout())
+
+	// header
+	_ = writer.Write([]string{"first call[s]", "last call[s]", "count", "scenario node"})
+
+	// data rows
 	for _, s := range scenarioStructs {
-		fmt.Printf("%d,%d,%d,%s\n", s.FirstReq, s.LastReq, s.Count, s.Pattern.String(true))
+		_ = writer.Write([]string{strconv.Itoa(s.FirstReq), strconv.Itoa(s.LastReq), strconv.Itoa(s.Count), s.Pattern.String(true)})
 	}
+
+	writer.Flush()
 	return nil
 }
 
