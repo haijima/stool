@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"github.com/haijima/stool/internal/log"
 	"sort"
 	"time"
 
+	"github.com/haijima/stool/internal/log"
 	"github.com/samber/lo"
 )
 

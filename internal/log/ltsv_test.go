@@ -1,9 +1,10 @@
 package log
 
 import (
-	"github.com/spf13/afero"
 	"os"
 	"testing"
+
+	"github.com/spf13/afero"
 )
 
 func BenchmarkLTSVReader(b *testing.B) {

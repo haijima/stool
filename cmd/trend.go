@@ -3,12 +3,12 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/haijima/stool/internal/log"
 	"io"
 	"strconv"
 	"strings"
 
 	"github.com/haijima/stool/internal"
+	"github.com/haijima/stool/internal/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

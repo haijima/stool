@@ -2,15 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"runtime/debug"
+	"time"
+
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
-	"runtime/debug"
-	"time"
 )
 
 // Version is set in build step

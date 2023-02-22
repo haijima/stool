@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewScenarioCmd(t *testing.T) {

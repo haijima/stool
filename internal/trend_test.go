@@ -2,9 +2,9 @@ package internal
 
 import (
 	"bytes"
-	"github.com/haijima/stool/internal/log"
 	"testing"
 
+	"github.com/haijima/stool/internal/log"
 	"github.com/stretchr/testify/assert"
 )
 

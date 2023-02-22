@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"github.com/haijima/stool/internal/log"
-	"github.com/haijima/stool/internal/pattern"
 	"time"
 
+	"github.com/haijima/stool/internal/log"
+	"github.com/haijima/stool/internal/pattern"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 )
