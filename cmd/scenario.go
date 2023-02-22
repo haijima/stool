@@ -3,60 +3,50 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
 	"github.com/haijima/stool/internal/pattern"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 // NewScenarioCmd returns the scenario command
-func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
-	var scenarioCmd = &cobra.Command{
-		Use:   "scenario",
-		Short: "Show the access patterns of users",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runScenario(cmd, p, v, fs)
-		},
+func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
+	scenarioCmd := cobrax.NewCommand(v, fs)
+	scenarioCmd.Use = "scenario"
+	scenarioCmd.Short = "Show the access patterns of users"
+	scenarioCmd.RunE = func(cmd *cobrax.Command, args []string) error {
+		return runScenario(cmd, p)
 	}
+
 	scenarioCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
 	scenarioCmd.PersistentFlags().Bool("palette", false, "use color palette for each endpoint")
-	_ = v.BindPFlags(scenarioCmd.PersistentFlags())
-	v.SetFs(fs)
+	scenarioCmd.BindPersistentFlags()
 
 	return scenarioCmd
 }
 
-func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) error {
-	file := v.GetString("file")
-	matchingGroups := v.GetStringSlice("matching_groups")
-	ignorePatterns := v.GetStringSlice("ignore_patterns")
-	timeFormat := v.GetString("time_format")
-	format := v.GetString("format")
-	palette := v.GetBool("palette")
-	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
+func runScenario(cmd *cobrax.Command, p *internal.ScenarioProfiler) error {
+	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
+	ignorePatterns := cmd.Viper().GetStringSlice("ignore_patterns")
+	timeFormat := cmd.Viper().GetString("time_format")
+	format := cmd.Viper().GetString("format")
+	palette := cmd.Viper().GetBool("palette")
+	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
-	var r io.Reader
-	if file != "" {
-		f, err := fs.Open(file)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		r = f
-	} else {
-		r = cmd.InOrStdin()
+	f, err := cmd.ReadFileOrStdIn("file")
+	if err != nil {
+		return err
 	}
-	logReader, err := log.NewLTSVReader(r, log.LTSVReadOpt{
+	defer f.Close()
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
@@ -70,16 +60,22 @@ func runScenario(cmd *cobra.Command, p *internal.ScenarioProfiler, v *viper.Vipe
 		return err
 	}
 
+	var printFn printScenarioFunc
 	switch strings.ToLower(format) {
 	case "dot":
-		return createScenarioDot(cmd, scenarios, fs, palette)
+		printFn = createScenarioDot
 	case "csv":
-		return printScenarioCSV(cmd, scenarios)
+		printFn = printScenarioCSV
+	default:
+		return fmt.Errorf("invalid format flag: %s", format)
 	}
-	return fmt.Errorf("invalid format flag: %s", format)
+
+	return printFn(cmd, scenarios, palette)
 }
 
-func printScenarioCSV(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct) error {
+type printScenarioFunc = func(*cobrax.Command, []internal.ScenarioStruct, bool) error
+
+func printScenarioCSV(cmd *cobrax.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	// header
@@ -94,7 +90,7 @@ func printScenarioCSV(cmd *cobra.Command, scenarioStructs []internal.ScenarioStr
 	return nil
 }
 
-func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, fs afero.Fs, usePalette bool) error {
+func createScenarioDot(cmd *cobrax.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
 	graph := graphviz.NewGraph("root", "stool scenario")
 	graph.IsHorizontal = true
 

@@ -1,35 +1,31 @@
 package cmd
 
 import (
+	"github.com/haijima/cobrax"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 // NewAaCommand returns the aa command
-func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobra.Command {
-	// aaCmd represents the aa command
-	var aaCmd = &cobra.Command{
-		Use:   "aa",
-		Short: "Show an ASCII art of a \"stool\"",
-		Run: func(cmd *cobra.Command, args []string) {
-			if v.GetBool("big") {
-				cmd.Print(aaBig)
-			} else if v.GetBool("text") {
-				cmd.Print(aaText)
-			} else {
-				cmd.Print(aa)
-			}
-		},
-		Hidden: true,
+func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobrax.Command {
+	var aaCmd = cobrax.NewCommand(v, fs)
+	aaCmd.Use = "aa"
+	aaCmd.Short = "Show an ASCII art of a \"stool\""
+	aaCmd.Hidden = true
+	aaCmd.Run = func(cmd *cobrax.Command, args []string) {
+		if cmd.Viper().GetBool("big") {
+			cmd.PrintOut(aaBig)
+		} else if cmd.Viper().GetBool("text") {
+			cmd.PrintOut(aaText)
+		} else {
+			cmd.PrintOut(aa)
+		}
 	}
 
 	aaCmd.Flags().Bool("big", false, "if true, shows a big ASCII art")
 	aaCmd.Flags().Bool("text", false, "if true, shows a ASCII art of text")
 	aaCmd.MarkFlagsMutuallyExclusive("big", "text")
-
-	_ = v.BindPFlags(aaCmd.Flags())
-	v.SetFs(fs)
+	aaCmd.BindFlags()
 
 	return aaCmd
 }
