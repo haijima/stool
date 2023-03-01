@@ -27,7 +27,7 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 	}
 
 	transitionCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
-	transitionCmd.BindPersistentFlags()
+	_ = transitionCmd.BindPersistentFlags()
 
 	return transitionCmd
 }

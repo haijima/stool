@@ -28,7 +28,7 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 
 	scenarioCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
 	scenarioCmd.PersistentFlags().Bool("palette", false, "use color palette for each endpoint")
-	scenarioCmd.BindPersistentFlags()
+	_ = scenarioCmd.BindPersistentFlags()
 
 	return scenarioCmd
 }

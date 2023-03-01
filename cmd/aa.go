@@ -25,7 +25,7 @@ func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	aaCmd.Flags().Bool("big", false, "if true, shows a big ASCII art")
 	aaCmd.Flags().Bool("text", false, "if true, shows a ASCII art of text")
 	aaCmd.MarkFlagsMutuallyExclusive("big", "text")
-	aaCmd.BindFlags()
+	_ = aaCmd.BindFlags()
 
 	return aaCmd
 }
