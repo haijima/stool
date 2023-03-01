@@ -2,6 +2,7 @@ github.com/Wing924/ltsv,https://github.com/Wing924/ltsv/blob/v0.3.1/LICENSE,Apac
 github.com/awalterschulze/gographviz,https://github.com/awalterschulze/gographviz/blob/v2.0.3/LICENSE,BSD-3-Clause
 github.com/dustin/go-humanize,https://github.com/dustin/go-humanize/blob/v1.0.1/LICENSE,MIT
 github.com/fsnotify/fsnotify,https://github.com/fsnotify/fsnotify/blob/v1.6.0/LICENSE,BSD-3-Clause
+github.com/haijima/cobrax,https://github.com/haijima/cobrax/blob/v0.0.2/LICENSE,MIT
 github.com/haijima/stool,https://github.com/haijima/stool/blob/HEAD/LICENSE,MIT
 github.com/hashicorp/hcl,https://github.com/hashicorp/hcl/blob/v1.0.0/LICENSE,MPL-2.0
 github.com/lucasb-eyer/go-colorful,https://github.com/lucasb-eyer/go-colorful/blob/v1.2.0/LICENSE,MIT
@@ -16,9 +17,6 @@ github.com/spf13/jwalterweatherman,https://github.com/spf13/jwalterweatherman/bl
 github.com/spf13/pflag,https://github.com/spf13/pflag/blob/v1.0.5/LICENSE,BSD-3-Clause
 github.com/spf13/viper,https://github.com/spf13/viper/blob/v1.15.0/LICENSE,MIT
 github.com/subosito/gotenv,https://github.com/subosito/gotenv/blob/v1.4.2/LICENSE,MIT
-go.uber.org/atomic,https://github.com/uber-go/atomic/blob/v1.9.0/LICENSE.txt,MIT
-go.uber.org/multierr,https://github.com/uber-go/multierr/blob/v1.8.0/LICENSE.txt,MIT
-go.uber.org/zap,https://github.com/uber-go/zap/blob/v1.21.0/LICENSE.txt,MIT
 golang.org/x/exp,https://cs.opensource.google/go/x/exp/+/bbda1eaf:LICENSE,BSD-3-Clause
 golang.org/x/sys/unix,https://cs.opensource.google/go/x/sys/+/v0.3.0:LICENSE,BSD-3-Clause
 golang.org/x/text,https://cs.opensource.google/go/x/text/+/v0.5.0:LICENSE,BSD-3-Clause

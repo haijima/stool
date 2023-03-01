@@ -3,58 +3,47 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"io"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 // NewTransitionCmd returns the transition command
-func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
-	var transitionCmd = &cobra.Command{
-		Use:   "transition",
-		Short: "Show the transition between endpoints",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runTransition(cmd, p, v, fs)
-		},
+func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
+	var transitionCmd = cobrax.NewCommand(v, fs)
+	transitionCmd.Use = "transition"
+	transitionCmd.Short = "Show the transition between endpoints"
+	transitionCmd.RunE = func(cmd *cobrax.Command, args []string) error {
+		return runTransition(cmd, p)
 	}
 
 	transitionCmd.PersistentFlags().String("format", "dot", "The output format (dot, csv)")
-	_ = v.BindPFlags(transitionCmd.PersistentFlags())
-	v.SetFs(fs)
+	_ = transitionCmd.BindPersistentFlags()
 
 	return transitionCmd
 }
 
-func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) error {
-	file := v.GetString("file")
-	matchingGroups := v.GetStringSlice("matching_groups")
-	ignorePatterns := v.GetStringSlice("ignore_patterns")
-	timeFormat := v.GetString("time_format")
-	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
+func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
+	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
+	ignorePatterns := cmd.Viper().GetStringSlice("ignore_patterns")
+	timeFormat := cmd.Viper().GetString("time_format")
+	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
-	var r io.Reader
-	if file != "" {
-		f, err := fs.Open(file)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		r = f
-	} else {
-		r = cmd.InOrStdin()
+	f, err := cmd.ReadFileOrStdIn("file")
+	if err != nil {
+		return err
 	}
-	logReader, err := log.NewLTSVReader(r, log.LTSVReadOpt{
+	defer f.Close()
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
@@ -68,17 +57,23 @@ func runTransition(cmd *cobra.Command, p *internal.TransitionProfiler, v *viper.
 		return err
 	}
 
-	format := v.GetString("format")
+	var printFn printTransitionFunc
+	format := cmd.Viper().GetString("format")
 	switch strings.ToLower(format) {
 	case "dot":
-		return createTransitionDot(cmd, result, fs)
+		printFn = createTransitionDot
 	case "csv":
-		return printTransitionCsv(cmd, result)
+		printFn = printTransitionCsv
+	default:
+		return fmt.Errorf("invalid format flag: %s", format)
 	}
-	return fmt.Errorf("invalid format flag: %s", format)
+
+	return printFn(cmd, result)
 }
 
-func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afero.Fs) error {
+type printTransitionFunc = func(*cobrax.Command, *internal.Transition) error
+
+func createTransitionDot(cmd *cobrax.Command, result *internal.Transition) error {
 	graph := graphviz.NewGraph("root", "stool transition")
 
 	eps := result.Endpoints
@@ -152,7 +147,7 @@ func createTransitionDot(cmd *cobra.Command, result *internal.Transition, fs afe
 	return graph.Write(cmd.OutOrStdout())
 }
 
-func printTransitionCsv(cmd *cobra.Command, result *internal.Transition) error {
+func printTransitionCsv(cmd *cobrax.Command, result *internal.Transition) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	eps := result.Endpoints

@@ -3,58 +3,47 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 // NewTrendCommand returns the trend command
-func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
-	trendCmd := &cobra.Command{
-		Use:   "trend",
-		Short: "Show the count of accesses for each endpoint over time",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runTrend(cmd, p, v, fs)
-		},
+func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
+	trendCmd := cobrax.NewCommand(v, fs)
+	trendCmd.Use = "trend"
+	trendCmd.Short = "Show the count of accesses for each endpoint over time"
+	trendCmd.RunE = func(cmd *cobrax.Command, args []string) error {
+		return runTrend(cmd, p)
 	}
 
 	trendCmd.PersistentFlags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
-	_ = v.BindPFlags(trendCmd.PersistentFlags())
-	v.SetFs(fs)
+	_ = trendCmd.BindPersistentFlags()
 
 	return trendCmd
 }
 
-func runTrend(cmd *cobra.Command, p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) error {
-	file := v.GetString("file")
-	matchingGroups := v.GetStringSlice("matching_groups")
-	timeFormat := v.GetString("time_format")
-	interval := v.GetInt("interval")
-	zap.L().Debug(fmt.Sprintf("%+v", v.AllSettings()))
+func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
+	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
+	timeFormat := cmd.Viper().GetString("time_format")
+	interval := cmd.Viper().GetInt("interval")
+	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
 	if interval <= 0 {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
 
-	var r io.Reader
-	if file != "" {
-		f, err := fs.Open(file)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		r = f
-	} else {
-		r = cmd.InOrStdin()
+	f, err := cmd.ReadFileOrStdIn("file")
+	if err != nil {
+		return err
 	}
-	logReader, err := log.NewLTSVReader(r, log.LTSVReadOpt{
+	defer f.Close()
+	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
 	})
@@ -70,7 +59,7 @@ func runTrend(cmd *cobra.Command, p *internal.TrendProfiler, v *viper.Viper, fs 
 	return printTrendCsv(cmd, result)
 }
 
-func printTrendCsv(cmd *cobra.Command, result *internal.Trend) error {
+func printTrendCsv(cmd *cobrax.Command, result *internal.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	header := make([]string, 0)

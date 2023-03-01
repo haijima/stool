@@ -3,8 +3,8 @@ package cmd
 import (
 	"testing"
 
+	"github.com/haijima/cobrax"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,8 +48,8 @@ func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 
 	v.Set("verbose", true)
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {} // dummy function to make command runnable
-	cmd.SetArgs([]string{})                              // dummy not to use os.Args[1:]
+	cmd.Run = func(cmd *cobrax.Command, args []string) {} // dummy function to make command runnable
+	cmd.SetArgs([]string{})                               // dummy not to use os.Args[1:]
 	err := cmd.Execute()
 
 	assert.Nil(t, err)
@@ -62,8 +62,8 @@ func TestNewRootCmd_Flag_Debug(t *testing.T) {
 
 	v.Set("debug", true)
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {} // dummy function to make command runnable
-	cmd.SetArgs([]string{})                              // dummy not to use os.Args[1:]
+	cmd.Run = func(cmd *cobrax.Command, args []string) {} // dummy function to make command runnable
+	cmd.SetArgs([]string{})                               // dummy not to use os.Args[1:]
 	err := cmd.Execute()
 
 	assert.Nil(t, err)
@@ -76,7 +76,7 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 
 	_, _ = fs.Create(".stool.yaml")
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {} // dummy function to make command runnable
+	cmd.Run = func(cmd *cobrax.Command, args []string) {} // dummy function to make command runnable
 	cmd.SetArgs([]string{"--config", ".stool.yaml"})
 	err := cmd.Execute()
 
