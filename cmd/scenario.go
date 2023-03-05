@@ -41,7 +41,7 @@ func runScenario(cmd *cobrax.Command, p *internal.ScenarioProfiler) error {
 	palette := cmd.Viper().GetBool("palette")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
-	f, err := cmd.ReadFileOrStdIn("file")
+	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,7 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	timeFormat := cmd.Viper().GetString("time_format")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
-	f, err := cmd.ReadFileOrStdIn("file")
+	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
 	if err != nil {
 		return err
 	}
