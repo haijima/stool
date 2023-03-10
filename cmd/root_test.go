@@ -13,6 +13,7 @@ func TestNewRootCmd(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
+	_ = cmd.BindFlags()
 
 	assert.Equal(t, "stool", cmd.Name(), "NewRootCommand() should return command named \"stool\". but: \"%s\"", cmd.Name())
 	assert.False(t, cmd.HasParent(), "RootCommand should not have parent command.")
@@ -24,6 +25,7 @@ func TestNewRootCmd_Flag(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
+	_ = cmd.BindFlags()
 	fileFlag := cmd.PersistentFlags().Lookup("file")
 	matchingGroupsFlag := cmd.PersistentFlags().Lookup("matching_groups")
 	ignorePatternsFlag := cmd.PersistentFlags().Lookup("ignore_patterns")
@@ -45,6 +47,7 @@ func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
+	_ = cmd.BindFlags()
 
 	v.Set("verbose", true)
 
@@ -59,6 +62,7 @@ func TestNewRootCmd_Flag_Debug(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
+	_ = cmd.BindFlags()
 
 	v.Set("debug", true)
 
@@ -73,6 +77,7 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
+	_ = cmd.BindFlags()
 
 	_, _ = fs.Create(".stool.yaml")
 
@@ -87,6 +92,7 @@ func TestExecute(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	v := viper.New()
 	cmd := NewRootCmd(v, fs)
+	_ = cmd.BindFlags()
 
 	err := cmd.Execute()
 

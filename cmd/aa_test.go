@@ -13,6 +13,7 @@ func TestNewAaCommand(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewAaCommand(v, fs)
+	_ = cmd.BindFlags()
 
 	assert.Equal(t, "aa", cmd.Name())
 }
@@ -21,6 +22,7 @@ func TestNewAaCommand_Run(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewAaCommand(v, fs)
+	_ = cmd.BindFlags()
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
@@ -33,6 +35,7 @@ func TestNewAaCommand_Flag_Big(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewAaCommand(v, fs)
+	_ = cmd.BindFlags()
 	v.Set("big", true)
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
@@ -46,6 +49,7 @@ func TestNewAaCommand_Flag_Text(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewAaCommand(v, fs)
+	_ = cmd.BindFlags()
 	v.Set("text", true)
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)

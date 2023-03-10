@@ -23,7 +23,6 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 	}
 
 	trendCmd.PersistentFlags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
-	_ = trendCmd.BindPersistentFlags()
 
 	return trendCmd
 }
