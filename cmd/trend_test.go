@@ -16,6 +16,7 @@ func TestNewTrendCmd(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 
 	assert.Equal(t, "trend", cmd.Name(), "NewTrendCommand() should return command named \"trend\". but: \"%s\"", cmd.Name())
 }
@@ -25,6 +26,7 @@ func TestNewTrendCmd_Flag(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 	intervalFlag := cmd.LocalFlags().Lookup("interval")
 
 	assert.True(t, cmd.HasAvailableLocalFlags(), "trend command should have available local flag")
@@ -38,6 +40,7 @@ func Test_Trend_RunE(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -59,6 +62,7 @@ func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 
 	v.Set("interval", "0")
 
@@ -72,6 +76,7 @@ func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
@@ -87,6 +92,7 @@ func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -132,6 +138,7 @@ func BenchmarkTrendCommand_RunE(b *testing.B) {
 	v := viper.New()
 	fs := afero.NewOsFs()
 	cmd := NewTrendCommand(p, v, fs)
+	_ = cmd.BindFlags()
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"

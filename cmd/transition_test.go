@@ -17,6 +17,7 @@ func TestNewTransitionCmd(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	assert.Equal(t, "transition", cmd.Name(), "NewTransitionCmd() should return command named \"transition\". but: \"%s\"", cmd.Name())
 }
@@ -26,9 +27,10 @@ func TestNewTransitionCmd_Flag(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	formatFlag := cmd.PersistentFlags().Lookup("format")
+	_ = cmd.BindFlags()
+	formatFlag := cmd.Flags().Lookup("format")
 
-	assert.True(t, cmd.HasAvailablePersistentFlags(), "transition command should have available flag")
+	assert.True(t, cmd.HasAvailableFlags(), "transition command should have available flag")
 	assert.NotNil(t, formatFlag, "transition command should have \"format\" flag")
 	assert.Equal(t, "string", formatFlag.Value.Type(), "\"format\" flag is string")
 }
@@ -38,6 +40,7 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -62,6 +65,7 @@ func Test_TransitionCmd_RunE_file_not_exists(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
@@ -76,6 +80,7 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -97,6 +102,7 @@ func Test_TransitionCmd_RunE_format_mermaid(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -127,6 +133,7 @@ func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -215,6 +222,7 @@ func BenchmarkTransitionCommand_RunE(b *testing.B) {
 	v := viper.New()
 	fs := afero.NewOsFs()
 	cmd := NewTransitionCmd(p, v, fs)
+	_ = cmd.BindFlags()
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"
