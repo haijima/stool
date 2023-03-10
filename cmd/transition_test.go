@@ -92,6 +92,36 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	assert.Equal(t, ",,GET /,POST /initialize\n,0,1,1\nGET /,1,1,0\nPOST /initialize,1,0,0\n", stdout.String())
 }
 
+func Test_TransitionCmd_RunE_format_mermaid(t *testing.T) {
+	p := internal.NewTransitionProfiler()
+	v := viper.New()
+	fs := afero.NewMemMapFs()
+	cmd := NewTransitionCmd(p, v, fs)
+
+	fileName := "./access.log"
+	v.Set("file", fileName)
+	v.Set("format", "mermaid")
+	_, _ = fs.Create(fileName)
+	_ = afero.WriteFile(fs, fileName, []byte("time:01/Jan/2023:12:00:01 +0900\treq:POST /initialize HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\ntime:01/Jan/2023:12:00:02 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\ntime:01/Jan/2023:12:00:03 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
+
+	stdout := new(bytes.Buffer)
+	cmd.SetOut(stdout)
+
+	err := cmd.RunE(cmd, []string{})
+
+	assert.NoError(t, err)
+	assert.Contains(t, stdout.String(), "title: stool transition")
+	assert.Contains(t, stdout.String(), "stateDiagram-v2")
+	assert.Contains(t, stdout.String(), "direction TB")
+	assert.Contains(t, stdout.String(), "s1 : GET / Call 2 (66.66%)")
+	assert.Contains(t, stdout.String(), "s2 : POST /initialize Call 1 (33.33%)")
+	assert.Contains(t, stdout.String(), "[*] --> s1: 1")
+	assert.Contains(t, stdout.String(), "[*] --> s2: 1")
+	assert.Contains(t, stdout.String(), "s1 --> [*]: 1")
+	assert.Contains(t, stdout.String(), "s2 --> [*]: 1")
+	assert.Contains(t, stdout.String(), "s1 --> s1: 1")
+}
+
 func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
