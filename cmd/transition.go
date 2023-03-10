@@ -61,6 +61,8 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	switch strings.ToLower(format) {
 	case "dot":
 		printFn = createTransitionDot
+	case "mermaid":
+		printFn = createTransitionMermaid
 	case "csv":
 		printFn = printTransitionCsv
 	default:
@@ -144,6 +146,57 @@ func createTransitionDot(cmd *cobrax.Command, result *internal.Transition) error
 	}
 
 	return graph.Write(cmd.OutOrStdout())
+}
+
+func createTransitionMermaid(cmd *cobrax.Command, result *internal.Transition) error {
+	cmd.Println("---")
+	cmd.Println("title: stool transition")
+	cmd.Println("---")
+	cmd.Println("stateDiagram-v2")
+	cmd.Println("direction TB")
+
+	eps := result.Endpoints
+	sort.Strings(eps)
+
+	// Calculate the total of calls for each endpoint
+	totalSum := 0
+	for _, e := range eps {
+		totalSum += result.Sum[e]
+	}
+
+	// Add each endpoint as a node
+	cmd.Println("\t[*]")
+	for i, e := range eps {
+		if e == "" {
+			continue
+		}
+		sum := result.Sum[e]
+		cmd.Printf("\ts%d : %s Call %s (%s%%)\n", i, e, humanize.Comma(int64(sum)), humanize.FtoaWithDigits(100*float64(sum)/float64(totalSum), 2))
+	}
+
+	for i, source := range eps {
+		for j, target := range eps {
+			if result.Data[source] == nil {
+				continue
+			}
+			count := result.Data[source][target]
+			if count == 0 {
+				continue
+			}
+			s := fmt.Sprintf("s%d", i)
+			if source == "" {
+				s = "[*]"
+			}
+			t := fmt.Sprintf("s%d", j)
+			if target == "" {
+				t = "[*]"
+			}
+
+			cmd.Printf("\t%s --> %s: %d\n", s, t, count)
+		}
+	}
+
+	return nil
 }
 
 func printTransitionCsv(cmd *cobrax.Command, result *internal.Transition) error {
