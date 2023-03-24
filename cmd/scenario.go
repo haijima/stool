@@ -36,6 +36,7 @@ func runScenario(cmd *cobrax.Command, p *internal.ScenarioProfiler) error {
 	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
 	ignorePatterns := cmd.Viper().GetStringSlice("ignore_patterns")
 	timeFormat := cmd.Viper().GetString("time_format")
+	labels := cmd.Viper().GetStringMapString("log_labels")
 	format := cmd.Viper().GetString("format")
 	palette := cmd.Viper().GetBool("palette")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
@@ -49,6 +50,7 @@ func runScenario(cmd *cobrax.Command, p *internal.ScenarioProfiler) error {
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
+		Labels:         labels,
 	})
 	if err != nil {
 		return err

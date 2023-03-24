@@ -35,6 +35,7 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
 	ignorePatterns := cmd.Viper().GetStringSlice("ignore_patterns")
 	timeFormat := cmd.Viper().GetString("time_format")
+	labels := cmd.Viper().GetStringMapString("log_labels")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
 	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
@@ -46,6 +47,7 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 		MatchingGroups: matchingGroups,
 		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
+		Labels:         labels,
 	})
 	if err != nil {
 		return err

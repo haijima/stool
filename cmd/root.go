@@ -21,6 +21,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd.PersistentFlags().StringSlice("ignore_patterns", []string{}, "comma-separated list of regular expression patterns to ignore URIs")
 	rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	_ = rootCmd.MarkFlagFilename("file", viper.SupportedExts...)
+	rootCmd.PersistentFlags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
 	rootCmd.PersistentFlags().Bool("version", false, "Show the version of this command")
 
 	rootCmd.AddCommand(NewTrendCommand(internal.NewTrendProfiler(), v, fs))
