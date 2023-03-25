@@ -33,8 +33,9 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 
 func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
-	ignorePatterns := cmd.Viper().GetStringSlice("ignore_patterns")
 	timeFormat := cmd.Viper().GetString("time_format")
+	labels := cmd.Viper().GetStringMapString("log_labels")
+	filter := cmd.Viper().GetString("filter")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
 	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
@@ -44,8 +45,9 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	defer f.Close()
 	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
-		IgnorePatterns: ignorePatterns,
 		TimeFormat:     timeFormat,
+		Labels:         labels,
+		Filter:         filter,
 	})
 	if err != nil {
 		return err

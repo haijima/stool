@@ -30,6 +30,8 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
 	timeFormat := cmd.Viper().GetString("time_format")
+	labels := cmd.Viper().GetStringMapString("log_labels")
+	filter := cmd.Viper().GetString("filter")
 	interval := cmd.Viper().GetInt("interval")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
@@ -45,6 +47,8 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
 		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
+		Labels:         labels,
+		Filter:         filter,
 	})
 	if err != nil {
 		return err

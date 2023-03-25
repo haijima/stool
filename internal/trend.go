@@ -24,6 +24,9 @@ func (p *TrendProfiler) Profile(reader *log.LTSVReader, interval int) (*Trend, e
 	for reader.Read() {
 		_, err := reader.Parse(&entry)
 		if err != nil {
+			if err == log.Filtered {
+				continue
+			}
 			return nil, err
 		}
 
