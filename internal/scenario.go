@@ -14,7 +14,6 @@ type ScenarioProfiler struct {
 
 type ScenarioOption struct {
 	MatchingGroups []string
-	IgnorePatterns []string
 	TimeFormat     string
 }
 
@@ -44,10 +43,10 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 	for reader.Read() {
 		_, err := reader.Parse(&entry)
 		if err != nil {
+			if err == log.Filtered {
+				continue
+			}
 			return nil, err
-		}
-		if entry.IsIgnored {
-			continue
 		}
 
 		k := entry.Key()

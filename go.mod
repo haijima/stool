@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/Wing924/ltsv v0.3.1
+	github.com/antonmedv/expr v1.12.5
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/haijima/cobrax v0.0.4

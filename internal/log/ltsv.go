@@ -2,6 +2,7 @@ package log
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -17,19 +18,21 @@ type LTSVReader struct {
 	r                *bufio.Scanner
 	timeFormat       string
 	matchingPatterns []regexp.Regexp
-	ignorePatterns   []regexp.Regexp
 	labels           map[string]string
 	line             int
+	filter           *FilterExpr
 }
 
 type LTSVReadOpt struct {
 	MatchingGroups []string
-	IgnorePatterns []string
 	TimeFormat     string
 	Labels         map[string]string
+	Filter         string
 }
 
 const defaultTimeFormat = "02/Jan/2006:15:04:05 -0700"
+
+var Filtered = errors.New("filtered")
 
 func NewLTSVReader(r io.Reader, opt LTSVReadOpt) (*LTSVReader, error) {
 	scanner := bufio.NewScanner(r)
@@ -48,14 +51,6 @@ func NewLTSVReader(r io.Reader, opt LTSVReadOpt) (*LTSVReader, error) {
 		}
 		matchingregexps = append(matchingregexps, *p)
 	}
-	ignoreRegexps := make([]regexp.Regexp, 0, len(opt.IgnorePatterns))
-	for _, pattern := range opt.IgnorePatterns {
-		p, err := regexp.Compile(pattern)
-		if err != nil {
-			return nil, err
-		}
-		ignoreRegexps = append(ignoreRegexps, *p)
-	}
 
 	labels := maps.Clone(defaultLabels)
 	for k, v := range opt.Labels {
@@ -64,12 +59,17 @@ func NewLTSVReader(r io.Reader, opt LTSVReadOpt) (*LTSVReader, error) {
 		}
 	}
 
+	filter, err := NewFilterExpr(opt.Filter)
+	if err != nil {
+		return nil, err
+	}
+
 	return &LTSVReader{
 		r:                scanner,
 		matchingPatterns: matchingregexps,
-		ignorePatterns:   ignoreRegexps,
 		timeFormat:       timeFormat,
 		labels:           labels,
+		filter:           filter,
 	}, nil
 }
 
@@ -89,7 +89,6 @@ type LogEntry struct {
 	Uid       string
 	SetNewUid bool
 	Time      time.Time
-	IsIgnored bool
 }
 
 func (e LogEntry) Key() string {
@@ -113,7 +112,6 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	entry.Req = ""
 	entry.Method = ""
 	entry.Uri = ""
-	entry.IsIgnored = false
 	entry.Status = 0
 	entry.Time = time.Time{}
 	entry.Uid = ""
@@ -126,7 +124,6 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 			method, uri := parseReq(string(value), r.matchingPatterns)
 			entry.Method = method
 			entry.Uri = uri
-			entry.IsIgnored = isIgnored(uri, r.ignorePatterns)
 
 		case r.labels["status"]:
 			status, err := strconv.Atoi(string(value))
@@ -177,6 +174,13 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 		return nil, fmt.Errorf("\"%s\" or \"%s\" field is not found on line %d", r.labels["uidset"], r.labels["uidgot"], r.line)
 	}
 
+	match, err := r.filter.Run(*entry)
+	if err != nil {
+		return nil, err
+	}
+	if !match {
+		return nil, Filtered
+	}
 	return entry, nil
 }
 
@@ -204,13 +208,4 @@ func parseReq(req string, patterns []regexp.Regexp) (string, string) {
 		}
 	}
 	return method, uri
-}
-
-func isIgnored(uri string, ignorePatterns []regexp.Regexp) bool {
-	for _, p := range ignorePatterns {
-		if p.MatchString(uri) {
-			return true
-		}
-	}
-	return false
 }

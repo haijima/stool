@@ -24,10 +24,10 @@ func (p *TransitionProfiler) Profile(reader *log.LTSVReader) (*Transition, error
 	for reader.Read() {
 		_, err := reader.Parse(&entry)
 		if err != nil {
+			if err == log.Filtered {
+				continue
+			}
 			return nil, err
-		}
-		if entry.IsIgnored {
-			continue
 		}
 
 		k := entry.Key()
@@ -58,7 +58,6 @@ func (p *TransitionProfiler) Profile(reader *log.LTSVReader) (*Transition, error
 
 type TransitionOption struct {
 	MatchingGroups []string
-	IgnorePatterns []string
 	TimeFormat     string
 }
 
