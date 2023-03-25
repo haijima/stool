@@ -30,6 +30,7 @@ func TestNewRootCmd_Flag(t *testing.T) {
 	matchingGroupsFlag := cmd.PersistentFlags().Lookup("matching_groups")
 	ignorePatternsFlag := cmd.PersistentFlags().Lookup("ignore_patterns")
 	timeFormatFlag := cmd.PersistentFlags().Lookup("time_format")
+	logLabelsFlag := cmd.PersistentFlags().Lookup("log_labels")
 
 	assert.True(t, cmd.HasAvailablePersistentFlags(), "transition command should have available flag")
 	assert.NotNil(t, fileFlag, "transition command should have \"file\" flag")
@@ -42,6 +43,8 @@ func TestNewRootCmd_Flag(t *testing.T) {
 	assert.Equal(t, "stringSlice", ignorePatternsFlag.Value.Type(), "\"ignore_patterns\" flag is string slice")
 	assert.NotNil(t, timeFormatFlag, "transition command should have \"time_format\" flag")
 	assert.Equal(t, "string", timeFormatFlag.Value.Type(), "\"time_format\" flag is string")
+	assert.NotNil(t, logLabelsFlag, "transition command should have \"log_labels\" flag")
+	assert.Equal(t, "stringToString", logLabelsFlag.Value.Type(), "\"log_labels\" flag is stringToString")
 }
 func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 	fs := afero.NewMemMapFs()
