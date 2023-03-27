@@ -9,6 +9,7 @@ import (
 	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
@@ -22,7 +23,8 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 		return runTrend(cmd, p)
 	}
 
-	trendCmd.PersistentFlags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
+	trendCmd.Flags().String("format", "table", "The output format (table, md, csv)")
+	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
 
 	return trendCmd
 }
@@ -32,6 +34,7 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	timeFormat := cmd.Viper().GetString("time_format")
 	labels := cmd.Viper().GetStringMapString("log_labels")
 	filter := cmd.Viper().GetString("filter")
+	format := cmd.Viper().GetString("format")
 	interval := cmd.Viper().GetInt("interval")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
@@ -59,28 +62,61 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 		return err
 	}
 
-	return printTrendCsv(cmd, result)
+	if format == "table" {
+		return printTrendTable(cmd, result, false)
+	} else if format == "md" {
+		return printTrendTable(cmd, result, true)
+	} else if format == "csv" {
+		return printTrendCsv(cmd, result)
+	}
+	return fmt.Errorf("unknown format: %s", format)
+}
+
+func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown bool) error {
+	table := tablewriter.NewWriter(cmd.OutOrStdout())
+	if markdown {
+		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+		table.SetCenterSeparator("|")
+	}
+
+	table.SetHeader(resultToHeader(result))
+
+	table.AppendBulk(resultToRows(result))
+	table.Render()
+	return nil
 }
 
 func printTrendCsv(cmd *cobrax.Command, result *internal.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
-	header := make([]string, 0)
+	if err := writer.Write(resultToHeader(result)); err != nil {
+		return err
+	}
+
+	if err := writer.WriteAll(resultToRows(result)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func resultToHeader(result *internal.Trend) []string {
+	header := make([]string, 0, result.Step+2)
 	header = append(header, "Method", "Uri")
 	for i := 0; i < result.Step; i++ {
 		header = append(header, strconv.Itoa(i*result.Interval))
 	}
-	_ = writer.Write(header)
+	return header
+}
 
-	// data rows for each endpoint
+func resultToRows(result *internal.Trend) [][]string {
+	rows := make([][]string, 0, len(result.Endpoints()))
 	for _, endpoint := range result.Endpoints() {
 		row := make([]string, 0)
 		row = append(row, strings.SplitN(endpoint, " ", 2)...) // split into Method and Uri
 		for _, count := range result.Counts(endpoint) {
 			row = append(row, strconv.Itoa(count))
 		}
-		_ = writer.Write(row)
+		rows = append(rows, row)
 	}
-	writer.Flush()
-	return nil
+	return rows
 }
