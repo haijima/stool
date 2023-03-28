@@ -38,20 +38,18 @@ stool [command]
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
   example: `--matching_groups "/users/.*,/items/.*"`.
   `--time_format string` : The format to parse time field on log file (default `02/Jan/2006:15:04:05 -0700`).
-  Options for scenario
 
 #### Options for `stool scenario`
 
 - `--format` : The output format (dot, csv) (default "dot").
-  Options for transition
 
 #### Options for `stool transition`
 
-- `--format` : The output format (dot, csv) (default "dot").
-  Options for trend
+- `--format` : The output format (dot, mermaid, csv) (default "dot").
 
 #### Options for `stool trend`
 
+- `--format` : The output format (table, md, csv) (default "table")
 - `-i, --interval` : The time (in seconds) of the interval. Access counts are cumulated at each interval. (default `5`).
 
 ### Configuration and Customization
