@@ -32,7 +32,7 @@ stool [command]
 
 #### Global Options
 
-- `--config string` : Config file (default is $HOME/.stool.yaml)
+- `--config string` : Config file (default is $XDG_CONFIG_HOME/.stool.yaml)
 - `-f, --file string` : Access log file to profile.
 - `--ignore_patterns strings` : Comma-separated list of regular expression patterns to ignore URIs
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
