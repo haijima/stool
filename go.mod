@@ -7,7 +7,8 @@ require (
 	github.com/antonmedv/expr v1.12.5
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/dustin/go-humanize v1.0.1
-	github.com/haijima/cobrax v0.0.5
+	github.com/fatih/color v1.13.0
+	github.com/haijima/cobrax v0.0.7
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/samber/lo v1.38.1
