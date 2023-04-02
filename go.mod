@@ -10,7 +10,6 @@ require (
 	github.com/haijima/cobrax v0.0.5
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/samber/lo v1.38.1
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1

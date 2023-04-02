@@ -2,7 +2,7 @@ package internal
 
 import (
 	"github.com/haijima/stool/internal/log"
-	"github.com/samber/lo"
+	"github.com/haijima/stool/internal/util"
 )
 
 type TransitionProfiler struct {
@@ -52,7 +52,7 @@ func (p *TransitionProfiler) Profile(reader *log.LTSVReader) (*Transition, error
 		result[lv][""] += 1
 	}
 
-	res := NewTransition(result, lo.Keys(endpoints), sum)
+	res := NewTransition(result, util.Keys(endpoints), sum)
 	return res, nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/haijima/stool/internal/log"
-	"github.com/samber/lo"
+	"github.com/haijima/stool/internal/util"
 )
 
 type TrendProfiler struct {
@@ -74,13 +74,15 @@ func (t *Trend) Counts(endpoint string) []int {
 		return []int{}
 	}
 
-	return lo.Times(t.Step, func(i int) int {
-		return m[i] // if not contained stores zero
-	})
+	c := make([]int, 0, t.Step)
+	for i := 0; i < t.Step; i++ {
+		c = append(c, m[i]) // if not contained stores zero
+	}
+	return c
 }
 
 func (t *Trend) Endpoints() []string {
-	keys := lo.Keys(t.data)
+	keys := util.Keys(t.data)
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	return keys
 }

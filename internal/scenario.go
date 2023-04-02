@@ -5,7 +5,7 @@ import (
 
 	"github.com/haijima/stool/internal/log"
 	"github.com/haijima/stool/internal/pattern"
-	"github.com/samber/lo"
+	"github.com/haijima/stool/internal/util"
 	"golang.org/x/exp/slices"
 )
 
@@ -97,7 +97,7 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 	}
 
 	// merge patterns
-	ss := lo.Values(scenarios)
+	ss := util.Values(scenarios)
 	slices.SortFunc(ss, func(a, b ScenarioStruct) bool {
 		return a.Pattern.String(true) > b.Pattern.String(true)
 	})
@@ -109,8 +109,8 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 				tt[i] = ScenarioStruct{
 					Hash:     p.String(true),
 					Count:    s.Count + t.Count,
-					FirstReq: lo.Min([]int{s.FirstReq, t.FirstReq}),
-					LastReq:  lo.Max([]int{s.LastReq, t.LastReq}),
+					FirstReq: util.Min(s.FirstReq, t.FirstReq),
+					LastReq:  util.Max(s.LastReq, t.LastReq),
 					Pattern:  p,
 				}
 				match = true
