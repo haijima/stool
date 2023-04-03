@@ -7,9 +7,10 @@ require (
 	github.com/antonmedv/expr v1.12.5
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/dustin/go-humanize v1.0.1
-	github.com/fatih/color v1.13.0
+	github.com/fatih/color v1.15.0
 	github.com/haijima/cobrax v0.0.7
 	github.com/lucasb-eyer/go-colorful v1.2.0
+	github.com/mattn/go-colorable v0.1.13
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/viper v1.15.0
@@ -23,6 +24,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect

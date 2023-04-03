@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dustin/go-humanize"
+	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
@@ -25,6 +27,7 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 
 	trendCmd.Flags().String("format", "table", "The output format (table, md, csv)")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
+	trendCmd.Flags().Bool("no_color", false, "disable colorized output")
 
 	return trendCmd
 }
@@ -36,6 +39,7 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	filter := cmd.Viper().GetString("filter")
 	format := cmd.Viper().GetString("format")
 	interval := cmd.Viper().GetInt("interval")
+	noColor := cmd.Viper().GetBool("no_color")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
 	if interval <= 0 {
@@ -63,37 +67,45 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	}
 
 	if format == "table" {
-		return printTrendTable(cmd, result, false)
+		return printTrendTable(cmd, result, false, noColor)
 	} else if format == "md" {
-		return printTrendTable(cmd, result, true)
+		return printTrendTable(cmd, result, true, noColor)
 	} else if format == "csv" {
-		return printTrendCsv(cmd, result)
+		return printTrendCsv(cmd, result, noColor)
 	}
 	return fmt.Errorf("unknown format: %s", format)
 }
 
-func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown bool) error {
+func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown, noColor bool) error {
 	table := tablewriter.NewWriter(cmd.OutOrStdout())
 	if markdown {
 		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 		table.SetCenterSeparator("|")
 	}
 
-	table.SetHeader(resultToHeader(result))
+	header := resultToHeader(result)
+	table.SetHeader(header)
 
-	table.AppendBulk(resultToRows(result))
+	aligns := make([]int, 0, len(header))
+	aligns = append(aligns, tablewriter.ALIGN_LEFT)
+	aligns = append(aligns, tablewriter.ALIGN_LEFT)
+	for i := 2; i < len(header); i++ {
+		aligns = append(aligns, tablewriter.ALIGN_RIGHT)
+	}
+	table.SetColumnAlignment(aligns)
+	table.AppendBulk(resultToRows(result, true, noColor))
 	table.Render()
 	return nil
 }
 
-func printTrendCsv(cmd *cobrax.Command, result *internal.Trend) error {
+func printTrendCsv(cmd *cobrax.Command, result *internal.Trend, noColor bool) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	if err := writer.Write(resultToHeader(result)); err != nil {
 		return err
 	}
 
-	if err := writer.WriteAll(resultToRows(result)); err != nil {
+	if err := writer.WriteAll(resultToRows(result, false, noColor)); err != nil {
 		return err
 	}
 	return nil
@@ -108,13 +120,24 @@ func resultToHeader(result *internal.Trend) []string {
 	return header
 }
 
-func resultToRows(result *internal.Trend) [][]string {
+func resultToRows(result *internal.Trend, humanized, noColor bool) [][]string {
 	rows := make([][]string, 0, len(result.Endpoints()))
 	for _, endpoint := range result.Endpoints() {
 		row := make([]string, 0)
 		row = append(row, strings.SplitN(endpoint, " ", 2)...) // split into Method and Uri
-		for _, count := range result.Counts(endpoint) {
-			row = append(row, strconv.Itoa(count))
+		for i, count := range result.Counts(endpoint) {
+			s := strconv.Itoa(count)
+			if humanized {
+				s = humanize.Comma(int64(count))
+			}
+			if !noColor {
+				if i > 0 && count*2 > result.Counts(endpoint)[i-1]*3 {
+					s = color.GreenString(s)
+				} else if i > 0 && count*3 < result.Counts(endpoint)[i-1]*2 {
+					s = color.RedString(s)
+				}
+			}
+			row = append(row, s)
 		}
 		rows = append(rows, row)
 	}
