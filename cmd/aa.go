@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/haijima/cobrax"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -21,6 +22,7 @@ func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 			cmd.PrintOut(aa)
 		}
 	}
+	aaCmd.Args = cobra.NoArgs
 
 	aaCmd.Flags().Bool("big", false, "if true, shows a big ASCII art")
 	aaCmd.Flags().Bool("text", false, "if true, shows a ASCII art of text")

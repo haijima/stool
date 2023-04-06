@@ -14,6 +14,7 @@ import (
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -25,6 +26,7 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 	transitionCmd.RunE = func(cmd *cobrax.Command, args []string) error {
 		return runTransition(cmd, p)
 	}
+	transitionCmd.Args = cobra.NoArgs
 
 	transitionCmd.Flags().String("format", "dot", "The output format (dot, mermaid, csv)")
 

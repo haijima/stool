@@ -14,6 +14,7 @@ import (
 	"github.com/haijima/stool/internal/pattern"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -25,6 +26,7 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 	scenarioCmd.RunE = func(cmd *cobrax.Command, args []string) error {
 		return runScenario(cmd, p)
 	}
+	scenarioCmd.Args = cobra.NoArgs
 
 	scenarioCmd.Flags().String("format", "dot", "The output format (dot, csv)")
 	scenarioCmd.Flags().Bool("palette", false, "use color palette for each endpoint")
