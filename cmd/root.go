@@ -4,6 +4,7 @@ import (
 	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -12,6 +13,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd := cobrax.NewCommand(v, fs)
 	rootCmd.Use = "stool"
 	rootCmd.Short = "stool is access log profiler"
+	rootCmd.Args = cobra.NoArgs
 
 	rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
 	rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")

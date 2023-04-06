@@ -13,6 +13,7 @@ import (
 	"github.com/haijima/stool/internal/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -24,6 +25,7 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 	trendCmd.RunE = func(cmd *cobrax.Command, args []string) error {
 		return runTrend(cmd, p)
 	}
+	trendCmd.Args = cobra.NoArgs
 
 	trendCmd.Flags().String("format", "table", "The output format (table, md, csv)")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
