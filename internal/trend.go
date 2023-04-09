@@ -15,7 +15,7 @@ func NewTrendProfiler() *TrendProfiler {
 	return &TrendProfiler{}
 }
 
-func (p *TrendProfiler) Profile(reader *log.LTSVReader, interval int) (*Trend, error) {
+func (p *TrendProfiler) Profile(reader *log.LTSVReader, interval int, sortKeys []string) (*Trend, error) {
 	var result = map[string]map[int]int{}
 	var startTime time.Time
 	step := 0
