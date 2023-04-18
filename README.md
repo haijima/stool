@@ -51,6 +51,8 @@ stool [command]
 
 - `--format` : The output format (table, md, csv) (default "table")
 - `-i, --interval` : The time (in seconds) of the interval. Access counts are cumulated at each interval. (default `5`).
+- `--sort string` : Comma-separated list of <sort keys>:<order> Valid sort keys are: method, uri, sum, count0 and
+  count1. Valid orders are asc and desc. e.g. 'sum:desc,count0:asc'  (default "sum:desc")
 
 ### Configuration and Customization
 
