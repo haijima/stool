@@ -16,7 +16,7 @@ func TestTrendProfiler_Profile(t *testing.T) {
 		MatchingGroups: []string{"^/api/user/[^\\/]+$", "^/api/group/[^\\/]+$"},
 	})
 
-	trend, err := p.Profile(logReader, 5)
+	trend, err := p.Profile(logReader, 5, []string{})
 
 	assert.NoError(t, err)
 	assert.NotNil(t, trend)
@@ -32,7 +32,7 @@ func TestTrendProfiler_Profile_invalid_TimeFormat(t *testing.T) {
 		MatchingGroups: []string{"^/api/user/[^\\/]+$", "^/api/group/[^\\/]+$"},
 	})
 
-	trend, err := p.Profile(logReader, 5)
+	trend, err := p.Profile(logReader, 5, []string{})
 
 	assert.ErrorContains(t, err, "cannot parse")
 	assert.Nil(t, trend)
@@ -47,15 +47,14 @@ func TestTrendProfiler_Profile_invalid_ltsv_format(t *testing.T) {
 		MatchingGroups: []string{"^/api/user/[^\\/]+$"},
 	})
 
-	trend, err := p.Profile(logReader, 5)
+	trend, err := p.Profile(logReader, 5, []string{})
 
 	assert.ErrorContains(t, err, "bad line syntax")
 	assert.Nil(t, trend)
 }
 
 func TestTrend(t *testing.T) {
-	data := map[string]map[int]int{"GET /": {0: 1, 1: 2, 2: 3, 3: 4}, "POST /": {0: 1}}
-
+	data := PrepareTrendData(t)
 	trend := NewTrend(data, 5, 5)
 
 	assert.Equal(t, 5, trend.Interval)
@@ -63,8 +62,7 @@ func TestTrend(t *testing.T) {
 }
 
 func TestTrend_Counts(t *testing.T) {
-	data := map[string]map[int]int{"GET /": {0: 1, 1: 2, 2: 3, 3: 4}, "POST /": {0: 1}}
-
+	data := PrepareTrendData(t)
 	trend := NewTrend(data, 5, 5)
 
 	assert.Equal(t, 5, len(trend.Counts("GET /")))
@@ -82,8 +80,7 @@ func TestTrend_Counts(t *testing.T) {
 }
 
 func TestTrend_Counts_not_found(t *testing.T) {
-	data := map[string]map[int]int{"GET /": {0: 1, 1: 2, 2: 3, 3: 4}, "POST /": {0: 1}}
-
+	data := PrepareTrendData(t)
 	trend := NewTrend(data, 5, 5)
 
 	assert.NotNil(t, trend.Counts("PUT /"))
@@ -91,11 +88,28 @@ func TestTrend_Counts_not_found(t *testing.T) {
 }
 
 func TestTrend_Endpoints(t *testing.T) {
-	data := map[string]map[int]int{"GET /": {0: 1, 1: 2, 2: 3, 3: 4}, "POST /": {0: 1}}
-
+	data := PrepareTrendData(t)
 	trend := NewTrend(data, 5, 5)
 
 	assert.Equal(t, 2, len(trend.Endpoints()))
 	assert.Equal(t, "GET /", trend.Endpoints()[0])
 	assert.Equal(t, "POST /", trend.Endpoints()[1])
+}
+
+func PrepareTrendData(t *testing.T) map[string]*TrendData {
+	t.Helper()
+	data := make(map[string]*TrendData, 2)
+	data["GET /"] = &TrendData{Method: "GET", Uri: "/"}
+	data["GET /"].AddCount(0, 1)
+	data["GET /"].AddCount(1, 2)
+	data["GET /"].AddCount(2, 3)
+	data["GET /"].AddCount(3, 4)
+	data["GET /"].AddCount(4, 0)
+	data["POST /"] = &TrendData{Method: "POST", Uri: "/"}
+	data["POST /"].AddCount(0, 1)
+	data["POST /"].AddCount(1, 0)
+	data["POST /"].AddCount(2, 0)
+	data["POST /"].AddCount(3, 0)
+	data["POST /"].AddCount(4, 0)
+	return data
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
@@ -47,7 +48,7 @@ func Test_Trend_RunE(t *testing.T) {
 	v.Set("interval", "5")
 	v.Set("format", "csv")
 	_, _ = fs.Create(fileName)
-	_ = afero.WriteFile(fs, fileName, []byte("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:06 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-"), 0777)
+	_ = afero.WriteFile(fs, fileName, []byte("time:20/Jan/2023:14:39:01 +0900\thost:192.168.0.10\tforwardedfor:-\treq:POST /initialize HTTP/2.0\tstatus:200\tmethod:POST\turi:/initialize\tsize:18\treferer:-\tua:benchmarker-initializer\treqtime:0.268\tcache:-\truntime:-\tapptime:0.268\tvhost:192.168.0.11\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:06 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-\ntime:20/Jan/2023:14:39:07 +0900\thost:192.168.0.10\tforwardedfor:-\treq:GET / HTTP/2.0\tstatus:200\tmethod:GET\turi:/\tsize:528\treferer:-\tua:Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 Edg/85.0.564.44\treqtime:0.002\tcache:-\truntime:-\tapptime:0.000\tvhost:192.168.0.11\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\tcookie:-"), 0777)
 
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
@@ -55,7 +56,7 @@ func Test_Trend_RunE(t *testing.T) {
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
-	assert.Equal(t, "Method,Uri,0,5\nGET,/,0,1\nPOST,/initialize,1,0\n", stdout.String())
+	assert.Equal(t, "Method,Uri,0,5\nGET,/,0,2\nPOST,/initialize,1,0\n", stdout.String())
 }
 
 func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
@@ -108,20 +109,23 @@ func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 }
 
 func Test_printTrendCsv(t *testing.T) {
-	data := make(map[string]map[int]int, 2)
-	data["GET /"] = make(map[int]int, 4)
-	data["GET /"][0] = 1
-	data["GET /"][1] = 2
-	data["GET /"][2] = 3
-	data["GET /"][3] = 4
-	data["POST /"] = make(map[int]int, 1)
-	data["POST /"][0] = 1
+	data := make(map[string]*internal.TrendData, 2)
+	data["GET /"] = &internal.TrendData{Method: "GET", Uri: "/"}
+	data["GET /"].AddCount(0, 1)
+	data["GET /"].AddCount(1, 2)
+	data["GET /"].AddCount(2, 3)
+	data["GET /"].AddCount(3, 4)
+	data["GET /"].AddCount(4, 0)
+	data["POST /"] = &internal.TrendData{Method: "POST", Uri: "/"}
+	data["POST /"].AddCount(0, 1)
+	data["POST /"].AddCount(1, 0)
+	data["POST /"].AddCount(2, 0)
+	data["POST /"].AddCount(3, 0)
+	data["POST /"].AddCount(4, 0)
 
-	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
-
+	cmd := cobrax.NewCommand(v, fs)
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 

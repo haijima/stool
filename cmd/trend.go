@@ -30,6 +30,7 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 	trendCmd.Flags().String("format", "table", "The output format (table, md, csv)")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
 	trendCmd.Flags().Bool("no_color", false, "disable colorized output")
+	trendCmd.Flags().StringSlice("sort", []string{"sum:desc"}, "comma-separated list of <sort keys>:<order> Valid sort keys are method, uri, sum, count0 and count1. Valid orders are asc and desc. e.g. 'sum:desc,count0:asc' ")
 
 	return trendCmd
 }
@@ -40,6 +41,7 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	labels := cmd.Viper().GetStringMapString("log_labels")
 	filter := cmd.Viper().GetString("filter")
 	format := cmd.Viper().GetString("format")
+	sortKeys := cmd.Viper().GetStringSlice("sort")
 	interval := cmd.Viper().GetInt("interval")
 	noColor := cmd.Viper().GetBool("no_color")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
@@ -63,7 +65,7 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 		return err
 	}
 
-	result, err := p.Profile(logReader, interval)
+	result, err := p.Profile(logReader, interval, sortKeys)
 	if err != nil {
 		return err
 	}
@@ -135,6 +137,8 @@ func resultToRows(result *internal.Trend, humanized, noColor bool) [][]string {
 			if !noColor {
 				if i > 0 && count*2 > result.Counts(endpoint)[i-1]*3 {
 					s = color.GreenString(s)
+				} else if count == 0 {
+					s = color.HiBlackString(s)
 				} else if i > 0 && count*3 < result.Counts(endpoint)[i-1]*2 {
 					s = color.RedString(s)
 				}
