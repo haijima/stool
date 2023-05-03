@@ -82,13 +82,14 @@ var defaultLabels = map[string]string{
 }
 
 type LogEntry struct {
-	Req       string
-	Method    string
-	Uri       string
-	Status    int
-	Uid       string
-	SetNewUid bool
-	Time      time.Time
+	Req          string
+	Method       string
+	Uri          string
+	Status       int
+	Uid          string
+	SetNewUid    bool
+	Time         time.Time
+	MatchedGroup *regexp.Regexp
 }
 
 func (e LogEntry) Key() string {
@@ -116,14 +117,16 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	entry.Time = time.Time{}
 	entry.Uid = ""
 	entry.SetNewUid = false
+	entry.MatchedGroup = nil
 
 	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label, value []byte) error {
 		switch string(label) {
 		case r.labels["req"]:
 			entry.Req = string(value)
-			method, uri := parseReq(string(value), r.matchingPatterns)
+			method, uri, MatchedGroup := parseReq(string(value), r.matchingPatterns)
 			entry.Method = method
 			entry.Uri = uri
+			entry.MatchedGroup = MatchedGroup
 
 		case r.labels["status"]:
 			status, err := strconv.Atoi(string(value))
@@ -184,15 +187,26 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	return entry, nil
 }
 
-func parseReq(req string, patterns []regexp.Regexp) (string, string) {
+func parseReq(req string, patterns []regexp.Regexp) (string, string, *regexp.Regexp) {
+	method, uri, _ := ParseReq(req)
+	for _, p := range patterns {
+		if p.MatchString(uri) {
+			return method, p.String(), &p
+		}
+	}
+	return method, uri, nil
+}
+
+func ParseReq(req string) (string, string, string) {
 	var method string
 	var uri string
+	var query string
 	i := strings.Index(req, " ")
 	if i >= 0 {
 		method = req[:i]
 		uri = req[i+1:]
 	} else {
-		return "", ""
+		return "", "", ""
 	}
 	i = strings.Index(uri, " ")
 	if i >= 0 {
@@ -200,12 +214,8 @@ func parseReq(req string, patterns []regexp.Regexp) (string, string) {
 	}
 	i = strings.Index(uri, "?")
 	if i >= 0 {
+		query = uri[i+1:]
 		uri = uri[:i]
 	}
-	for _, p := range patterns {
-		if p.MatchString(uri) {
-			return method, p.String()
-		}
-	}
-	return method, uri
+	return method, uri, query
 }
