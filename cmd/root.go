@@ -25,6 +25,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd.AddCommand(NewTrendCommand(internal.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
+	rootCmd.AddCommand(NewParamCommand(internal.NewParamProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
 
 	return rootCmd
