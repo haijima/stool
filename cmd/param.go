@@ -279,10 +279,8 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 
 func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, format string) {
 	rows := make([][]string, 0)
-	validKeys := make([]string, 0)
 	for _, k := range result.Endpoints {
 		v := result.Count[k]
-		validKeys = append(validKeys, strings.Split(k, " ")[1])
 		pathParams, hasPathParam := result.Path[k]
 		queryParams, hasQuery := result.QueryValue[k]
 		if !hasPathParam && !hasQuery {
