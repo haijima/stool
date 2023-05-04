@@ -98,7 +98,16 @@ func printParamResult(cmd *cobrax.Command, result *internal.Param, paramType str
 		v := result.Count[k]
 		pathParams, hasPathParam := result.Path[k]
 		queryParams, hasQuery := result.QueryValue[k]
-		if !hasPathParam && !hasQuery {
+		if paramType != "all" && !hasPathParam && !hasQuery {
+			if !cmd.Viper().GetBool("quiet") {
+				if strings.HasPrefix(k, "GET ") {
+					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] Neither path parameter nor query parameter for \"%s\"", k)))
+				} else {
+					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No path parameter for \"%s\"", k)))
+				}
+				cmd.PrintErrln("Use capture group of regular expression to get path parameters. e.g. \"/users/([^/]+)\" or \"/users/(?P<id>[0-9]+)/posts\"")
+				cmd.PrintErrln()
+			}
 			continue // has no param
 		} else if paramType == "path" && !hasPathParam {
 			if !cmd.Viper().GetBool("quiet") {
