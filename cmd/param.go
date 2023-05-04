@@ -357,7 +357,7 @@ func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, form
 		mdWriter.AppendBulk(rows)
 		mdWriter.Render()
 	} else {
-		cmd.PrintErrln("invalid format: %s", format)
+		cmd.PrintErrf("invalid format: %s\n", format)
 	}
 }
 
