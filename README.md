@@ -24,6 +24,7 @@ stool [command]
 
 ### Commands
 
+- `param`: Show the parameter statistics for each endpoint
 - `scenario`: Show the access patterns of users
 - `transition`: Show the transition between endpoints
 - `trend`: Show the count of accesses for each endpoint over time
@@ -37,7 +38,15 @@ stool [command]
 - `--ignore_patterns strings` : Comma-separated list of regular expression patterns to ignore URIs
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
   example: `--matching_groups "/users/.*,/items/.*"`.
-  `--time_format string` : The format to parse time field on log file (default `02/Jan/2006:15:04:05 -0700`).
+- `--no_color`: Disable colorized output
+- `--time_format string` : The format to parse time field on log file (default `02/Jan/2006:15:04:05 -0700`).
+
+#### Options for `stool param`
+
+- `--format string`: The stat output format (table, md, csv, tsv) (default "table")
+- `-n, --num int`: The number of parameters to show (default 5)
+- `--stat`: Show statistics of the parameters
+- `-t, --type string`: The type of the parameter {path|query|all} (default "all")
 
 #### Options for `stool scenario`
 
@@ -61,6 +70,8 @@ Instructions on how to configure and customize the tool can be found in the `con
 ## Examples
 
 ``` sh
+stool param --file path/to/access.log --num 10 --stat "/users/(?P<userId>[^/]+)$"
+
 stool scenario --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o scenario.svg && open scenario.svg
 
 stool transition --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o transition.svg && open transition.svg

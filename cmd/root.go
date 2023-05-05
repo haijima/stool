@@ -20,11 +20,13 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
 	rootCmd.PersistentFlags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
 	rootCmd.PersistentFlags().String("filter", "", "filter log lines by regular expression")
+	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
 	_ = rootCmd.MarkFlagFilename("file", viper.SupportedExts...)
 
 	rootCmd.AddCommand(NewTrendCommand(internal.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
+	rootCmd.AddCommand(NewParamCommand(internal.NewParamProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
 
 	return rootCmd
