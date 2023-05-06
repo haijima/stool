@@ -18,50 +18,47 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
 
 ## Commands and Options
 
-``` sh
-stool [command]
-```
-
 ### Commands
 
-- `param`: Show the parameter statistics for each endpoint
-- `scenario`: Show the access patterns of users
-- `transition`: Show the transition between endpoints
-- `trend`: Show the count of accesses for each endpoint over time
+- `stool param`: Show the parameter statistics for each endpoint
+- `stool scenario`: Show the access patterns of users
+- `stool transition`: Show the transition between endpoints
+- `stool trend`: Show the count of accesses for each endpoint over time
 
 ### Options
 
 #### Global Options
 
-- `--config string` : Config file (default is $XDG_CONFIG_HOME/.stool.yaml)
+- `--config string` : Config file (default is `$XDG_CONFIG_HOME/.stool.yaml`)
 - `-f, --file string` : Access log file to profile.
 - `--ignore_patterns strings` : Comma-separated list of regular expression patterns to ignore URIs
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
   example: `--matching_groups "/users/.*,/items/.*"`.
 - `--no_color`: Disable colorized output
-- `--time_format string` : The format to parse time field on log file (default `02/Jan/2006:15:04:05 -0700`).
+- `--time_format string` : The format to parse time field on log file (default `"02/Jan/2006:15:04:05 -0700"`).
 
 #### Options for `stool param`
 
-- `--format string`: The stat output format (table, md, csv, tsv) (default "table")
-- `-n, --num int`: The number of parameters to show (default 5)
+- `--format string`: The stat output format {table|md|csv|tsv} (default `"table"`)
+- `-n, --num int`: The number of parameters to show (default `5`)
 - `--stat`: Show statistics of the parameters
-- `-t, --type string`: The type of the parameter {path|query|all} (default "all")
+- `-t, --type string`: The type of the parameter {path|query|all} (default `"all"`)
 
 #### Options for `stool scenario`
 
-- `--format` : The output format (dot, csv) (default "dot").
+- `--format string` : The output format {dot|csv} (default `"dot"`).
 
 #### Options for `stool transition`
 
-- `--format` : The output format (dot, mermaid, csv) (default "dot").
+- `--format string` : The output format {dot|mermaid|csv} (default `"dot"`).
 
 #### Options for `stool trend`
 
-- `--format` : The output format (table, md, csv) (default "table")
-- `-i, --interval` : The time (in seconds) of the interval. Access counts are cumulated at each interval. (default `5`).
-- `--sort string` : Comma-separated list of <sort keys>:<order> Valid sort keys are: method, uri, sum, count0, count1
-  and countN. Valid orders are asc and desc. e.g. 'sum:desc,count0:asc'  (default "sum:desc")
+- `--format string` : The output format {table|md|csv} (default `"table"`)
+- `-i, --interval int` : The time (in seconds) of the interval. Access counts are cumulated at each interval. (
+  default `5`).
+- `--sort string` : Comma-separated list of <sort keys>:<order> Sort keys are {method|uri|sum|count0|count1|countN}.
+  Orders are [asc|desc]. e.g. `"sum:desc,count0:asc"` (default `"sum:desc"`)
 
 ### Configuration and Customization
 
@@ -76,7 +73,7 @@ stool scenario --file path/to/access.log --matching_groups "/users/.*,/items/.*"
 
 stool transition --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o transition.svg && open transition.svg
 
-stool trend --file path/to/access.log --matching_groups "/users/.*,/items/.*" --interval 
+stool trend --file path/to/access.log --matching_groups "/users/.*,/items/.*" --interval 10
 ```
 
 ## Prerequisites
@@ -88,7 +85,7 @@ or `stool transition` command.
 
 ### LTSV Log format
 
-`stool` can handle LTSV formatted log file. The example of Nginx log setting is shown below:
+`stool` can handle [LTSV](http://ltsv.org/) formatted log file. The example of Nginx log setting is shown below:
 
 ```nginx configuration
 userid on; # Enable $uid_got and $uid_set
