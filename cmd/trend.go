@@ -49,6 +49,8 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
 
+	color.NoColor = color.NoColor || noColor
+
 	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
 	if err != nil {
 		return err
@@ -70,16 +72,16 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	}
 
 	if format == "table" {
-		return printTrendTable(cmd, result, false, noColor)
+		return printTrendTable(cmd, result, false)
 	} else if format == "md" {
-		return printTrendTable(cmd, result, true, noColor)
+		return printTrendTable(cmd, result, true)
 	} else if format == "csv" {
-		return printTrendCsv(cmd, result, noColor)
+		return printTrendCsv(cmd, result)
 	}
 	return fmt.Errorf("unknown format: %s", format)
 }
 
-func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown, noColor bool) error {
+func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown bool) error {
 	table := tablewriter.NewWriter(cmd.OutOrStdout())
 	if markdown {
 		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
@@ -96,19 +98,19 @@ func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown, noCo
 		aligns = append(aligns, tablewriter.ALIGN_RIGHT)
 	}
 	table.SetColumnAlignment(aligns)
-	table.AppendBulk(resultToRows(result, true, noColor))
+	table.AppendBulk(resultToRows(result, true))
 	table.Render()
 	return nil
 }
 
-func printTrendCsv(cmd *cobrax.Command, result *internal.Trend, noColor bool) error {
+func printTrendCsv(cmd *cobrax.Command, result *internal.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	if err := writer.Write(resultToHeader(result)); err != nil {
 		return err
 	}
 
-	if err := writer.WriteAll(resultToRows(result, false, noColor)); err != nil {
+	if err := writer.WriteAll(resultToRows(result, false)); err != nil {
 		return err
 	}
 	return nil
@@ -123,7 +125,7 @@ func resultToHeader(result *internal.Trend) []string {
 	return header
 }
 
-func resultToRows(result *internal.Trend, humanized, noColor bool) [][]string {
+func resultToRows(result *internal.Trend, humanized bool) [][]string {
 	rows := make([][]string, 0, len(result.Endpoints()))
 	for _, endpoint := range result.Endpoints() {
 		row := make([]string, 0)
@@ -133,14 +135,12 @@ func resultToRows(result *internal.Trend, humanized, noColor bool) [][]string {
 			if humanized {
 				s = humanize.Comma(int64(count))
 			}
-			if !noColor {
-				if i > 0 && count*2 > result.Counts(endpoint)[i-1]*3 {
-					s = color.GreenString(s)
-				} else if count == 0 {
-					s = color.HiBlackString(s)
-				} else if i > 0 && count*3 < result.Counts(endpoint)[i-1]*2 {
-					s = color.RedString(s)
-				}
+			if i > 0 && count*2 > result.Counts(endpoint)[i-1]*3 {
+				s = color.GreenString(s)
+			} else if count == 0 {
+				s = color.HiBlackString(s)
+			} else if i > 0 && count*3 < result.Counts(endpoint)[i-1]*2 {
+				s = color.RedString(s)
 			}
 			row = append(row, s)
 		}
