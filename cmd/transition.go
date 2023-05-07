@@ -28,7 +28,7 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 	}
 	transitionCmd.Args = cobra.NoArgs
 
-	transitionCmd.Flags().String("format", "dot", "The output format (dot, mermaid, csv)")
+	transitionCmd.Flags().String("format", "dot", "The output format {dot|mermaid|csv}")
 
 	return transitionCmd
 }

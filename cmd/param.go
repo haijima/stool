@@ -24,7 +24,7 @@ import (
 func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	paramCmd := cobrax.NewCommand(v, fs)
 	paramCmd.Use = "param"
-	paramCmd.Short = "Show the parameters of each endpoint"
+	paramCmd.Short = "Show the parameter statistics for each endpoint"
 	paramCmd.RunE = func(cmd *cobrax.Command, args []string) error {
 		return runParam(cmd, p, args)
 	}
@@ -33,7 +33,7 @@ func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *co
 	paramCmd.Flags().StringP("type", "t", "all", "The type of the parameter {path|query|all}")
 	paramCmd.Flags().IntP("num", "n", 5, "The number of parameters to show")
 	paramCmd.Flags().Bool("stat", false, "Show statistics of the parameters")
-	paramCmd.Flags().String("format", "table", "The stat output format (table, md, csv, tsv)")
+	paramCmd.Flags().String("format", "table", "The stat output format {table|md|csv|tsv}")
 
 	return paramCmd
 }

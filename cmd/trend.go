@@ -27,9 +27,9 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 	}
 	trendCmd.Args = cobra.NoArgs
 
-	trendCmd.Flags().String("format", "table", "The output format (table, md, csv)")
+	trendCmd.Flags().String("format", "table", "The output format {table|md|csv}")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
-	trendCmd.Flags().StringSlice("sort", []string{"sum:desc"}, "comma-separated list of <sort keys>:<order> Valid sort keys are method, uri, sum, count0 and count1. Valid orders are asc and desc. e.g. 'sum:desc,count0:asc' ")
+	trendCmd.Flags().StringSlice("sort", []string{"sum:desc"}, "comma-separated list of \"<sort keys>:<order>\" Sort keys are {method|uri|sum|count0|count1|countN}. Orders are [asc|desc]. e.g. \"sum:desc,count0:asc\"")
 
 	return trendCmd
 }

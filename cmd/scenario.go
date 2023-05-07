@@ -28,7 +28,7 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 	}
 	scenarioCmd.Args = cobra.NoArgs
 
-	scenarioCmd.Flags().String("format", "dot", "The output format (dot, csv)")
+	scenarioCmd.Flags().String("format", "dot", "The output format {dot|mermaid|csv}")
 	scenarioCmd.Flags().Bool("palette", false, "use color palette for each endpoint")
 
 	return scenarioCmd
