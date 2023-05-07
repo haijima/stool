@@ -31,7 +31,8 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
 
 - `--config string` : Config file (default is `$XDG_CONFIG_HOME/.stool.yaml`)
 - `-f, --file string` : Access log file to profile.
-- `--ignore_patterns strings` : Comma-separated list of regular expression patterns to ignore URIs
+- `--filter string` : Filter log lines by regular expression
+- `--log_labels stringToString` : Comma-separated list of key=value pairs to override log labels (default `[]`)
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
   example: `--matching_groups "/users/.*,/items/.*"`.
 - `--no_color`: Disable colorized output
@@ -39,26 +40,27 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
 
 #### Options for `stool param`
 
-- `--format string`: The stat output format {table|md|csv|tsv} (default `"table"`)
+- `--format string`: The stat output format {`table`|`md`|`csv`|`tsv`} (default `"table"`)
 - `-n, --num int`: The number of parameters to show (default `5`)
 - `--stat`: Show statistics of the parameters
-- `-t, --type string`: The type of the parameter {path|query|all} (default `"all"`)
+- `-t, --type string`: The type of the parameter {`path`|`query`|`all`} (default `"all"`)
 
 #### Options for `stool scenario`
 
-- `--format string` : The output format {dot|csv} (default `"dot"`).
+- `--format string` : The output format {`dot`|`mermaid`|`csv`} (default `"dot"`).
 
 #### Options for `stool transition`
 
-- `--format string` : The output format {dot|mermaid|csv} (default `"dot"`).
+- `--format string` : The output format {`dot`|`mermaid`|`csv`} (default `"dot"`).
 
 #### Options for `stool trend`
 
-- `--format string` : The output format {table|md|csv} (default `"table"`)
+- `--format string` : The output format {`table`|`md`|`csv`} (default `"table"`)
 - `-i, --interval int` : The time (in seconds) of the interval. Access counts are cumulated at each interval. (
   default `5`).
-- `--sort string` : Comma-separated list of <sort keys>:<order> Sort keys are {method|uri|sum|count0|count1|countN}.
-  Orders are [asc|desc]. e.g. `"sum:desc,count0:asc"` (default `"sum:desc"`)
+- `--sort string` : Comma-separated list of `"<sort keys>:<order>"` Sort keys
+  are {`method`|`uri`|`sum`|`count0`|`count1`|`countN`}. Orders are [`asc`|`desc`]. e.g. `"sum:desc,count0:asc"` (
+  default `"sum:desc"`)
 
 ### Config file
 
