@@ -24,6 +24,7 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
 - `stool scenario`: Show the access patterns of users
 - `stool transition`: Show the transition between endpoints
 - `stool trend`: Show the count of accesses for each endpoint over time
+- `stool genconf`: Generate configuration file
 
 ### Options
 
@@ -62,6 +63,10 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
   are {`method`|`uri`|`sum`|`count0`|`count1`|`countN`}. Orders are [`asc`|`desc`]. e.g. `"sum:desc,count0:asc"` (
   default `"sum:desc"`)
 
+#### Options for `stool genconf`
+
+- `--format string` : The output format {`toml`|`yaml`|`json`} (default `"toml"`)
+
 ### Config file
 
 You can specify the default options in a config file.
@@ -86,6 +91,8 @@ stool scenario --file path/to/access.log --matching_groups "/users/.*,/items/.*"
 stool transition --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o transition.svg && open transition.svg
 
 stool trend --file path/to/access.log --matching_groups "/users/.*,/items/.*" --interval 10
+
+stool genconf path/to/main.go --format yaml >> .stool.yaml
 ```
 
 ## Prerequisites
