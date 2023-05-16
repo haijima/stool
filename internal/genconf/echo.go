@@ -54,14 +54,14 @@ func GenMatchingGroupFromEchoV4(fileName string, echoPkgName string) ([]string, 
 		return true
 	})
 
-	errInfo := make([]*ArgAstInfo, 0, 0)
+	errInfo := make([]*ArgAstInfo, 0)
 
 	// Check e.Group()
 	type Group struct {
 		Ident     string
 		PathValue string
 	}
-	groups := make([]Group, 0, 0)
+	groups := make([]Group, 0)
 	astutil.Apply(node, nil, func(c *astutil.Cursor) bool {
 		n := c.Node()
 		switch x := n.(type) {
@@ -108,7 +108,7 @@ func GenMatchingGroupFromEchoV4(fileName string, echoPkgName string) ([]string, 
 
 	// Check e.GET(), e.POST(), e.PUT(), ...
 	targetFuncNames := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "Static", "CONNECT", "HEAD", "OPTIONS", "TRACE", "RouteNotFound", "Any", "Match"}
-	endpoints := make([]string, 0, 0)
+	endpoints := make([]string, 0)
 	astutil.Apply(node, nil, func(c *astutil.Cursor) bool {
 		n := c.Node()
 		switch x := n.(type) {
