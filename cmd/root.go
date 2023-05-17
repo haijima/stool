@@ -28,6 +28,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
 	rootCmd.AddCommand(NewParamCommand(internal.NewParamProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
+	rootCmd.AddCommand(NewGenConfCmd(v, fs))
 
 	return rootCmd
 }
