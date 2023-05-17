@@ -45,12 +45,10 @@ toml, yaml, and json formats are supported.`
 
 func runGenConf(cmd *cobrax.Command, fileName string) error {
 	format := cmd.Viper().GetString("format")
-	noColor := cmd.Viper().GetBool("no_color")
 
 	if format != "toml" && format != "yaml" && format != "json" {
 		return fmt.Errorf("invalid format: %s", format)
 	}
-	color.NoColor = color.NoColor || noColor
 
 	usedFramework, err := genconf.CheckImportedFramework(fileName)
 	if err != nil {

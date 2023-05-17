@@ -42,14 +42,11 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	format := cmd.Viper().GetString("format")
 	sortKeys := cmd.Viper().GetStringSlice("sort")
 	interval := cmd.Viper().GetInt("interval")
-	noColor := cmd.Viper().GetBool("no_color")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
 	if interval <= 0 {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
-
-	color.NoColor = color.NoColor || noColor
 
 	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
 	if err != nil {

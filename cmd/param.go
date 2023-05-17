@@ -46,7 +46,6 @@ func runParam(cmd *cobrax.Command, p *internal.ParamProfiler, args []string) err
 	num := cmd.Viper().GetInt("num")
 	statFlg := cmd.Viper().GetBool("stat")
 	format := cmd.Viper().GetString("format")
-	noColor := cmd.Viper().GetBool("no_color")
 	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
 
 	paramType = strings.ToLower(paramType)
@@ -56,8 +55,6 @@ func runParam(cmd *cobrax.Command, p *internal.ParamProfiler, args []string) err
 	if format != "table" && format != "md" && format != "csv" && format != "tsv" {
 		return fmt.Errorf("format flag should be 'table', 'md', 'csv' or 'tsv'. but: %s", format)
 	}
-
-	color.NoColor = color.NoColor || noColor
 
 	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
 	if err != nil {

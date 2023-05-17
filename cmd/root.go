@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
@@ -22,6 +23,12 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd.PersistentFlags().String("filter", "", "filter log lines by regular expression")
 	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
 	_ = rootCmd.MarkFlagFilename("file", viper.SupportedExts...)
+
+	rootCmd.PersistentPreRunE = func(cmd *cobrax.Command, args []string) error {
+		color.NoColor = color.NoColor || cmd.Viper().GetBool("no_color")
+
+		return nil
+	}
 
 	rootCmd.AddCommand(NewTrendCommand(internal.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
