@@ -156,7 +156,7 @@ func GenMatchingGroupFromEchoV4(fileName string, echoPkgName string) ([]string, 
 				}
 				replaced := pathParamPattern.ReplaceAllString(unquote, "(?P<$1>[^/]+)")
 				if methodName == "Static" {
-					endpoints = append(endpoints, fmt.Sprintf("^%s/.*", replaced))
+					endpoints = append(endpoints, fmt.Sprintf("^%s/(?P<filepath>.+)", replaced))
 				} else {
 					endpoints = append(endpoints, fmt.Sprintf("^%s$", replaced))
 				}
