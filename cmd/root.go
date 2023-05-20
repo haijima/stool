@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"io"
+	"log"
+
 	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
@@ -25,6 +28,15 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	_ = rootCmd.MarkFlagFilename("file", viper.SupportedExts...)
 
 	rootCmd.PersistentPreRunE = func(cmd *cobrax.Command, args []string) error {
+		if cmd.Viper().GetBool("debug") {
+			log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
+			log.SetOutput(cmd.ErrOrStderr())
+		} else if cmd.Viper().GetBool("verbose") {
+			log.SetOutput(cmd.ErrOrStderr())
+		} else {
+			log.SetOutput(io.Discard)
+		}
+
 		color.NoColor = color.NoColor || cmd.Viper().GetBool("no_color")
 
 		return nil
