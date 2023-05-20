@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/haijima/stool/internal/log"
-	"github.com/haijima/stool/internal/util"
+	"golang.org/x/exp/maps"
 )
 
 type TrendProfiler struct {
@@ -114,7 +114,7 @@ func (t *Trend) sort(sortOptions []string) []string {
 		return t.keys
 	}
 
-	s := NewSortable(util.Keys(t.data))
+	s := NewSortable(maps.Keys(t.data))
 	s.AddMapper("method", func(i, j string) bool { return t.data[i].Method < t.data[j].Method })
 	s.AddMapper("uri", func(i, j string) bool { return t.data[i].Uri < t.data[j].Uri })
 	s.AddMapper("sum", func(i, j string) bool { return t.data[i].sum < t.data[j].sum })
