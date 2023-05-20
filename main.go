@@ -11,6 +11,7 @@ import (
 
 func main() {
 	rootCmd := cmd.NewRootCmd(viper.New(), afero.NewOsFs())
+	rootCmd.SetOut(colorable.NewColorableStdout())
 	rootCmd.SetErr(colorable.NewColorableStderr())
 	err := rootCmd.Execute()
 	if err != nil {
