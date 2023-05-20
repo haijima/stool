@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -198,24 +199,14 @@ func parseReq(req string, patterns []regexp.Regexp) (string, string, *regexp.Reg
 }
 
 func ParseReq(req string) (string, string, string) {
-	var method string
-	var uri string
-	var query string
-	i := strings.Index(req, " ")
-	if i >= 0 {
-		method = req[:i]
-		uri = req[i+1:]
-	} else {
+	method, uri, ok := strings.Cut(req, " ")
+	if !ok {
 		return "", "", ""
 	}
-	i = strings.Index(uri, " ")
-	if i >= 0 {
-		uri = uri[:i]
+	uri, _, _ = strings.Cut(uri, " ")
+	parsed, err := url.Parse(uri)
+	if err != nil {
+		return "", "", ""
 	}
-	i = strings.Index(uri, "?")
-	if i >= 0 {
-		query = uri[i+1:]
-		uri = uri[:i]
-	}
-	return method, uri, query
+	return method, parsed.Path, parsed.RawQuery
 }

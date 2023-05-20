@@ -66,24 +66,23 @@ func (p *ParamProfiler) Profile(reader *log.LTSVReader) (*Param, error) {
 
 		// Query param
 		if query != "" {
-			qs := strings.Split(query, "&")
 			if _, ok := param.QueryValue[key]; !ok {
 				param.QueryKey[key] = map[string]int{}
 				param.QueryKeyCombination[key] = map[string]int{}
 				param.QueryValue[key] = map[string]map[string]int{}
 				param.QueryValueCombination[key] = map[string]int{}
 			}
+			qs := strings.Split(query, "&")
 			slices.Sort(qs)
 			qks := make([]string, 0)
-			for _, v := range qs {
-				q := strings.Split(v, "=")
-				if len(q) == 2 {
-					param.QueryKey[key][q[0]] += 1
-					if _, ok := param.QueryValue[key][q[0]]; !ok {
-						param.QueryValue[key][q[0]] = map[string]int{}
+			for _, q := range qs {
+				if k, v, ok := strings.Cut(q, "="); ok {
+					param.QueryKey[key][k] += 1
+					if _, ok := param.QueryValue[key][k]; !ok {
+						param.QueryValue[key][k] = map[string]int{}
 					}
-					param.QueryValue[key][q[0]][q[1]] += 1
-					qks = append(qks, q[0])
+					param.QueryValue[key][k][v] += 1
+					qks = append(qks, k)
 				}
 			}
 			// qks is not needed to be sorted because it is already sorted (qs is sorted)
