@@ -235,3 +235,12 @@ func BenchmarkTransitionCommand_RunE(b *testing.B) {
 		_ = cmd.RunE(cmd, []string{})
 	}
 }
+
+func TestTransitionExecute(t *testing.T) {
+	v := viper.New()
+	fs := afero.NewOsFs()
+	cmd := NewRootCmd(v, fs)
+	cmd.SetArgs([]string{"transition"})
+
+	assert.NoError(t, cmd.Execute())
+}

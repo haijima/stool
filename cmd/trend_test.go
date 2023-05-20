@@ -157,3 +157,12 @@ func BenchmarkTrendCommand_RunE(b *testing.B) {
 		_ = cmd.RunE(cmd, []string{})
 	}
 }
+
+func TestTrendExecute(t *testing.T) {
+	v := viper.New()
+	fs := afero.NewOsFs()
+	cmd := NewRootCmd(v, fs)
+	cmd.SetArgs([]string{"trend"})
+
+	assert.NoError(t, cmd.Execute())
+}
