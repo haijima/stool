@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/withfig/autocomplete-tools/integrations/cobra"
 )
 
 // NewRootCmd returns the base command used when called without any subcommands
@@ -48,6 +49,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobrax.Command {
 	rootCmd.AddCommand(NewParamCommand(internal.NewParamProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
 	rootCmd.AddCommand(NewGenConfCmd(v, fs))
+	rootCmd.AddCommand(cobrax.Wrap(cobracompletefig.CreateCompletionSpecCommand(), v, fs))
 
 	return rootCmd
 }
