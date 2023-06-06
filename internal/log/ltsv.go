@@ -207,16 +207,6 @@ func (r *LTSVReader) Err() error {
 	return r.r.Err()
 }
 
-func parseReq(req string, patterns []regexp.Regexp) (string, string, *regexp.Regexp) {
-	method, uri, _ := ParseReq(req)
-	for _, p := range patterns {
-		if p.MatchString(uri) {
-			return method, p.String(), &p
-		}
-	}
-	return method, uri, nil
-}
-
 func ParseReq(req string) (string, string, string) {
 	method, uri, ok := strings.Cut(req, " ")
 	if !ok {
