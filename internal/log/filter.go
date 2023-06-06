@@ -8,8 +8,14 @@ import (
 	"github.com/antonmedv/expr/vm"
 )
 
+type Expr interface {
+	Run(entry LogEntry) (bool, error)
+}
+
 type FilterExpr struct {
 	program *vm.Program
+	vm      *vm.VM
+	env     *ExprEnv
 }
 
 func NewFilterExpr(code string) (*FilterExpr, error) {
@@ -36,31 +42,37 @@ func NewFilterExpr(code string) (*FilterExpr, error) {
 
 	return &FilterExpr{
 		program: program,
+		vm:      &vm.VM{},
+		env: &ExprEnv{
+			TimeStringEqual:            TimeStringEqual,
+			TimeStringNotEqual:         TimeStringNotEqual,
+			TimeStringGreaterThan:      TimeStringGreaterThan,
+			TimeStringGreaterThanEqual: TimeStringGreaterThanEqual,
+			TimeStringLessThan:         TimeStringLessThan,
+			TimeStringLessThanEqual:    TimeStringLessThanEqual,
+			StringTimeEqual:            StringTimeEqual,
+			StringTimeNotEqual:         StringTimeNotEqual,
+			StringTimeGreaterThan:      StringTimeGreaterThan,
+			StringTimeGreaterThanEqual: StringTimeGreaterThanEqual,
+			StringTimeLessThan:         StringTimeLessThan,
+			StringTimeLessThanEqual:    StringTimeLessThanEqual,
+		},
 	}, nil
 }
 
 func (f *FilterExpr) Run(entry LogEntry) (bool, error) {
-	run, err := expr.Run(f.program, ExprEnv{
-		Req:                        entry.Req,
-		Method:                     entry.Method,
-		Uri:                        entry.Uri,
-		Status:                     entry.Status,
-		Time:                       entry.Time,
-		Uid:                        entry.Uid,
-		SetNewUid:                  entry.SetNewUid,
-		TimeStringEqual:            TimeStringEqual,
-		TimeStringNotEqual:         TimeStringNotEqual,
-		TimeStringGreaterThan:      TimeStringGreaterThan,
-		TimeStringGreaterThanEqual: TimeStringGreaterThanEqual,
-		TimeStringLessThan:         TimeStringLessThan,
-		TimeStringLessThanEqual:    TimeStringLessThanEqual,
-		StringTimeEqual:            StringTimeEqual,
-		StringTimeNotEqual:         StringTimeNotEqual,
-		StringTimeGreaterThan:      StringTimeGreaterThan,
-		StringTimeGreaterThanEqual: StringTimeGreaterThanEqual,
-		StringTimeLessThan:         StringTimeLessThan,
-		StringTimeLessThanEqual:    StringTimeLessThanEqual,
-	})
+	if f.program == nil {
+		return false, errors.New("program is nil")
+	}
+
+	f.env.Req = entry.Req
+	f.env.Method = entry.Method
+	f.env.Uri = entry.Uri
+	f.env.Status = entry.Status
+	f.env.Time = entry.Time
+	f.env.Uid = entry.Uid
+	f.env.SetNewUid = entry.SetNewUid
+	run, err := f.vm.Run(f.program, f.env)
 	if err != nil {
 		return false, err
 	}
