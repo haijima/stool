@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slices"
 )
 
 // NewTrendCommand returns the trend command
@@ -124,7 +125,9 @@ func resultToHeader(result *internal.Trend) []string {
 
 func resultToRows(result *internal.Trend, humanized bool) [][]string {
 	rows := make([][]string, 0, len(result.Endpoints()))
-	for _, endpoint := range result.Endpoints() {
+	eps := result.Endpoints()
+	slices.Sort(eps)
+	for _, endpoint := range eps {
 		row := make([]string, 0)
 		row = append(row, strings.SplitN(endpoint, " ", 2)...) // split into Method and Uri
 		for i, count := range result.Counts(endpoint) {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/haijima/cobrax"
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/tenntenn/golden"
 )
 
 func TestNewTrendCmd(t *testing.T) {
@@ -138,6 +140,36 @@ POST,/,1,0,0,0,0
 `, stdout.String())
 }
 
+func TestTrendExecute(t *testing.T) {
+	testdata := filepath.Join("testdata", t.Name())
+	formats := []string{"table", "md", "csv"}
+	for _, tt := range formats {
+		tt := tt
+		t.Run(tt, func(t *testing.T) {
+			v := viper.New()
+			fs := afero.NewOsFs()
+			stdout := new(bytes.Buffer)
+			stderr := new(bytes.Buffer)
+			cmd := NewRootCmd(v, fs)
+			cmd.SetOut(stdout)
+			cmd.SetErr(stderr)
+			cmd.SetArgs([]string{"trend", "--config", "testdata/.stool.yaml"})
+			v.Set("format", tt)
+			_ = cmd.BindFlags()
+
+			assert.NoError(t, cmd.Execute())
+
+			c := golden.New(t, flagUpdateGolden, testdata, tt)
+			if diff := c.Check("_stdout", stdout); diff != "" {
+				t.Error("stdout\n", diff)
+			}
+			if diff := c.Check("_stderr", stderr); diff != "" {
+				t.Error("stderr\n", diff)
+			}
+		})
+	}
+}
+
 func BenchmarkTrendCommand_RunE(b *testing.B) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
@@ -156,13 +188,4 @@ func BenchmarkTrendCommand_RunE(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = cmd.RunE(cmd, []string{})
 	}
-}
-
-func TestTrendExecute(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewOsFs()
-	cmd := NewRootCmd(v, fs)
-	cmd.SetArgs([]string{"trend"})
-
-	assert.NoError(t, cmd.Execute())
 }
