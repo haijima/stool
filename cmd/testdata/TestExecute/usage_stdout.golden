@@ -1,0 +1,27 @@
+stool is access log profiler
+
+Usage:
+  stool [command]
+
+Available Commands:
+  genconf     Generate configuration file
+  param       Show the parameter statistics for each endpoint
+  scenario    Show the access patterns of users
+  transition  Show the transition between endpoints
+  trend       Show the count of accesses for each endpoint over time
+
+Flags:
+      --config string               config file (default is $XDG_CONFIG_HOME/.stool.yaml)
+      --debug                       debug level output
+  -f, --file string                 access log file to profile
+      --filter string               filter log lines by regular expression
+  -h, --help                        help for stool
+      --log_labels stringToString   comma-separated list of key=value pairs to override log labels (default [])
+  -m, --matching_groups strings     comma-separated list of regular expression patterns to group matched URIs
+      --no_color                    disable colorized output
+  -q, --quiet                       quiet output
+      --time_format string          format to parse time field on log file (default "02/Jan/2006:15:04:05 -0700")
+  -V, --verbose                     verbose level output
+  -v, --version                     Show the version of this command
+
+Use "stool [command] --help" for more information about a command.

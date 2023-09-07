@@ -1,0 +1,133 @@
+digraph root {
+	fontname=Courier;
+	label="stool transition";
+	labelloc=t;
+	margin=20;
+	tooltip="stool transition";
+	start->"GET ^/$"[ color="#554b40", dir=forward, penwidth=3.535831, weight=363.261578 ];
+	start->"GET ^/api/trend$"[ color="#554b40", dir=forward, penwidth=3.295325, weight=328.903582 ];
+	start->"GET ^/api/user/me$"[ color="#554b40", dir=forward, penwidth=1.404646, weight=58.806593 ];
+	start->"POST ^/api/auth$"[ color="#554b40", dir=forward, penwidth=4.670732, weight=525.390331 ];
+	start->"POST ^/api/condition/[^/]+$"[ color="#6b4325", dir=forward, penwidth=7.478395, weight=926.485018 ];
+	start->"POST ^/api/signout$"[ color="#554b40", dir=forward, penwidth=3.271971, weight=325.567246 ];
+	start->"POST ^/initialize$"[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET /assets/*"->end[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET /assets/*"->"GET /assets/*"[ color="#63462e", dir=back, penwidth=7.365575, weight=910.367821 ];
+	"GET /assets/*"->"GET ^/$"[ color="#554b40", dir=forward, penwidth=3.317781, weight=332.111565 ];
+	"GET /assets/*"->"GET ^/api/condition/[^/]+$"[ color="#554b40", dir=forward, penwidth=2.687344, weight=242.049157 ];
+	"GET /assets/*"->"GET ^/api/isu$"[ color="#554b40", dir=forward, penwidth=3.295325, weight=328.903582 ];
+	"GET /assets/*"->"GET ^/api/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=2.045995, weight=150.427875 ];
+	"GET /assets/*"->"GET ^/api/isu/[^/]+/graph$"[ color="#554b40", dir=forward, penwidth=2.045995, weight=150.427875 ];
+	"GET /assets/*"->"GET ^/api/trend$"[ color="#554b40", dir=forward, penwidth=6.419475, weight=775.210766 ];
+	"GET /assets/*"->"POST ^/api/isu$"[ color="#554b40", dir=forward, penwidth=1.641349, weight=92.621282 ];
+	"GET /register"->"GET /assets/*"[ color="#554b40", dir=forward, penwidth=1.641349, weight=92.621282 ];
+	"GET ^/$"->end[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET ^/$"->"GET /assets/*"[ color="#554b40", dir=forward, penwidth=6.425146, weight=776.020792 ];
+	"GET ^/$"->"POST ^/api/auth$"[ color="#554b40", dir=forward, penwidth=3.328693, weight=333.670439 ];
+	"GET ^/api/condition/[^/]+$"->end[ color="#554b40", dir=forward, penwidth=3.339405, weight=335.200707 ];
+	"GET ^/api/condition/[^/]+$"->"GET /register"[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET ^/api/condition/[^/]+$"->"GET ^/$"[ color="#554b40", dir=forward, penwidth=3.247643, weight=322.091856 ];
+	"GET ^/api/condition/[^/]+$"->"GET ^/api/condition/[^/]+$"[ color="#554b40", dir=back, penwidth=5.863259, weight=695.751307 ];
+	"GET ^/api/condition/[^/]+$"->"GET ^/api/isu$"[ color="#554b40", dir=forward, penwidth=3.827944, weight=404.992050 ];
+	"GET ^/api/condition/[^/]+$"->"GET ^/api/user/me$"[ color="#554b40", dir=forward, penwidth=3.247643, weight=322.091856 ];
+	"GET ^/api/condition/[^/]+$"->"GET ^/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=1.809292, weight=116.613186 ];
+	"GET ^/api/condition/[^/]+$"->"GET ^/isu/[^/]+/condition$"[ color="#554b40", dir=forward, penwidth=2.450641, weight=208.234468 ];
+	"GET ^/api/condition/[^/]+$"->"POST ^/api/isu$"[ color="#554b40", dir=forward, penwidth=1.404646, weight=58.806593 ];
+	"GET ^/api/condition/[^/]+$"->"POST ^/api/signout$"[ color="#554b40", dir=forward, penwidth=3.222257, weight=318.465316 ];
+	"GET ^/api/isu$"->end[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET ^/api/isu$"->"GET ^/api/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=3.664580, weight=381.654246 ];
+	"GET ^/api/isu$"->"GET ^/api/isu/[^/]+/icon$"[ color="#554b40", dir=forward, penwidth=4.021738, weight=432.676833 ];
+	"GET ^/api/isu$"->"GET ^/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=1.404646, weight=58.806593 ];
+	"GET ^/api/isu$"->"POST ^/api/isu$"[ color="#554b40", dir=forward, penwidth=2.135985, weight=163.283623 ];
+	"GET ^/api/isu/[^/]+$"->"GET ^/api/isu/[^/]+/icon$"[ color="#554b40", dir=forward, penwidth=4.467759, weight=496.394154 ];
+	"GET ^/api/isu/[^/]+/graph$"->"GET ^/api/condition/[^/]+$"[ color="#554b40", dir=forward, penwidth=4.093057, weight=442.865282 ];
+	"GET ^/api/isu/[^/]+/graph$"->"GET ^/api/isu/[^/]+/graph$"[ color="#554b40", dir=back, penwidth=4.479922, weight=498.131660 ];
+	"GET ^/api/isu/[^/]+/graph$"->"GET ^/isu/[^/]+/condition$"[ color="#554b40", dir=forward, penwidth=2.045995, weight=150.427875 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET /register"[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET ^/api/condition/[^/]+$"[ color="#554b40", dir=forward, penwidth=3.804496, weight=401.642311 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET ^/api/isu$"[ color="#554b40", dir=forward, penwidth=2.135985, weight=163.283623 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET ^/api/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=4.028297, weight=433.613891 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET ^/api/isu/[^/]+/graph$"[ color="#554b40", dir=forward, penwidth=4.093057, weight=442.865282 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET ^/api/isu/[^/]+/icon$"[ color="#554b40", dir=back, penwidth=5.048169, weight=579.309899 ];
+	"GET ^/api/isu/[^/]+/icon$"->"GET ^/isu/[^/]+/graph$"[ color="#554b40", dir=forward, penwidth=2.045995, weight=150.427875 ];
+	"GET ^/api/isu/[^/]+/icon$"->"POST ^/api/isu$"[ color="#554b40", dir=forward, penwidth=3.181980, weight=312.711498 ];
+	"GET ^/api/trend$"->end[ color="#554b40", dir=forward, penwidth=3.496636, weight=357.662342 ];
+	"GET ^/api/trend$"->"GET ^/$"[ color="#554b40", dir=forward, penwidth=6.418335, weight=775.047812 ];
+	"GET ^/api/user/me$"->end[ color="#554b40", dir=forward, penwidth=3.209138, weight=316.591141 ];
+	"GET ^/api/user/me$"->"GET ^/$"[ color="#554b40", dir=forward, penwidth=1.641349, weight=92.621282 ];
+	"GET ^/api/user/me$"->"GET ^/api/isu$"[ color="#554b40", dir=forward, penwidth=3.676617, weight=383.373839 ];
+	"GET ^/isu/[^/]+$"->"GET /assets/*"[ color="#554b40", dir=forward, penwidth=2.045995, weight=150.427875 ];
+	"GET ^/isu/[^/]+/condition$"->"GET /assets/*"[ color="#554b40", dir=forward, penwidth=2.687344, weight=242.049157 ];
+	"GET ^/isu/[^/]+/graph$"->"GET /assets/*"[ color="#554b40", dir=forward, penwidth=2.045995, weight=150.427875 ];
+	"POST ^/api/auth$"->end[ color="#554b40", dir=forward, penwidth=4.617366, weight=517.766616 ];
+	"POST ^/api/auth$"->"GET ^/api/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=3.259934, weight=323.847653 ];
+	"POST ^/api/auth$"->"GET ^/api/user/me$"[ color="#554b40", dir=forward, penwidth=3.317781, weight=332.111565 ];
+	"POST ^/api/condition/[^/]+$"->end[ color="#6b4325", dir=forward, penwidth=7.478395, weight=926.485018 ];
+	"POST ^/api/isu$"->end[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"POST ^/api/isu$"->"GET /register"[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"POST ^/api/isu$"->"GET ^/$"[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"POST ^/api/isu$"->"GET ^/api/isu/[^/]+$"[ color="#554b40", dir=forward, penwidth=3.295325, weight=328.903582 ];
+	"POST ^/api/isu$"->"POST ^/api/isu$"[ color="#554b40", dir=back, penwidth=1.000000, weight=1.000000 ];
+	"POST ^/api/signout$"->end[ color="#554b40", dir=forward, penwidth=3.295325, weight=328.903582 ];
+	"POST ^/api/signout$"->"GET ^/api/user/me$"[ color="#554b40", dir=forward, penwidth=3.195717, weight=314.673877 ];
+	"POST ^/api/signout$"->"POST ^/api/signout$"[ color="#554b40", dir=back, penwidth=1.404646, weight=58.806593 ];
+	"POST ^/initialize$"->end[ color="#554b40", dir=forward, penwidth=1.000000, weight=1.000000 ];
+	"GET /assets/*" [ color="#6a4326", fillcolor="#e2c7b2", fontname=Courier, fontsize=22.793510, label="GET /assets/*
+Call: 65,292 (40.48%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET /assets/*
+Call: 65,292 (40.48%)" ];
+	"GET /register" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=9.465941, label="GET /register
+Call: 3 (0%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET /register
+Call: 3 (0%)" ];
+	"GET ^/$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=20.407072, label="GET ^/$
+Call: 10,918 (6.77%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/$
+Call: 10,918 (6.77%)" ];
+	"GET ^/api/condition/[^/]+$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=19.221118, label="GET ^/api/condition/[^/]+$
+Call: 4,489 (2.78%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/condition/[^/]+$
+Call: 4,489 (2.78%)" ];
+	"GET ^/api/isu$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=15.533039, label="GET ^/api/isu$
+Call: 283 (0.17%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/isu$
+Call: 283 (0.17%)" ];
+	"GET ^/api/isu/[^/]+$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=15.926306, label="GET ^/api/isu/[^/]+$
+Call: 380 (0.23%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/isu/[^/]+$
+Call: 380 (0.23%)" ];
+	"GET ^/api/isu/[^/]+/graph$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=16.522374, label="GET ^/api/isu/[^/]+/graph$
+Call: 594 (0.36%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/isu/[^/]+/graph$
+Call: 594 (0.36%)" ];
+	"GET ^/api/isu/[^/]+/icon$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=17.831150, label="GET ^/api/isu/[^/]+/icon$
+Call: 1,584 (0.98%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/isu/[^/]+/icon$
+Call: 1,584 (0.98%)" ];
+	"GET ^/api/trend$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=20.393683, label="GET ^/api/trend$
+Call: 10,809 (6.7%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/trend$
+Call: 10,809 (6.7%)" ];
+	"GET ^/api/user/me$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=14.640737, label="GET ^/api/user/me$
+Call: 145 (0.08%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/api/user/me$
+Call: 145 (0.08%)" ];
+	"GET ^/isu/[^/]+$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=10.390846, label="GET ^/isu/[^/]+$
+Call: 6 (0%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/isu/[^/]+$
+Call: 6 (0%)" ];
+	"GET ^/isu/[^/]+/condition$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=11.856787, label="GET ^/isu/[^/]+/condition$
+Call: 18 (0.01%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/isu/[^/]+/condition$
+Call: 18 (0.01%)" ];
+	"GET ^/isu/[^/]+/graph$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=10.390846, label="GET ^/isu/[^/]+/graph$
+Call: 6 (0%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="GET ^/isu/[^/]+/graph$
+Call: 6 (0%)" ];
+	"POST ^/api/auth$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=16.517874, label="POST ^/api/auth$
+Call: 592 (0.36%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="POST ^/api/auth$
+Call: 592 (0.36%)" ];
+	"POST ^/api/condition/[^/]+$" [ color="#6b4325", fillcolor="#e2c6b2", fontname=Courier, fontsize=22.807760, label="POST ^/api/condition/[^/]+$
+Call: 65,993 (40.92%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="POST ^/api/condition/[^/]+$
+Call: 65,993 (40.92%)" ];
+	"POST ^/api/isu$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=13.347211, label="POST ^/api/isu$
+Call: 55 (0.03%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="POST ^/api/isu$
+Call: 55 (0.03%)" ];
+	"POST ^/api/signout$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=14.090468, label="POST ^/api/signout$
+Call: 96 (0.05%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="POST ^/api/signout$
+Call: 96 (0.05%)" ];
+	"POST ^/initialize$" [ color="#554b40", fillcolor="#ece4dc", fontname=Courier, fontsize=8.000000, label="POST ^/initialize$
+Call: 1 (0%)", margin=0.2, penwidth=1, shape=box, style=filled, tooltip="POST ^/initialize$
+Call: 1 (0%)" ];
+	end [ fontname=Courier, fontsize=14.000000, label=end, shape=plaintext, tooltip=end ];
+	start [ fontname=Courier, fontsize=14.000000, label=start, shape=plaintext, tooltip=start ];
+
+}
+

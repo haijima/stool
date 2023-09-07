@@ -1,0 +1,27 @@
+file: testdata/access.log
+matching_groups:
+  - "^/$"
+  - "^/initialize$"
+  - "^/api/auth$"
+  - "^/api/condition/[^/]+$"
+  - "^/api/isu$"
+  - "^/api/isu/[^/]+$"
+  - "^/api/isu/[^/]+/graph$"
+  - "^/api/isu/[^/]+/icon$"
+  - "^/api/signout$"
+  - "^/api/trend$"
+  - "^/api/user/me$"
+  - "^/isu/[^/]+$"
+  - "^/isu/[^/]+/condition$"
+  - "^/isu/[^/]+/graph$"
+  - "^register$"
+  - "/assets/*"
+
+# filter:
+#   "uri not matches '/assets/.' and uri not matches '.*initialize.*'"
+
+time_format: "02/Jan/2006:15:04:05 -0700"
+
+interval: 12
+trend:
+  interval: 13

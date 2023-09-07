@@ -1,13 +1,23 @@
 package cmd
 
 import (
+	"bytes"
+	"flag"
+	"path/filepath"
 	"testing"
 
 	"github.com/haijima/cobrax"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/tenntenn/golden"
 )
+
+var flagUpdateGolden bool
+
+func init() {
+	flag.BoolVar(&flagUpdateGolden, "update", false, "update golden files")
+}
 
 func TestNewRootCmd(t *testing.T) {
 	fs := afero.NewMemMapFs()
@@ -92,12 +102,24 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	testdata := filepath.Join("testdata", t.Name())
 	v := viper.New()
+	fs := afero.NewOsFs()
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
 	cmd := NewRootCmd(v, fs)
+	cmd.SetOut(stdout)
+	cmd.SetErr(stderr)
+	cmd.SetArgs([]string{"--config", "testdata/.stool.yaml"})
 	_ = cmd.BindFlags()
 
-	err := cmd.Execute()
+	assert.NoError(t, cmd.Execute())
 
-	assert.Nil(t, err)
+	c := golden.New(t, flagUpdateGolden, testdata, "usage")
+	if diff := c.Check("_stdout", stdout); diff != "" {
+		t.Error("stdout\n", diff)
+	}
+	if diff := c.Check("_stderr", stderr); diff != "" {
+		t.Error("stderr\n", diff)
+	}
 }
