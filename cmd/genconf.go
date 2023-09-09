@@ -39,12 +39,14 @@ toml, yaml, and json formats are supported.`
 	genConfCmd.Args = cobra.ExactArgs(1)
 
 	genConfCmd.Flags().String("format", "toml", "The output format {toml|yaml|json}")
+	genConfCmd.Flags().Bool("capture-group-name", false, "Add names to captured groups like \"(?P<name>pattern)\"")
 
 	return genConfCmd
 }
 
 func runGenConf(cmd *cobrax.Command, fileName string) error {
 	format := cmd.Viper().GetString("format")
+	captureGroupName := cmd.Viper().GetBool("capture-group-name")
 
 	if format != "toml" && format != "yaml" && format != "json" {
 		return fmt.Errorf("invalid format: %s", format)
@@ -61,7 +63,7 @@ func runGenConf(cmd *cobrax.Command, fileName string) error {
 		cmd.PrintErrln("Detected Echo: \"github.com/labstack/echo/v4\"")
 
 		var anblErr *genconf.ArgNotBasicLitError
-		matchingGroups, err = genconf.GenMatchingGroupFromEchoV4(fileName, usedFramework.PkgName)
+		matchingGroups, err = genconf.GenMatchingGroupFromEchoV4(fileName, usedFramework.PkgName, captureGroupName)
 		if err != nil {
 			if errors.As(err, &anblErr) {
 				printArgNotBasicLitError(cmd, anblErr)
