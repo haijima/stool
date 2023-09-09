@@ -15,7 +15,7 @@ import (
 
 var pathParamPattern = regexp.MustCompile(":([^/]+)")
 
-func GenMatchingGroupFromEchoV4(fileName string, echoPkgName string) ([]string, error) {
+func GenMatchingGroupFromEchoV4(fileName string, echoPkgName string, captureGroupName bool) ([]string, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, fileName, nil, parser.AllErrors)
 	if err != nil {
@@ -154,11 +154,20 @@ func GenMatchingGroupFromEchoV4(fileName string, echoPkgName string) ([]string, 
 						break
 					}
 				}
-				replaced := pathParamPattern.ReplaceAllString(unquote, "(?P<$1>[^/]+)")
-				if methodName == "Static" {
-					endpoints = append(endpoints, fmt.Sprintf("^%s/(?P<filepath>.+)", replaced))
+				if captureGroupName {
+					replaced := pathParamPattern.ReplaceAllString(unquote, "(?P<$1>[^/]+)")
+					if methodName == "Static" {
+						endpoints = append(endpoints, fmt.Sprintf("^%s/(?P<filepath>.+)", replaced))
+					} else {
+						endpoints = append(endpoints, fmt.Sprintf("^%s$", replaced))
+					}
 				} else {
-					endpoints = append(endpoints, fmt.Sprintf("^%s$", replaced))
+					replaced := pathParamPattern.ReplaceAllString(unquote, "([^/]+)")
+					if methodName == "Static" {
+						endpoints = append(endpoints, fmt.Sprintf("^%s/(.+)", replaced))
+					} else {
+						endpoints = append(endpoints, fmt.Sprintf("^%s$", replaced))
+					}
 				}
 			default:
 				// add error info

@@ -10,7 +10,7 @@ import (
 
 func TestGenMatchingGroupFromEchoV4(t *testing.T) {
 	filename := "testdata/echo_simple.go"
-	mgs, err := GenMatchingGroupFromEchoV4(filename, "echo")
+	mgs, err := GenMatchingGroupFromEchoV4(filename, "echo", true)
 
 	assert.NoError(t, err)
 	assert.Equal(t, len(mgs), 3)
@@ -21,7 +21,7 @@ func TestGenMatchingGroupFromEchoV4(t *testing.T) {
 
 func TestGenMatchingGroupFromEchoV4_complex(t *testing.T) {
 	filename := "testdata/echo_complex.go"
-	mgs, err := GenMatchingGroupFromEchoV4(filename, "echov4")
+	mgs, err := GenMatchingGroupFromEchoV4(filename, "echov4", true)
 
 	var anblErr *ArgNotBasicLitError
 	assert.ErrorAs(t, err, &anblErr)

@@ -111,5 +111,5 @@ func TestRunGenConf(t *testing.T) {
 	err := cmd.Execute()
 
 	assert.NoError(t, err)
-	assert.Equal(t, "matching_groups:\n    - ^/api/items$\n    - ^/api/users$\n    - ^/api/users/(?P<id>[^/]+)$\n\n", stdout.String())
+	assert.Equal(t, "matching_groups:\n    - ^/api/items$\n    - ^/api/users$\n    - ^/api/users/([^/]+)$\n\n", stdout.String())
 }
