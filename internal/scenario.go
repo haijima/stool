@@ -1,13 +1,14 @@
 package internal
 
 import (
+	"cmp"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/haijima/stool/internal/log"
 	"github.com/haijima/stool/internal/pattern"
-	"github.com/haijima/stool/internal/util"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 type ScenarioProfiler struct {
@@ -99,8 +100,8 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 
 	// merge patterns
 	ss := maps.Values(scenarios)
-	slices.SortFunc(ss, func(a, b ScenarioStruct) bool {
-		return a.Pattern.String(true) > b.Pattern.String(true)
+	slices.SortFunc(ss, func(a, b ScenarioStruct) int {
+		return strings.Compare(b.Pattern.String(true), a.Pattern.String(true))
 	})
 	tt := make([]ScenarioStruct, 0)
 	for _, s := range ss {
@@ -110,8 +111,8 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 				tt[i] = ScenarioStruct{
 					Hash:     p.String(true),
 					Count:    s.Count + t.Count,
-					FirstReq: util.Min(s.FirstReq, t.FirstReq),
-					LastReq:  util.Max(s.LastReq, t.LastReq),
+					FirstReq: min(s.FirstReq, t.FirstReq),
+					LastReq:  max(s.LastReq, t.LastReq),
 					Pattern:  p,
 				}
 				match = true
@@ -123,14 +124,14 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 		}
 	}
 
-	slices.SortFunc(tt, func(a, b ScenarioStruct) bool {
+	slices.SortFunc(tt, func(a, b ScenarioStruct) int {
 		if a.FirstReq != b.FirstReq {
-			return a.FirstReq < b.FirstReq
+			return cmp.Compare(a.FirstReq, b.FirstReq)
 		}
 		if a.Count != b.Count {
-			return a.Count > b.Count
+			return cmp.Compare(b.Count, a.Count)
 		}
-		return a.Pattern.String(true) > b.Pattern.String(true)
+		return strings.Compare(b.Pattern.String(true), a.Pattern.String(true))
 	})
 
 	return tt, nil
