@@ -9,9 +9,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
+	"github.com/haijima/gini"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
-	"github.com/haijima/stool/internal/stat"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -151,8 +151,8 @@ func printPathParamsResult(cmd *cobrax.Command, pathParams []map[string]int, pat
 		} else {
 			paramName = color.CyanString(fmt.Sprintf("%s path parameter", humanize.Ordinal(i+1)))
 		}
-		gini := stat.Gini(maps.Values(vv), stat.Unsorted)
-		cmd.PrintOutf("\t%s (Cardinality: %s, Gini: %s)\n", paramName, emphasisInt(ks), printGini(gini, true))
+		g, _ := gini.Gini(maps.Values(vv))
+		cmd.PrintOutf("\t%s (Cardinality: %s, Gini: %s)\n", paramName, emphasisInt(ks), printGini(g, true))
 
 		var ss []kv
 		for kkk, vvv := range vv {
@@ -182,8 +182,8 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 	for _, kk := range queryKeys {
 		vv := queryParams[kk]
 		ks := len(vv)
-		gini := stat.Gini(maps.Values(vv), stat.Unsorted)
-		cmd.PrintOutf("\t?%s (Count: %s, Rate: %s, Cardinality: %s, Gini: %s)\n", color.MagentaString(kk), emphasisInt(result.QueryKey[k][kk]), emphasisPercentage(result.QueryKey[k][kk], v), emphasisInt(ks), printGini(gini, true))
+		g, _ := gini.Gini(maps.Values(vv))
+		cmd.PrintOutf("\t?%s (Count: %s, Rate: %s, Cardinality: %s, Gini: %s)\n", color.MagentaString(kk), emphasisInt(result.QueryKey[k][kk]), emphasisPercentage(result.QueryKey[k][kk], v), emphasisInt(ks), printGini(g, true))
 		var ss []kv
 		for kkk, vvv := range vv {
 			ss = append(ss, kv{kkk, vvv})
@@ -216,8 +216,8 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 		sort.Slice(ss, func(i, j int) bool { return ss[i].Value > ss[j].Value })
 		ks := len(ss)
 
-		gini := stat.Gini(maps.Values(result.QueryKeyCombination[k]), stat.Unsorted)
-		cmd.PrintOutf("\tQuery key combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(gini, true))
+		g, _ := gini.Gini(maps.Values(result.QueryKeyCombination[k]))
+		cmd.PrintOutf("\tQuery key combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
 
 		if ks > displayNum {
 			ss = ss[:displayNum]
@@ -253,8 +253,8 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 		sort.Slice(ss, func(i, j int) bool { return ss[i].Value > ss[j].Value })
 		ks := len(ss)
 
-		gini := stat.Gini(maps.Values(result.QueryValueCombination[k]), stat.Unsorted)
-		cmd.PrintOutf("\tQuery key value combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(gini, true))
+		g, _ := gini.Gini(maps.Values(result.QueryValueCombination[k]))
+		cmd.PrintOutf("\tQuery key value combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
 
 		if ks > displayNum {
 			ss = ss[:displayNum]
@@ -301,7 +301,7 @@ func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, form
 				} else {
 					paramName = fmt.Sprintf("Path param(%d)", i+1)
 				}
-				gini := stat.Gini(maps.Values(vv), stat.Unsorted)
+				g, _ := gini.Gini(maps.Values(vv))
 				row := make([]string, 0, 6)
 				row = append(row, k)
 				row = append(row, "path")
@@ -309,7 +309,7 @@ func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, form
 				row = append(row, humanize.Comma(int64(v)))
 				row = append(row, color.HiBlackString("100.00"))
 				row = append(row, humanize.Comma(int64(len(vv))))
-				row = append(row, printGini(gini, false))
+				row = append(row, printGini(g, false))
 				rows = append(rows, row)
 			}
 		}
@@ -319,7 +319,7 @@ func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, form
 			slices.Sort(queryKeys)
 			for _, kk := range queryKeys {
 				vv := queryParams[kk]
-				gini := stat.Gini(maps.Values(vv), stat.Unsorted)
+				g, _ := gini.Gini(maps.Values(vv))
 				row := make([]string, 0, 6)
 				row = append(row, k)
 				row = append(row, "query")
@@ -327,7 +327,7 @@ func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, form
 				row = append(row, humanize.Comma(int64(result.QueryKey[k][kk])))
 				row = append(row, fmt.Sprintf("%.2f", float64(result.QueryKey[k][kk])/float64(v)*100))
 				row = append(row, humanize.Comma(int64(len(vv))))
-				row = append(row, printGini(gini, false))
+				row = append(row, printGini(g, false))
 				rows = append(rows, row)
 			}
 		}

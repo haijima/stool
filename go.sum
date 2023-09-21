@@ -131,6 +131,8 @@ github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5m
 github.com/googleapis/google-cloud-go-testing v0.0.0-20200911160855-bcd43fbb19e8/go.mod h1:dvDLG8qkwmyD9a/MJJN3XJcT3xFxOKAvTZGvuZmac9g=
 github.com/haijima/cobrax v0.0.8 h1:ZZCo52IVUKMrD4G9tNa+oeHkMAzZJfKN0GhJXbdNZow=
 github.com/haijima/cobrax v0.0.8/go.mod h1:qmJXlBvfIpJCJdL00+KeATE2NgxewB1gSvvmCw5OWPs=
+github.com/haijima/gini v0.0.2 h1:Qdtm7MAEXTBsgZIxdRedHcx1GV1VdE6YIV+73Ck3PzA=
+github.com/haijima/gini v0.0.2/go.mod h1:/PPE6lWMY7oJ3ZilOc0vyDhJ/q07QAPInGWJFOTxEGY=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
