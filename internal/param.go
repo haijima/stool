@@ -2,11 +2,11 @@ package internal
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/haijima/stool/internal/log"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 type ParamProfiler struct {
@@ -94,13 +94,13 @@ func (p *ParamProfiler) Profile(reader *log.LTSVReader) (*Param, error) {
 	}
 
 	param.Endpoints = maps.Keys(endpointsMap)
-	slices.SortFunc(param.Endpoints, func(i, j string) bool {
+	slices.SortFunc(param.Endpoints, func(i, j string) int {
 		ii := strings.Split(i, " ")
 		jj := strings.Split(j, " ")
 		if ii[1] != jj[1] {
-			return ii[1] < jj[1]
+			return strings.Compare(ii[1], jj[1])
 		}
-		return ii[0] < jj[0]
+		return strings.Compare(ii[0], jj[0])
 	})
 	return param, nil
 }
