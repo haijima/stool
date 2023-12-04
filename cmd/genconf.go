@@ -38,7 +38,7 @@ toml, yaml, and json formats are supported.`
 	}
 	genConfCmd.Args = cobra.ExactArgs(1)
 
-	genConfCmd.Flags().String("format", "toml", "The output format {toml|yaml|json}")
+	genConfCmd.Flags().String("format", "yaml", "The output format {toml|yaml|json}")
 	genConfCmd.Flags().Bool("capture-group-name", false, "Add names to captured groups like \"(?P<name>pattern)\"")
 
 	return genConfCmd
