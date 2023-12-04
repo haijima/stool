@@ -65,7 +65,7 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
 
 #### Options for `stool genconf`
 
-- `--format string` : The output format {`toml`|`yaml`|`json`} (default `"toml"`)
+- `--format string` : The output format {`toml`|`yaml`|`json`} (default `"yaml"`)
 - `--capture-group-name` : Add names to captured groups like `"(?P<name>pattern)"` (default `false`)
 
 ### Config file
