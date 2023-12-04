@@ -38,7 +38,7 @@ toml, yaml, and json formats are supported.`
 	}
 	genConfCmd.Args = cobra.ExactArgs(1)
 
-	genConfCmd.Flags().String("format", "yaml", "The output format {toml|yaml|json}")
+	genConfCmd.Flags().String("format", "yaml", "The output format {toml|yaml|json|flag}")
 	genConfCmd.Flags().Bool("capture-group-name", false, "Add names to captured groups like \"(?P<name>pattern)\"")
 
 	return genConfCmd
@@ -48,7 +48,7 @@ func runGenConf(cmd *cobrax.Command, fileName string) error {
 	format := cmd.Viper().GetString("format")
 	captureGroupName := cmd.Viper().GetBool("capture-group-name")
 
-	if format != "toml" && format != "yaml" && format != "json" {
+	if format != "toml" && format != "yaml" && format != "json" && format != "flag" {
 		return fmt.Errorf("invalid format: %s", format)
 	}
 
@@ -83,6 +83,8 @@ func runGenConf(cmd *cobrax.Command, fileName string) error {
 		return printMatchingGroupInYaml(cmd, conf)
 	case "json":
 		return printMatchingGroupInJson(cmd, conf)
+	case "flag":
+		return printMatchingGroupAsFlag(cmd, conf)
 	}
 	return nil
 }
@@ -116,6 +118,11 @@ func printMatchingGroupInJson(cmd *cobrax.Command, conf MatchingGroupConf) error
 		panic(err)
 	}
 	cmd.PrintOutln(string(b))
+	return nil
+}
+
+func printMatchingGroupAsFlag(cmd *cobrax.Command, conf MatchingGroupConf) error {
+	cmd.PrintOutln(fmt.Sprintf("-m '%s'", strings.Join(conf.MatchingGroups, ",")))
 	return nil
 }
 
