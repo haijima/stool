@@ -30,6 +30,12 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 
 	scenarioCmd.Flags().String("format", "dot", "The output format {dot|mermaid|csv}")
 	scenarioCmd.Flags().Bool("palette", false, "use color palette for each endpoint")
+	scenarioCmd.Flags().StringP("file", "f", "", "access log file to profile")
+	scenarioCmd.Flags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
+	scenarioCmd.Flags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
+	scenarioCmd.Flags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
+	scenarioCmd.Flags().String("filter", "", "filter log lines by regular expression")
+	_ = scenarioCmd.MarkFlagFilename("file", viper.SupportedExts...)
 
 	return scenarioCmd
 }

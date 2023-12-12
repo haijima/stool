@@ -29,6 +29,12 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 	transitionCmd.Args = cobra.NoArgs
 
 	transitionCmd.Flags().String("format", "dot", "The output format {dot|mermaid|csv}")
+	transitionCmd.Flags().StringP("file", "f", "", "access log file to profile")
+	transitionCmd.Flags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
+	transitionCmd.Flags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
+	transitionCmd.Flags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
+	transitionCmd.Flags().String("filter", "", "filter log lines by regular expression")
+	_ = transitionCmd.MarkFlagFilename("file", viper.SupportedExts...)
 
 	return transitionCmd
 }
