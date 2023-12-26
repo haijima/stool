@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/haijima/stool/internal"
@@ -33,6 +34,9 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 		slog.SetDefault(Logger(*v))
 		color.NoColor = color.NoColor || v.GetBool("no_color")
 		if err := ReadConfigFile(v); err != nil {
+			return err
+		}
+		if err := v.MergeConfigMap(v.GetStringMap(strings.ToLower(cmd.Name()))); err != nil {
 			return err
 		}
 		return v.BindPFlags(cmd.Flags())
@@ -72,12 +76,13 @@ func OpenOrStdIn(filename string, fs afero.Fs, stdin io.Reader) (io.ReadCloser, 
 func ReadConfigFile(v *viper.Viper) error {
 	if cfgFile != "" {
 		v.SetConfigFile(cfgFile) // Use config file from the flag.
-	} else {
-		wd, err := os.Getwd()
-		if err != nil {
-			return err
+		// If a config file is found, read it in.
+		if err := v.ReadInConfig(); err == nil {
+			slog.Info(fmt.Sprintf("Using config file: %s", v.ConfigFileUsed()))
+			slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 		}
-		v.AddConfigPath(wd) // adding current working directory as first search path
+	} else {
+		xdgViper := viper.New()
 		xdgConfig := os.Getenv("XDG_CONFIG_HOME")
 		if xdgConfig == "" {
 			home, err := os.UserHomeDir()
@@ -86,18 +91,44 @@ func ReadConfigFile(v *viper.Viper) error {
 			}
 			xdgConfig = filepath.Join(home, ".config")
 		}
-		v.AddConfigPath(filepath.Join(xdgConfig, "stool")) // adding XDG config directory as second search path
+		xdgViper.AddConfigPath(filepath.Join(xdgConfig, "stool")) // use XDG config directory as global config path
+		xdgViper.SetConfigName("config")
+
+		homeViper := viper.New()
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return err
 		}
-		v.AddConfigPath(home) // adding home directory as third search path
-		v.SetConfigName(".stool")
-	}
+		homeViper.AddConfigPath(home) // use home directory as global config path
+		homeViper.SetConfigName(".stool")
 
-	// If a config file is found, read it in.
-	if err := v.ReadInConfig(); err == nil {
-		slog.Debug(fmt.Sprintf("Using config file: %s", v.ConfigFileUsed()))
+		projectViper := viper.New()
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		projectViper.AddConfigPath(wd) // use current working directory as project config path
+		projectViper.SetConfigName(".stool")
+
+		// Read in global config file (XDG > HOME)
+		if err := xdgViper.ReadInConfig(); err == nil {
+			slog.Info(fmt.Sprintf("Using file as global configuration: %s", xdgViper.ConfigFileUsed()))
+			slog.Debug(fmt.Sprintf("%+v", xdgViper.AllSettings()))
+		} else if err := homeViper.ReadInConfig(); err == nil {
+			slog.Info(fmt.Sprintf("Using file as global configuration: %s", homeViper.ConfigFileUsed()))
+			slog.Debug(fmt.Sprintf("%+v", homeViper.AllSettings()))
+		}
+
+		// Read in project config file
+		if err := projectViper.ReadInConfig(); err == nil {
+			slog.Info(fmt.Sprintf("Using file as project configuration: %s", projectViper.ConfigFileUsed()))
+			slog.Debug(fmt.Sprintf("%+v", projectViper.AllSettings()))
+		}
+
+		// Merge all config files
+		cobra.CheckErr(v.MergeConfigMap(xdgViper.AllSettings()))
+		cobra.CheckErr(v.MergeConfigMap(homeViper.AllSettings()))
+		cobra.CheckErr(v.MergeConfigMap(projectViper.AllSettings()))
 		slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 	}
 	return nil
