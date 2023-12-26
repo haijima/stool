@@ -64,7 +64,7 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -84,7 +84,7 @@ func Test_TransitionCmd_RunE_file_not_exists(t *testing.T) {
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.ErrorContains(t, err, "not_exists.log")
@@ -105,7 +105,7 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -127,7 +127,7 @@ func Test_TransitionCmd_RunE_format_mermaid(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -155,7 +155,7 @@ func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	_, _ = fs.Create(fileName)
 	_ = afero.WriteFile(fs, fileName, []byte("time:01/Jan/2023:12:00:01 +0900\treq:POST /initialize HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\ntime:01/Jan/2023:12:00:02 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\ntime:01/Jan/2023:12:00:03 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.ErrorContains(t, err, "invalid format flag")

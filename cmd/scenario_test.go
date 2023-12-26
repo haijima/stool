@@ -66,7 +66,7 @@ func Test_ScenarioCmd_RunE(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -92,7 +92,7 @@ func Test_ScenarioCmd_RunE_format_csv(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -114,7 +114,7 @@ func Test_ScenarioCmd_RunE_palette(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
-	_ = cmd.PreRunE(cmd, []string{})
+	_ = v.BindPFlags(cmd.Flags())
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
