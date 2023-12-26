@@ -20,18 +20,16 @@ import (
 
 func NewGenConfCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	genConfCmd := &cobra.Command{}
-	genConfCmd.Use = "genconf [-f format] <filename>"
+	genConfCmd.Use = "genconf [flags] <filename>"
 	genConfCmd.DisableFlagsInUseLine = true
 	genConfCmd.Short = "Generate configuration file"
 	genConfCmd.Long = `Extract the routing information from the source code and generate the "matching_group" configuration.
 
 The web framework used in the source code is automatically detected.
 Currently, the following frameworks are supported:
-- Echo (https://echo.labstack.com/)
-
-The output format is specified by the -f option.
-toml, yaml, and json formats are supported.`
+- Echo (https://echo.labstack.com/)`
 	genConfCmd.Example = "  stool genconf -f yaml main.go >> .stool.yaml"
+	genConfCmd.Args = cobra.ExactArgs(1)
 	genConfCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		return v.BindPFlags(cmd.Flags())
 	}
