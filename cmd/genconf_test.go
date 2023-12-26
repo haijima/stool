@@ -16,7 +16,6 @@ func TestNewGenConfCmd(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewGenConfCmd(v, fs)
-	_ = cmd.BindFlags()
 
 	assert.Equal(t, "genconf", cmd.Name(), "NewGenConfCmd() should return command named \"genconf\". but: \"%s\"", cmd.Name())
 }
@@ -25,7 +24,6 @@ func TestNewGenConfCmd_Flag(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewGenConfCmd(v, fs)
-	_ = cmd.BindFlags()
 	formatFlag := cmd.Flags().Lookup("format")
 
 	assert.True(t, cmd.HasAvailableFlags(), "genconf command should have available flag")
@@ -107,7 +105,7 @@ func TestRunGenConf(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd := NewRootCmd(v, fs)
 	cmd.SetOut(stdout)
-	cmd.SetArgs([]string{"genconf", "../internal/genconf/testdata/echo_simple.go", "--format", "yaml"})
+	cmd.SetArgs([]string{"genconf", "--format", "yaml", "../internal/genconf/testdata/echo_simple.go"})
 	err := cmd.Execute()
 
 	assert.NoError(t, err)

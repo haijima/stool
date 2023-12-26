@@ -3,12 +3,12 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
-	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
 	"github.com/olekukonko/tablewriter"
@@ -18,14 +18,16 @@ import (
 )
 
 // NewTrendCommand returns the trend command
-func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
-	trendCmd := cobrax.NewCommand(v, fs)
+func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+	trendCmd := &cobra.Command{}
 	trendCmd.Use = "trend"
 	trendCmd.Short = "Show the count of accesses for each endpoint over time"
-	trendCmd.RunE = func(cmd *cobrax.Command, args []string) error {
-		return runTrend(cmd, p)
+	trendCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return v.BindPFlags(cmd.Flags())
 	}
-	trendCmd.Args = cobra.NoArgs
+	trendCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return runTrend(cmd, v, fs, p)
+	}
 
 	trendCmd.Flags().String("format", "table", "The output format {table|md|csv}")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
@@ -40,21 +42,22 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 	return trendCmd
 }
 
-func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
-	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
-	timeFormat := cmd.Viper().GetString("time_format")
-	labels := cmd.Viper().GetStringMapString("log_labels")
-	filter := cmd.Viper().GetString("filter")
-	format := cmd.Viper().GetString("format")
-	sortKeys := cmd.Viper().GetStringSlice("sort")
-	interval := cmd.Viper().GetInt("interval")
-	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
+func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.TrendProfiler) error {
+	matchingGroups := v.GetStringSlice("matching_groups")
+	timeFormat := v.GetString("time_format")
+	labels := v.GetStringMapString("log_labels")
+	filter := v.GetString("filter")
+	format := v.GetString("format")
+	sortKeys := v.GetStringSlice("sort")
+	interval := v.GetInt("interval")
+	logger := slog.New(slog.NewTextHandler(cmd.ErrOrStderr(), nil))
+	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
 
 	if interval <= 0 {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
 
-	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
+	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -84,7 +87,7 @@ func runTrend(cmd *cobrax.Command, p *internal.TrendProfiler) error {
 	return fmt.Errorf("unknown format: %s", format)
 }
 
-func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown bool) error {
+func printTrendTable(cmd *cobra.Command, result *internal.Trend, markdown bool) error {
 	table := tablewriter.NewWriter(cmd.OutOrStdout())
 	if markdown {
 		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
@@ -106,7 +109,7 @@ func printTrendTable(cmd *cobrax.Command, result *internal.Trend, markdown bool)
 	return nil
 }
 
-func printTrendCsv(cmd *cobrax.Command, result *internal.Trend) error {
+func printTrendCsv(cmd *cobra.Command, result *internal.Trend) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	if err := writer.Write(resultToHeader(result)); err != nil {

@@ -16,7 +16,6 @@ func TestNewScenarioCmd(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewScenarioCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	assert.Equal(t, "scenario", cmd.Name(), "NewScenarioCmd() should return command named \"scenario\". but: \"%s\"", cmd.Name())
 }
@@ -26,10 +25,26 @@ func TestNewScenarioCmd_Flag(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewScenarioCmd(p, v, fs)
-	_ = cmd.BindFlags()
+	fileFlag := cmd.Flags().Lookup("file")
+	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
+	timeFormatFlag := cmd.Flags().Lookup("time_format")
+	logLabelsFlag := cmd.Flags().Lookup("log_labels")
+	filterFlag := cmd.Flags().Lookup("filter")
 	formatFlag := cmd.Flags().Lookup("format")
 	paletteFlag := cmd.Flags().Lookup("palette")
 
+	assert.NotNil(t, fileFlag, "scenario command should have \"file\" flag")
+	assert.Equal(t, "f", fileFlag.Shorthand, "\"file\" flag's shorthand is \"f\"")
+	assert.Equal(t, "string", fileFlag.Value.Type(), "\"file\" flag is string")
+	assert.NotNil(t, matchingGroupsFlag, "scenario command should have \"matching_groups\" flag")
+	assert.Equal(t, "m", matchingGroupsFlag.Shorthand, "\"matching_groups\" flag's shorthand is \"m\"")
+	assert.Equal(t, "stringSlice", matchingGroupsFlag.Value.Type(), "\"matching_groups\" flag is string slice")
+	assert.NotNil(t, timeFormatFlag, "scenario command should have \"time_format\" flag")
+	assert.Equal(t, "string", timeFormatFlag.Value.Type(), "\"time_format\" flag is string")
+	assert.NotNil(t, logLabelsFlag, "scenario command should have \"log_labels\" flag")
+	assert.Equal(t, "stringToString", logLabelsFlag.Value.Type(), "\"log_labels\" flag is stringToString")
+	assert.NotNil(t, filterFlag, "scenario command should have \"filter\" flag")
+	assert.Equal(t, "string", filterFlag.Value.Type(), "\"filter\" flag is string")
 	assert.True(t, cmd.HasAvailableFlags(), "scenario command should have available flag")
 	assert.NotNil(t, formatFlag, "scenario command should have \"format\" flag")
 	assert.Equal(t, "string", formatFlag.Value.Type(), "\"format\" flag is string")
@@ -42,7 +57,6 @@ func Test_ScenarioCmd_RunE(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewScenarioCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -52,6 +66,7 @@ func Test_ScenarioCmd_RunE(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -67,7 +82,6 @@ func Test_ScenarioCmd_RunE_format_csv(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewScenarioCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -78,6 +92,7 @@ func Test_ScenarioCmd_RunE_format_csv(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -89,7 +104,6 @@ func Test_ScenarioCmd_RunE_palette(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewScenarioCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -100,6 +114,7 @@ func Test_ScenarioCmd_RunE_palette(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -110,7 +125,6 @@ func BenchmarkScenarioCommand_RunE(b *testing.B) {
 	v := viper.New()
 	fs := afero.NewOsFs()
 	cmd := NewScenarioCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"

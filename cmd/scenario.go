@@ -3,11 +3,11 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
@@ -19,14 +19,16 @@ import (
 )
 
 // NewScenarioCmd returns the scenario command
-func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
-	scenarioCmd := cobrax.NewCommand(v, fs)
+func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+	scenarioCmd := &cobra.Command{}
 	scenarioCmd.Use = "scenario"
 	scenarioCmd.Short = "Show the access patterns of users"
-	scenarioCmd.RunE = func(cmd *cobrax.Command, args []string) error {
-		return runScenario(cmd, p)
+	scenarioCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return v.BindPFlags(cmd.Flags())
 	}
-	scenarioCmd.Args = cobra.NoArgs
+	scenarioCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return runScenario(cmd, v, fs, p)
+	}
 
 	scenarioCmd.Flags().String("format", "dot", "The output format {dot|mermaid|csv}")
 	scenarioCmd.Flags().Bool("palette", false, "use color palette for each endpoint")
@@ -40,16 +42,18 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 	return scenarioCmd
 }
 
-func runScenario(cmd *cobrax.Command, p *internal.ScenarioProfiler) error {
-	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
-	timeFormat := cmd.Viper().GetString("time_format")
-	labels := cmd.Viper().GetStringMapString("log_labels")
-	filter := cmd.Viper().GetString("filter")
-	format := cmd.Viper().GetString("format")
-	palette := cmd.Viper().GetBool("palette")
-	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
+func runScenario(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.ScenarioProfiler) error {
+	matchingGroups := v.GetStringSlice("matching_groups")
+	timeFormat := v.GetString("time_format")
+	labels := v.GetStringMapString("log_labels")
+	filter := v.GetString("filter")
+	format := v.GetString("format")
+	palette := v.GetBool("palette")
 
-	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
+	logger := slog.New(slog.NewJSONHandler(cmd.ErrOrStderr(), nil))
+	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
+
+	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -84,9 +88,9 @@ func runScenario(cmd *cobrax.Command, p *internal.ScenarioProfiler) error {
 	return printFn(cmd, scenarios, palette)
 }
 
-type printScenarioFunc = func(*cobrax.Command, []internal.ScenarioStruct, bool) error
+type printScenarioFunc = func(*cobra.Command, []internal.ScenarioStruct, bool) error
 
-func printScenarioCSV(cmd *cobrax.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
+func printScenarioCSV(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	// header
@@ -101,7 +105,7 @@ func printScenarioCSV(cmd *cobrax.Command, scenarioStructs []internal.ScenarioSt
 	return nil
 }
 
-func createScenarioDot(cmd *cobrax.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
+func createScenarioDot(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
 	graph := graphviz.NewGraph("root", "stool scenario")
 	graph.IsHorizontal = true
 
@@ -193,7 +197,7 @@ func createScenarioDot(cmd *cobrax.Command, scenarioStructs []internal.ScenarioS
 	return graph.Write(cmd.OutOrStdout())
 }
 
-func createScenarioMermaid(cmd *cobrax.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
+func createScenarioMermaid(cmd *cobra.Command, scenarioStructs []internal.ScenarioStruct, usePalette bool) error {
 	cmd.Println("---")
 	cmd.Println("title: stool scenario")
 	cmd.Println("---")

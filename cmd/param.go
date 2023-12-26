@@ -3,12 +3,12 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
-	"github.com/haijima/cobrax"
 	"github.com/haijima/gini"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
@@ -21,12 +21,15 @@ import (
 )
 
 // NewParamCommand returns the param command
-func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
-	paramCmd := cobrax.NewCommand(v, fs)
-	paramCmd.Use = "param"
+func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+	paramCmd := &cobra.Command{}
+	paramCmd.Use = "param [flags] <matching_group>..."
 	paramCmd.Short = "Show the parameter statistics for each endpoint"
-	paramCmd.RunE = func(cmd *cobrax.Command, args []string) error {
-		return runParam(cmd, p, args)
+	paramCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return v.BindPFlags(cmd.Flags())
+	}
+	paramCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return runParam(cmd, v, fs, p, args)
 	}
 	paramCmd.Args = cobra.MinimumNArgs(1)
 
@@ -44,15 +47,17 @@ func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *co
 	return paramCmd
 }
 
-func runParam(cmd *cobrax.Command, p *internal.ParamProfiler, args []string) error {
-	timeFormat := cmd.Viper().GetString("time_format")
-	labels := cmd.Viper().GetStringMapString("log_labels")
-	filter := cmd.Viper().GetString("filter")
-	paramType := cmd.Viper().GetString("type")
-	num := cmd.Viper().GetInt("num")
-	statFlg := cmd.Viper().GetBool("stat")
-	format := cmd.Viper().GetString("format")
-	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
+func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.ParamProfiler, args []string) error {
+	timeFormat := v.GetString("time_format")
+	labels := v.GetStringMapString("log_labels")
+	filter := v.GetString("filter")
+	paramType := v.GetString("type")
+	num := v.GetInt("num")
+	statFlg := v.GetBool("stat")
+	format := v.GetString("format")
+
+	logger := slog.New(slog.NewJSONHandler(cmd.OutOrStdout(), nil))
+	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
 
 	paramType = strings.ToLower(paramType)
 	if paramType != "path" && paramType != "query" && paramType != "all" {
@@ -62,7 +67,7 @@ func runParam(cmd *cobrax.Command, p *internal.ParamProfiler, args []string) err
 		return fmt.Errorf("format flag should be 'table', 'md', 'csv' or 'tsv'. but: %s", format)
 	}
 
-	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
+	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -85,7 +90,7 @@ func runParam(cmd *cobrax.Command, p *internal.ParamProfiler, args []string) err
 	if statFlg {
 		printParamStat(cmd, result, paramType, format)
 	} else {
-		printParamResult(cmd, result, paramType, num)
+		printParamResult(cmd, result, paramType, num, v.GetBool("quiet"))
 	}
 	return nil
 }
@@ -95,14 +100,14 @@ type kv struct {
 	Value int
 }
 
-func printParamResult(cmd *cobrax.Command, result *internal.Param, paramType string, displayNum int) {
+func printParamResult(cmd *cobra.Command, result *internal.Param, paramType string, displayNum int, quiet bool) {
 	validKeys := make([]string, 0)
 	for _, k := range result.Endpoints {
 		v := result.Count[k]
 		pathParams, hasPathParam := result.Path[k]
 		queryParams, hasQuery := result.QueryValue[k]
 		if paramType != "all" && !hasPathParam && !hasQuery {
-			if !cmd.Viper().GetBool("quiet") {
+			if !quiet {
 				if strings.HasPrefix(k, "GET ") {
 					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] Neither path parameter nor query parameter for \"%s\"", k)))
 				} else {
@@ -113,7 +118,7 @@ func printParamResult(cmd *cobrax.Command, result *internal.Param, paramType str
 			}
 			continue // has no param
 		} else if paramType == "path" && !hasPathParam {
-			if !cmd.Viper().GetBool("quiet") {
+			if !quiet {
 				cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No path parameter for \"%s\"", k)))
 				cmd.PrintErrln("Use capture group of regular expression to get path parameters. e.g. \"/users/([^/]+)\" or \"/users/(?P<id>[0-9]+)/posts\"")
 				cmd.PrintErrln("When you want to show query parameters, please use \"-t query\" or \"-t all\" option")
@@ -121,7 +126,7 @@ func printParamResult(cmd *cobrax.Command, result *internal.Param, paramType str
 			}
 			continue // has no path param
 		} else if paramType == "query" && !hasQuery {
-			if !cmd.Viper().GetBool("quiet") && strings.HasPrefix(k, "GET ") {
+			if !quiet && strings.HasPrefix(k, "GET ") {
 				cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No query parameter for \"%s\"", k)))
 				cmd.PrintErrln("When you want to show path parameters, please use \"-t path\" or \"-t all\" option")
 				cmd.PrintErrln()
@@ -130,7 +135,7 @@ func printParamResult(cmd *cobrax.Command, result *internal.Param, paramType str
 		}
 
 		validKeys = append(validKeys, strings.Split(k, " ")[1])
-		cmd.PrintOutf("%s (Count: %s)\n", color.New(color.FgHiBlue, color.Underline).Sprint(k), emphasisInt(v))
+		fmt.Fprintf(cmd.OutOrStdout(), "%s (Count: %s)\n", color.New(color.FgHiBlue, color.Underline).Sprint(k), emphasisInt(v))
 
 		if hasPathParam && (paramType == "path" || paramType == "all") {
 			printPathParamsResult(cmd, pathParams, result.PathName[k], displayNum, v)
@@ -141,14 +146,14 @@ func printParamResult(cmd *cobrax.Command, result *internal.Param, paramType str
 	}
 
 	// Show stool param command to call again
-	cmd.PrintOut("stool param")
+	fmt.Fprint(cmd.OutOrStdout(), "stool param")
 	for _, k := range validKeys {
-		cmd.PrintOutf(" \"%s\"", k)
+		fmt.Fprintf(cmd.OutOrStdout(), " \"%s\"\n", k)
 	}
-	cmd.PrintOutf(" -n %d\n", displayNum)
+	fmt.Fprintf(cmd.OutOrStdout(), " -n %d\n", displayNum)
 }
 
-func printPathParamsResult(cmd *cobrax.Command, pathParams []map[string]int, pathNames []string, displayNum int, v int) {
+func printPathParamsResult(cmd *cobra.Command, pathParams []map[string]int, pathNames []string, displayNum int, v int) {
 	for i, vv := range pathParams {
 		ks := len(vv)
 		var paramName string
@@ -158,7 +163,7 @@ func printPathParamsResult(cmd *cobrax.Command, pathParams []map[string]int, pat
 			paramName = color.CyanString(fmt.Sprintf("%s path parameter", humanize.Ordinal(i+1)))
 		}
 		g, _ := gini.Gini(maps.Values(vv))
-		cmd.PrintOutf("\t%s (Cardinality: %s, Gini: %s)\n", paramName, emphasisInt(ks), printGini(g, true))
+		fmt.Fprintf(cmd.OutOrStdout(), "\t%s (Cardinality: %s, Gini: %s)\n", paramName, emphasisInt(ks), printGini(g, true))
 
 		var ss []kv
 		for kkk, vvv := range vv {
@@ -172,16 +177,16 @@ func printPathParamsResult(cmd *cobrax.Command, pathParams []map[string]int, pat
 		var p int
 		for _, s := range ss {
 			p += s.Value
-			cmd.PrintOutf("\t\t%s: %s (Cum: %s)\n", color.GreenString(s.Key), emphasisInt(s.Value), emphasisPercentage(p, v))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t%s: %s (Cum: %s)\n", color.GreenString(s.Key), emphasisInt(s.Value), emphasisPercentage(p, v))
 		}
 		if ks > displayNum {
-			cmd.PrintOutf("\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
 		}
 	}
-	cmd.PrintOutln()
+	fmt.Fprintln(cmd.OutOrStdout())
 }
 
-func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum int, queryParams map[string]map[string]int, k string, v int) {
+func printQueryResult(cmd *cobra.Command, result *internal.Param, displayNum int, queryParams map[string]map[string]int, k string, v int) {
 	//cmd.PrintOutln("\tQuery parameter")
 	queryKeys := maps.Keys(queryParams)
 	slices.Sort(queryKeys)
@@ -189,7 +194,7 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 		vv := queryParams[kk]
 		ks := len(vv)
 		g, _ := gini.Gini(maps.Values(vv))
-		cmd.PrintOutf("\t?%s (Count: %s, Rate: %s, Cardinality: %s, Gini: %s)\n", color.MagentaString(kk), emphasisInt(result.QueryKey[k][kk]), emphasisPercentage(result.QueryKey[k][kk], v), emphasisInt(ks), printGini(g, true))
+		fmt.Fprintf(cmd.OutOrStdout(), "\t?%s (Count: %s, Rate: %s, Cardinality: %s, Gini: %s)\n", color.MagentaString(kk), emphasisInt(result.QueryKey[k][kk]), emphasisPercentage(result.QueryKey[k][kk], v), emphasisInt(ks), printGini(g, true))
 		var ss []kv
 		for kkk, vvv := range vv {
 			ss = append(ss, kv{kkk, vvv})
@@ -202,10 +207,10 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 		var p int
 		for _, s := range ss {
 			p += s.Value
-			cmd.PrintOutf("\t\t%s: %s (Cum: %s)\n", color.GreenString(s.Key), emphasisInt(s.Value), emphasisPercentage(p, result.QueryKey[k][kk]))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t%s: %s (Cum: %s)\n", color.GreenString(s.Key), emphasisInt(s.Value), emphasisPercentage(p, result.QueryKey[k][kk]))
 		}
 		if ks > displayNum {
-			cmd.PrintOutf("\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
 		}
 	}
 
@@ -223,7 +228,7 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 		ks := len(ss)
 
 		g, _ := gini.Gini(maps.Values(result.QueryKeyCombination[k]))
-		cmd.PrintOutf("\tQuery key combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
+		fmt.Fprintf(cmd.OutOrStdout(), "\tQuery key combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
 
 		if ks > displayNum {
 			ss = ss[:displayNum]
@@ -240,10 +245,10 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 			if s.Key != "(none)" {
 				qkc = "?" + qkc
 			}
-			cmd.PrintOutf("\t\t%s (Count: %s, Cum: %s)\n", qkc, emphasisInt(s.Value), emphasisPercentage(p, v))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t%s (Count: %s, Cum: %s)\n", qkc, emphasisInt(s.Value), emphasisPercentage(p, v))
 		}
 		if ks > displayNum {
-			cmd.PrintOutf("\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
 		}
 	}
 	if len(result.QueryKeyCombination[k]) > 1 {
@@ -260,7 +265,7 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 		ks := len(ss)
 
 		g, _ := gini.Gini(maps.Values(result.QueryValueCombination[k]))
-		cmd.PrintOutf("\tQuery key value combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
+		fmt.Fprintf(cmd.OutOrStdout(), "\tQuery key value combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
 
 		if ks > displayNum {
 			ss = ss[:displayNum]
@@ -280,16 +285,16 @@ func printQueryResult(cmd *cobrax.Command, result *internal.Param, displayNum in
 			if s.Key != "(none)" {
 				qkvc = "?" + qkvc
 			}
-			cmd.PrintOutf("\t\t%s (Count: %s, Cum: %s)\n", qkvc, emphasisInt(s.Value), emphasisPercentage(p, v))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t%s (Count: %s, Cum: %s)\n", qkvc, emphasisInt(s.Value), emphasisPercentage(p, v))
 		}
 		if ks > displayNum {
-			cmd.PrintOutf("\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
+			fmt.Fprintf(cmd.OutOrStdout(), "\t\t... and %s more\n", humanize.Comma(int64(ks-displayNum)))
 		}
 	}
-	cmd.PrintOutln()
+	fmt.Fprintln(cmd.OutOrStdout())
 }
 
-func printParamStat(cmd *cobrax.Command, result *internal.Param, paramType, format string) {
+func printParamStat(cmd *cobra.Command, result *internal.Param, paramType, format string) {
 	rows := make([][]string, 0)
 	for _, k := range result.Endpoints {
 		v := result.Count[k]

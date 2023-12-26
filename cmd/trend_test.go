@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +17,6 @@ func TestNewTrendCmd(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
 
 	assert.Equal(t, "trend", cmd.Name(), "NewTrendCommand() should return command named \"trend\". but: \"%s\"", cmd.Name())
 }
@@ -27,9 +26,25 @@ func TestNewTrendCmd_Flag(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
+	fileFlag := cmd.Flags().Lookup("file")
+	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
+	timeFormatFlag := cmd.Flags().Lookup("time_format")
+	logLabelsFlag := cmd.Flags().Lookup("log_labels")
+	filterFlag := cmd.Flags().Lookup("filter")
 	intervalFlag := cmd.LocalFlags().Lookup("interval")
 
+	assert.NotNil(t, fileFlag, "trend command should have \"file\" flag")
+	assert.Equal(t, "f", fileFlag.Shorthand, "\"file\" flag's shorthand is \"f\"")
+	assert.Equal(t, "string", fileFlag.Value.Type(), "\"file\" flag is string")
+	assert.NotNil(t, matchingGroupsFlag, "trend command should have \"matching_groups\" flag")
+	assert.Equal(t, "m", matchingGroupsFlag.Shorthand, "\"matching_groups\" flag's shorthand is \"m\"")
+	assert.Equal(t, "stringSlice", matchingGroupsFlag.Value.Type(), "\"matching_groups\" flag is string slice")
+	assert.NotNil(t, timeFormatFlag, "trend command should have \"time_format\" flag")
+	assert.Equal(t, "string", timeFormatFlag.Value.Type(), "\"time_format\" flag is string")
+	assert.NotNil(t, logLabelsFlag, "trend command should have \"log_labels\" flag")
+	assert.Equal(t, "stringToString", logLabelsFlag.Value.Type(), "\"log_labels\" flag is stringToString")
+	assert.NotNil(t, filterFlag, "trend command should have \"filter\" flag")
+	assert.Equal(t, "string", filterFlag.Value.Type(), "\"filter\" flag is string")
 	assert.True(t, cmd.HasAvailableLocalFlags(), "trend command should have available local flag")
 	assert.NotNil(t, intervalFlag, "trend command should have \"interval\" flag")
 	assert.Equal(t, "i", intervalFlag.Shorthand, "\"interval\" flag's shorthand is \"i\"")
@@ -41,7 +56,6 @@ func Test_Trend_RunE(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -64,7 +78,6 @@ func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
 
 	v.Set("interval", "0")
 
@@ -78,7 +91,6 @@ func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
@@ -94,7 +106,6 @@ func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -123,9 +134,9 @@ func Test_printTrendCsv(t *testing.T) {
 	data["POST /"].AddCount(3, 0)
 	data["POST /"].AddCount(4, 0)
 
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	cmd := cobrax.NewCommand(v, fs)
+	//v := viper.New()
+	//fs := afero.NewMemMapFs()
+	cmd := &cobra.Command{}
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
@@ -143,7 +154,6 @@ func BenchmarkTrendCommand_RunE(b *testing.B) {
 	v := viper.New()
 	fs := afero.NewOsFs()
 	cmd := NewTrendCommand(p, v, fs)
-	_ = cmd.BindFlags()
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"

@@ -17,7 +17,6 @@ func TestNewTransitionCmd(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	assert.Equal(t, "transition", cmd.Name(), "NewTransitionCmd() should return command named \"transition\". but: \"%s\"", cmd.Name())
 }
@@ -27,9 +26,25 @@ func TestNewTransitionCmd_Flag(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
+	fileFlag := cmd.Flags().Lookup("file")
+	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
+	timeFormatFlag := cmd.Flags().Lookup("time_format")
+	logLabelsFlag := cmd.Flags().Lookup("log_labels")
+	filterFlag := cmd.Flags().Lookup("filter")
 	formatFlag := cmd.Flags().Lookup("format")
 
+	assert.NotNil(t, fileFlag, "transition command should have \"file\" flag")
+	assert.Equal(t, "f", fileFlag.Shorthand, "\"file\" flag's shorthand is \"f\"")
+	assert.Equal(t, "string", fileFlag.Value.Type(), "\"file\" flag is string")
+	assert.NotNil(t, matchingGroupsFlag, "transition command should have \"matching_groups\" flag")
+	assert.Equal(t, "m", matchingGroupsFlag.Shorthand, "\"matching_groups\" flag's shorthand is \"m\"")
+	assert.Equal(t, "stringSlice", matchingGroupsFlag.Value.Type(), "\"matching_groups\" flag is string slice")
+	assert.NotNil(t, timeFormatFlag, "transition command should have \"time_format\" flag")
+	assert.Equal(t, "string", timeFormatFlag.Value.Type(), "\"time_format\" flag is string")
+	assert.NotNil(t, logLabelsFlag, "transition command should have \"log_labels\" flag")
+	assert.Equal(t, "stringToString", logLabelsFlag.Value.Type(), "\"log_labels\" flag is stringToString")
+	assert.NotNil(t, filterFlag, "transition command should have \"filter\" flag")
+	assert.Equal(t, "string", filterFlag.Value.Type(), "\"filter\" flag is string")
 	assert.True(t, cmd.HasAvailableFlags(), "transition command should have available flag")
 	assert.NotNil(t, formatFlag, "transition command should have \"format\" flag")
 	assert.Equal(t, "string", formatFlag.Value.Type(), "\"format\" flag is string")
@@ -40,7 +55,6 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -50,6 +64,7 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -65,11 +80,11 @@ func Test_TransitionCmd_RunE_file_not_exists(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.ErrorContains(t, err, "not_exists.log")
@@ -80,7 +95,6 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -91,6 +105,7 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -102,7 +117,6 @@ func Test_TransitionCmd_RunE_format_mermaid(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -113,6 +127,7 @@ func Test_TransitionCmd_RunE_format_mermaid(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
@@ -133,7 +148,6 @@ func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewMemMapFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -141,6 +155,7 @@ func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	_, _ = fs.Create(fileName)
 	_ = afero.WriteFile(fs, fileName, []byte("time:01/Jan/2023:12:00:01 +0900\treq:POST /initialize HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0F528CA635B26685F02030303\tuidgot:-\ntime:01/Jan/2023:12:00:02 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:uid=0B00A8C0FA28CA635B26685F02040303\tuidgot:-\ntime:01/Jan/2023:12:00:03 +0900\treq:GET / HTTP/2.0\tstatus:200\tuidset:-\tuidgot:uid=0B00A8C0FA28CA635B26685F02040303\n"), 0777)
 
+	_ = cmd.PreRunE(cmd, []string{})
 	err := cmd.RunE(cmd, []string{})
 
 	assert.ErrorContains(t, err, "invalid format flag")
@@ -222,7 +237,6 @@ func BenchmarkTransitionCommand_RunE(b *testing.B) {
 	v := viper.New()
 	fs := afero.NewOsFs()
 	cmd := NewTransitionCmd(p, v, fs)
-	_ = cmd.BindFlags()
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"

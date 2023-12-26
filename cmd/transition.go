@@ -3,13 +3,13 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
@@ -19,14 +19,16 @@ import (
 )
 
 // NewTransitionCmd returns the transition command
-func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) *cobrax.Command {
-	var transitionCmd = cobrax.NewCommand(v, fs)
+func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+	transitionCmd := &cobra.Command{}
 	transitionCmd.Use = "transition"
 	transitionCmd.Short = "Show the transition between endpoints"
-	transitionCmd.RunE = func(cmd *cobrax.Command, args []string) error {
-		return runTransition(cmd, p)
+	transitionCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return v.BindPFlags(cmd.Flags())
 	}
-	transitionCmd.Args = cobra.NoArgs
+	transitionCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return runTransition(cmd, v, fs, p)
+	}
 
 	transitionCmd.Flags().String("format", "dot", "The output format {dot|mermaid|csv}")
 	transitionCmd.Flags().StringP("file", "f", "", "access log file to profile")
@@ -39,14 +41,17 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 	return transitionCmd
 }
 
-func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
-	matchingGroups := cmd.Viper().GetStringSlice("matching_groups")
-	timeFormat := cmd.Viper().GetString("time_format")
-	labels := cmd.Viper().GetStringMapString("log_labels")
-	filter := cmd.Viper().GetString("filter")
-	cmd.V.Printf("%+v", cmd.Viper().AllSettings())
+func runTransition(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.TransitionProfiler) error {
+	matchingGroups := v.GetStringSlice("matching_groups")
+	timeFormat := v.GetString("time_format")
+	labels := v.GetStringMapString("log_labels")
+	filter := v.GetString("filter")
+	format := v.GetString("format")
 
-	f, err := cmd.OpenOrStdIn(cmd.Viper().GetString("file"))
+	logger := slog.New(slog.NewJSONHandler(cmd.ErrOrStderr(), nil))
+	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
+
+	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -67,7 +72,6 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	}
 
 	var printFn printTransitionFunc
-	format := cmd.Viper().GetString("format")
 	switch strings.ToLower(format) {
 	case "dot":
 		printFn = createTransitionDot
@@ -82,9 +86,9 @@ func runTransition(cmd *cobrax.Command, p *internal.TransitionProfiler) error {
 	return printFn(cmd, result)
 }
 
-type printTransitionFunc = func(*cobrax.Command, *internal.Transition) error
+type printTransitionFunc = func(*cobra.Command, *internal.Transition) error
 
-func createTransitionDot(cmd *cobrax.Command, result *internal.Transition) error {
+func createTransitionDot(cmd *cobra.Command, result *internal.Transition) error {
 	graph := graphviz.NewGraph("root", "stool transition")
 
 	eps := result.Endpoints
@@ -158,7 +162,7 @@ func createTransitionDot(cmd *cobrax.Command, result *internal.Transition) error
 	return graph.Write(cmd.OutOrStdout())
 }
 
-func createTransitionMermaid(cmd *cobrax.Command, result *internal.Transition) error {
+func createTransitionMermaid(cmd *cobra.Command, result *internal.Transition) error {
 	cmd.Println("---")
 	cmd.Println("title: stool transition")
 	cmd.Println("---")
@@ -209,7 +213,7 @@ func createTransitionMermaid(cmd *cobrax.Command, result *internal.Transition) e
 	return nil
 }
 
-func printTransitionCsv(cmd *cobrax.Command, result *internal.Transition) error {
+func printTransitionCsv(cmd *cobra.Command, result *internal.Transition) error {
 	writer := csv.NewWriter(cmd.OutOrStdout())
 
 	eps := result.Endpoints

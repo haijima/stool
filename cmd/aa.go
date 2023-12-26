@@ -1,28 +1,31 @@
 package cmd
 
 import (
-	"github.com/haijima/cobrax"
+	"fmt"
+
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 // NewAaCommand returns the aa command
-func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobrax.Command {
-	var aaCmd = cobrax.NewCommand(v, fs)
+func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobra.Command {
+	aaCmd := &cobra.Command{}
 	aaCmd.Use = "aa"
 	aaCmd.Short = "Show an ASCII art of a \"stool\""
 	aaCmd.Hidden = true
-	aaCmd.Run = func(cmd *cobrax.Command, args []string) {
-		if cmd.Viper().GetBool("big") {
-			cmd.PrintOut(aaBig)
-		} else if cmd.Viper().GetBool("text") {
-			cmd.PrintOut(aaText)
+	aaCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return v.BindPFlags(cmd.Flags())
+	}
+	aaCmd.Run = func(cmd *cobra.Command, args []string) {
+		if v.GetBool("big") {
+			fmt.Fprint(cmd.OutOrStdout(), aaBig)
+		} else if v.GetBool("text") {
+			fmt.Fprint(cmd.OutOrStdout(), aaText)
 		} else {
-			cmd.PrintOut(aa)
+			fmt.Fprint(cmd.OutOrStdout(), aa)
 		}
 	}
-	aaCmd.Args = cobra.NoArgs
 
 	aaCmd.Flags().Bool("big", false, "if true, shows a big ASCII art")
 	aaCmd.Flags().Bool("text", false, "if true, shows a ASCII art of text")
