@@ -25,9 +25,6 @@ func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *co
 	paramCmd := &cobra.Command{}
 	paramCmd.Use = "param [flags] <matching_group>..."
 	paramCmd.Short = "Show the parameter statistics for each endpoint"
-	paramCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return v.BindPFlags(cmd.Flags())
-	}
 	paramCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return runParam(cmd, v, fs, p, args)
 	}

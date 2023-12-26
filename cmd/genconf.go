@@ -30,9 +30,6 @@ Currently, the following frameworks are supported:
 - Echo (https://echo.labstack.com/)`
 	genConfCmd.Example = "  stool genconf -f yaml main.go >> .stool.yaml"
 	genConfCmd.Args = cobra.ExactArgs(1)
-	genConfCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return v.BindPFlags(cmd.Flags())
-	}
 	genConfCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		fileName := args[0]
 		return runGenConf(cmd, v, fs, fileName)

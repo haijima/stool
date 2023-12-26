@@ -23,9 +23,6 @@ func NewTransitionCmd(p *internal.TransitionProfiler, v *viper.Viper, fs afero.F
 	transitionCmd := &cobra.Command{}
 	transitionCmd.Use = "transition"
 	transitionCmd.Short = "Show the transition between endpoints"
-	transitionCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return v.BindPFlags(cmd.Flags())
-	}
 	transitionCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return runTransition(cmd, v, fs, p)
 	}

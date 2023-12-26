@@ -32,8 +32,10 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		slog.SetDefault(Logger(*v))
 		color.NoColor = color.NoColor || v.GetBool("no_color")
-
-		return ReadConfigFile(v)
+		if err := ReadConfigFile(v); err != nil {
+			return err
+		}
+		return v.BindPFlags(cmd.Flags())
 	}
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/.stool.yaml)")

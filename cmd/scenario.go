@@ -23,9 +23,6 @@ func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *
 	scenarioCmd := &cobra.Command{}
 	scenarioCmd.Use = "scenario"
 	scenarioCmd.Short = "Show the access patterns of users"
-	scenarioCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return v.BindPFlags(cmd.Flags())
-	}
 	scenarioCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return runScenario(cmd, v, fs, p)
 	}

@@ -22,9 +22,6 @@ func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *co
 	trendCmd := &cobra.Command{}
 	trendCmd.Use = "trend"
 	trendCmd.Short = "Show the count of accesses for each endpoint over time"
-	trendCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return v.BindPFlags(cmd.Flags())
-	}
 	trendCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return runTrend(cmd, v, fs, p)
 	}

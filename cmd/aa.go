@@ -14,9 +14,6 @@ func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	aaCmd.Use = "aa"
 	aaCmd.Short = "Show an ASCII art of a \"stool\""
 	aaCmd.Hidden = true
-	aaCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return v.BindPFlags(cmd.Flags())
-	}
 	aaCmd.Run = func(cmd *cobra.Command, args []string) {
 		if v.GetBool("big") {
 			fmt.Fprint(cmd.OutOrStdout(), aaBig)
