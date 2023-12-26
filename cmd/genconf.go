@@ -126,7 +126,7 @@ func printMatchingGroupInJson(cmd *cobra.Command, conf MatchingGroupConf) error 
 }
 
 func printMatchingGroupAsFlag(cmd *cobra.Command, conf MatchingGroupConf) error {
-	fmt.Fprintln(cmd.OutOrStdout(), fmt.Sprintf("-m '%s'", strings.Join(conf.MatchingGroups, ",")))
+	fmt.Fprintf(cmd.OutOrStdout(), "-m '%s'\n", strings.Join(conf.MatchingGroups, ","))
 	return nil
 }
 
