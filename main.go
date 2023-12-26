@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"regexp"
 	"strconv"
@@ -10,7 +9,6 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -29,15 +27,11 @@ func main() {
 }
 
 func apply(c *cobra.Command) {
-	fs := flag.NewFlagSet("verbosity", flag.ContinueOnError)
-	var verbosity int
-	fs.IntVar(&verbosity, "verbosity", 0, "verbosity level")
-	pflag.CommandLine.AddGoFlagSet(fs)
 	level, others := extract(os.Args[1:])
 	c.SetArgs(others)
-	//fmt.Printf("v: %d, others: %v\n", v, others)
 	cobra.OnInitialize(func() {
-		if level > verbosity {
+		verbosity, err := c.Flags().GetInt("verbosity")
+		if err == nil && level > verbosity {
 			err := c.Flags().Set("verbosity", strconv.Itoa(level))
 			if err != nil {
 				panic(err)

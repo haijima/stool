@@ -50,8 +50,7 @@ func runScenario(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Sc
 	format := v.GetString("format")
 	palette := v.GetBool("palette")
 
-	logger := slog.New(slog.NewJSONHandler(cmd.ErrOrStderr(), nil))
-	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
+	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {

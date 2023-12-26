@@ -1,8 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -29,22 +30,16 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	rootCmd.SilenceUsage = true // don't show help content when error occurred
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if v.GetInt("verbosity") >= 2 {
-			log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
-			log.SetOutput(cmd.ErrOrStderr())
-		} else if v.GetInt("verbosity") >= 1 {
-			log.SetOutput(cmd.ErrOrStderr())
-		} else {
-			log.SetOutput(io.Discard)
-		}
-
+		slog.SetDefault(Logger(*v))
 		color.NoColor = color.NoColor || v.GetBool("no_color")
 
-		return nil
+		return ReadConfigFile(v)
 	}
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/.stool.yaml)")
 	//rootCmd.PersistentFlags().BoolP("version", "v", false, "Show the version of this command")
+	rootCmd.PersistentFlags().Int("verbosity", 0, "verbosity level")
+	_ = v.BindPFlag("verbosity", rootCmd.PersistentFlags().Lookup("verbosity"))
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "quiet output")
 	_ = v.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
 	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
@@ -56,9 +51,6 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.AddCommand(NewParamCommand(internal.NewParamProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCommand(v, fs))
 	rootCmd.AddCommand(NewGenConfCmd(v, fs))
-
-	err := ReadConfigFile(*v)
-	cobra.CheckErr(err)
 
 	return rootCmd
 }
@@ -75,8 +67,7 @@ func OpenOrStdIn(filename string, fs afero.Fs, stdin io.Reader) (io.ReadCloser, 
 	}
 }
 
-func ReadConfigFile(v viper.Viper) error {
-	//cobra.OnInitialize(func() {
+func ReadConfigFile(v *viper.Viper) error {
 	if cfgFile != "" {
 		v.SetConfigFile(cfgFile) // Use config file from the flag.
 	} else {
@@ -104,9 +95,22 @@ func ReadConfigFile(v viper.Viper) error {
 
 	// If a config file is found, read it in.
 	if err := v.ReadInConfig(); err == nil {
-		log.Printf("Using config file: %s", v.ConfigFileUsed())
-		log.Printf("%+v", v.AllSettings())
+		slog.Debug(fmt.Sprintf("Using config file: %s", v.ConfigFileUsed()))
+		slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 	}
-	//})
 	return nil
+}
+
+func Logger(v viper.Viper) *slog.Logger {
+	if v.GetBool("quiet") {
+		return slog.New(slog.NewJSONHandler(io.Discard, &slog.HandlerOptions{Level: slog.LevelError}))
+	} else if v.GetInt("verbosity") >= 3 {
+		return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
+	} else if v.GetInt("verbosity") == 2 {
+		return slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	} else if v.GetInt("verbosity") == 1 {
+		return slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	} else {
+		return slog.New(slog.NewJSONHandler(io.Discard, &slog.HandlerOptions{Level: slog.LevelWarn}))
+	}
 }

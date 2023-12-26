@@ -56,8 +56,7 @@ func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Param
 	statFlg := v.GetBool("stat")
 	format := v.GetString("format")
 
-	logger := slog.New(slog.NewJSONHandler(cmd.OutOrStdout(), nil))
-	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
+	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	paramType = strings.ToLower(paramType)
 	if paramType != "path" && paramType != "query" && paramType != "all" {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"go/types"
+	"log/slog"
 	"strings"
 
 	"github.com/fatih/color"
@@ -48,6 +49,8 @@ toml, yaml, and json formats are supported.`
 func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, fileName string) error {
 	format := v.GetString("format")
 	captureGroupName := v.GetBool("capture-group-name")
+
+	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	if format != "toml" && format != "yaml" && format != "json" && format != "flag" {
 		return fmt.Errorf("invalid format: %s", format)

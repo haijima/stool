@@ -50,8 +50,8 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 	format := v.GetString("format")
 	sortKeys := v.GetStringSlice("sort")
 	interval := v.GetInt("interval")
-	logger := slog.New(slog.NewTextHandler(cmd.ErrOrStderr(), nil))
-	logger.Info(fmt.Sprintf("%+v", v.AllSettings()))
+
+	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	if interval <= 0 {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
