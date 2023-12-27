@@ -51,11 +51,11 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
 	_ = v.BindPFlag("no_color", rootCmd.PersistentFlags().Lookup("no_color"))
 
-	rootCmd.AddCommand(NewTrendCommand(internal.NewTrendProfiler(), v, fs))
+	rootCmd.AddCommand(NewTrendCmd(internal.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
-	rootCmd.AddCommand(NewParamCommand(internal.NewParamProfiler(), v, fs))
-	rootCmd.AddCommand(NewAaCommand(v, fs))
+	rootCmd.AddCommand(NewParamCmd(internal.NewParamProfiler(), v, fs))
+	rootCmd.AddCommand(NewAaCmd(v, fs))
 	rootCmd.AddCommand(NewGenConfCmd(v, fs))
 
 	return rootCmd

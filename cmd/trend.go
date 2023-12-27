@@ -17,8 +17,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// NewTrendCommand returns the trend command
-func NewTrendCommand(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+// NewTrendCmd returns the trend command
+func NewTrendCmd(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	trendCmd := &cobra.Command{}
 	trendCmd.Use = "trend"
 	trendCmd.Short = "Show the count of accesses for each endpoint over time"

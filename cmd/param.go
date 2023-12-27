@@ -20,8 +20,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// NewParamCommand returns the param command
-func NewParamCommand(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
+// NewParamCmd returns the param command
+func NewParamCmd(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	paramCmd := &cobra.Command{}
 	paramCmd.Use = "param [flags] <matching_group>..."
 	paramCmd.Short = "Show the parameter statistics for each endpoint"

@@ -16,16 +16,16 @@ func TestNewTrendCmd(t *testing.T) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 
-	assert.Equal(t, "trend", cmd.Name(), "NewTrendCommand() should return command named \"trend\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "trend", cmd.Name(), "NewTrendCmd() should return command named \"trend\". but: \"%s\"", cmd.Name())
 }
 
 func TestNewTrendCmd_Flag(t *testing.T) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 	fileFlag := cmd.Flags().Lookup("file")
 	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
 	timeFormatFlag := cmd.Flags().Lookup("time_format")
@@ -55,7 +55,7 @@ func Test_Trend_RunE(t *testing.T) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -77,7 +77,7 @@ func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 
 	v.Set("interval", "0")
 
@@ -90,7 +90,7 @@ func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
@@ -105,7 +105,7 @@ func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
@@ -153,7 +153,7 @@ func BenchmarkTrendCommand_RunE(b *testing.B) {
 	p := internal.NewTrendProfiler()
 	v := viper.New()
 	fs := afero.NewOsFs()
-	cmd := NewTrendCommand(p, v, fs)
+	cmd := NewTrendCmd(p, v, fs)
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"

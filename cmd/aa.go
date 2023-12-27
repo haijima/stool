@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// NewAaCommand returns the aa command
-func NewAaCommand(v *viper.Viper, fs afero.Fs) *cobra.Command {
+// NewAaCmd returns the aa command
+func NewAaCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	aaCmd := &cobra.Command{}
 	aaCmd.Use = "aa"
 	aaCmd.Short = "Show an ASCII art of a \"stool\""
