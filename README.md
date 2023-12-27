@@ -22,6 +22,21 @@ brew install haijima/tap/stool
 
 or you can download binaries from [Releases](https://github.com/haijima/stool/releases).
 
+
+## Examples
+
+``` sh
+stool param --file path/to/access.log --num 10 --stat "/users/(?P<userId>[^/]+)$"
+
+stool scenario --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o scenario.svg && open scenario.svg
+
+stool transition --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o transition.svg && open transition.svg
+
+stool trend --file path/to/access.log --matching_groups "/users/.*,/items/.*" --interval 10
+
+stool genconf path/to/main.go --format yaml >> .stool.yaml
+```
+
 ## Commands and Options
 
 ### Commands
@@ -36,15 +51,11 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
 
 #### Global Options
 
+- `-h, --help`: Show help
 - `--config string` : Config file (default is `$XDG_CONFIG_HOME/.stool.yaml`)
 - `--no_color`: Disable colorized output
 - `-q, --quiet`: Quiet output
 - `--verbosity int`: Verbosity level (default `0`)
-
-#### Options for `stool genconf`
-
-- `--capture-group-name` : Add names to captured groups like `"(?P<name>pattern)"` (default `false`)
-- `--format string` : The output format {`toml`|`yaml`|`json`|`flag`} (default `"yaml"`)
 
 #### Options for `stool param`
 
@@ -95,6 +106,11 @@ or you can download binaries from [Releases](https://github.com/haijima/stool/re
   example: `--matching_groups "/users/.*,/items/.*"`.
 - `--time_format string` : The format to parse time field on log file (default `"02/Jan/2006:15:04:05 -0700"`).
 
+#### Options for `stool genconf`
+
+- `--capture-group-name` : Add names to captured groups like `"(?P<name>pattern)"` (default `false`)
+- `--format string` : The output format {`toml`|`yaml`|`json`|`flag`} (default `"yaml"`)
+
 ### Config file
 
 If `--config` option is specified, **only** the passed file is used as the default options.
@@ -135,21 +151,6 @@ The merged config is as follows
 optionA: 1 # from $XDG_CONFIG_HOME/stool/config.yaml (prior to $HOME/.stool.yaml as global config) 
 optionB: 3 # overridden by $CURRENT_DIR/.stool.yaml as project specific config
 optionC: 3 # from $CURRENT_DIR/.stool.yaml as project specific config
-```
-
-
-## Examples
-
-``` sh
-stool param --file path/to/access.log --num 10 --stat "/users/(?P<userId>[^/]+)$"
-
-stool scenario --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o scenario.svg && open scenario.svg
-
-stool transition --file path/to/access.log --matching_groups "/users/.*,/items/.*" --format dot | dot -T svg -o transition.svg && open transition.svg
-
-stool trend --file path/to/access.log --matching_groups "/users/.*,/items/.*" --interval 10
-
-stool genconf path/to/main.go --format yaml >> .stool.yaml
 ```
 
 ## Prerequisites
