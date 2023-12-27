@@ -51,7 +51,6 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 
 #### Global Options
 
-- `-h, --help`: Show help
 - `--config string` : Config file (default is `$XDG_CONFIG_HOME/.stool.yaml`)
 - `--no_color`: Disable colorized output
 - `-q, --quiet`: Quiet output
