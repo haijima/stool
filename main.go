@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"regexp"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 )
 
 func main() {
-	v := viper.New()
+	v := viper.NewWithOptions(viper.WithLogger(slog.Default()))
 	fs := afero.NewOsFs()
 	v.SetFs(fs)
 	rootCmd := cmd.NewRootCmd(v, fs)
