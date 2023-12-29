@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -46,8 +45,6 @@ func runScenario(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Sc
 	filter := v.GetString("filter")
 	format := v.GetString("format")
 	palette := v.GetBool("palette")
-
-	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {

@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"log/slog"
 	"sort"
 	"strings"
 
@@ -52,8 +51,6 @@ func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Param
 	num := v.GetInt("num")
 	statFlg := v.GetBool("stat")
 	format := v.GetString("format")
-
-	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	paramType = strings.ToLower(paramType)
 	if paramType != "path" && paramType != "query" && paramType != "all" {

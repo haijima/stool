@@ -45,8 +45,6 @@ func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, fileName string
 	format := v.GetString("format")
 	captureGroupName := v.GetBool("capture-group-name")
 
-	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
-
 	if format != "toml" && format != "yaml" && format != "json" && format != "flag" {
 		return fmt.Errorf("invalid format: %s", format)
 	}
@@ -59,7 +57,7 @@ func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, fileName string
 	var matchingGroups []string
 	switch usedFramework.Kind {
 	case genconf.EchoV4:
-		cmd.PrintErrln("Detected Echo: \"github.com/labstack/echo/v4\"")
+		slog.Info("Detected Echo: \"github.com/labstack/echo/v4\"")
 
 		var anblErr *genconf.ArgNotBasicLitError
 		matchingGroups, err = genconf.GenMatchingGroupFromEchoV4(fileName, usedFramework.PkgName, captureGroupName)

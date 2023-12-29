@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -47,8 +46,6 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 	format := v.GetString("format")
 	sortKeys := v.GetStringSlice("sort")
 	interval := v.GetInt("interval")
-
-	slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
 
 	if interval <= 0 {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
