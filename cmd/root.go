@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log/slog"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
@@ -52,12 +53,12 @@ func setup(v *viper.Viper) func(cmd *cobra.Command, args []string) error {
 		l := Logger(v)
 		slog.SetDefault(l)
 		cobrax.SetLogger(l)
+
 		// Read config file
-		cfg, err := cmd.Flags().GetString("config")
-		if err != nil {
+		if err := cobrax.NewConfigBinder(cmd).Bind(v); err != nil {
 			return err
 		}
-		if err := cobrax.ReadConfigFile(v, cfg, true, cmd.Name()); err != nil {
+		if err := cobrax.OverrideBySubConfig(v, strings.ToLower(cmd.Name())); err != nil {
 			return err
 		}
 		// Bind flags (flags of the command to be executed)
@@ -65,6 +66,7 @@ func setup(v *viper.Viper) func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		// Print config values
+		slog.Info("bind flags and config values")
 		slog.Debug(cobrax.DebugViper(v))
 		return nil
 	}
