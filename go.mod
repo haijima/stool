@@ -4,9 +4,9 @@ go 1.21.5
 
 require (
 	github.com/Wing924/ltsv v0.3.1
-	github.com/antonmedv/expr v1.15.3
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/dustin/go-humanize v1.0.1
+	github.com/expr-lang/expr v1.15.7
 	github.com/fatih/color v1.16.0
 	github.com/haijima/cobrax v0.1.0
 	github.com/haijima/gini v0.0.2
