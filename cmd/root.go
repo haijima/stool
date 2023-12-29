@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/fatih/color"
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -25,17 +23,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	rootCmd.SilenceUsage = true  // don't show help content when error occurred
 	rootCmd.SilenceErrors = true // Print error by own slog logger
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		slog.SetDefault(Logger(*v))
-		color.NoColor = color.NoColor || v.GetBool("no_color")
-		if err := ReadConfigFile(v); err != nil {
-			return err
-		}
-		if err := v.MergeConfigMap(v.GetStringMap(strings.ToLower(cmd.Name()))); err != nil {
-			return err
-		}
-		return v.BindPFlags(cmd.Flags())
-	}
+	rootCmd.PersistentPreRunE = setup(v)
 
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $XDG_CONFIG_HOME/.stool.yaml)")
 	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
@@ -56,77 +44,31 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	return rootCmd
 }
 
-func OpenOrStdIn(filename string, fs afero.Fs, stdin io.Reader) (io.ReadCloser, error) {
-	if filename != "" {
-		f, err := fs.Open(filename)
-		if err != nil {
-			return nil, err
-		}
-		return f, nil
-	} else {
-		return io.NopCloser(stdin), nil
-	}
-}
-
-func ReadConfigFile(v *viper.Viper) error {
-	if cfgFile != "" {
-		v.SetConfigFile(cfgFile) // Use config file from the flag.
-		// If a config file is found, read it in.
-		if err := v.ReadInConfig(); err == nil {
-			slog.Info(fmt.Sprintf("Using config file: %s", v.ConfigFileUsed()))
-			slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
-		}
-	} else {
-		xdgViper := viper.New()
-		xdgConfig := os.Getenv("XDG_CONFIG_HOME")
-		if xdgConfig == "" {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return err
-			}
-			xdgConfig = filepath.Join(home, ".config")
-		}
-		xdgViper.AddConfigPath(filepath.Join(xdgConfig, "stool")) // use XDG config directory as global config path
-		xdgViper.SetConfigName("config")
-
-		homeViper := viper.New()
-		home, err := os.UserHomeDir()
+func setup(v *viper.Viper) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		// Colorize settings (Do before logger setup)
+		color.NoColor = color.NoColor || v.GetBool("no_color")
+		// Set Logger
+		l := Logger(*v)
+		slog.SetDefault(l)
+		cobrax.SetLogger(l)
+		// Read config file
+		cfg, err := cmd.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
-		homeViper.AddConfigPath(home) // use home directory as global config path
-		homeViper.SetConfigName(".stool")
-
-		projectViper := viper.New()
-		wd, err := os.Getwd()
-		if err != nil {
+		if err := cobrax.ReadConfigFile(v, cfg, true, cmd.Name()); err != nil {
 			return err
 		}
-		projectViper.AddConfigPath(wd) // use current working directory as project config path
-		projectViper.SetConfigName(".stool")
-
-		// Read in global config file (XDG > HOME)
-		if err := xdgViper.ReadInConfig(); err == nil {
-			slog.Info(fmt.Sprintf("Using file as global configuration: %s", xdgViper.ConfigFileUsed()))
-			slog.Debug(fmt.Sprintf("%+v", xdgViper.AllSettings()))
-		} else if err := homeViper.ReadInConfig(); err == nil {
-			slog.Info(fmt.Sprintf("Using file as global configuration: %s", homeViper.ConfigFileUsed()))
-			slog.Debug(fmt.Sprintf("%+v", homeViper.AllSettings()))
+		// Bind flags (flags of the command to be executed)
+		if err := v.BindPFlags(cmd.Flags()); err != nil {
+			return err
 		}
 
-		// Read in project config file
-		if err := projectViper.ReadInConfig(); err == nil {
-			slog.Info(fmt.Sprintf("Using file as project configuration: %s", projectViper.ConfigFileUsed()))
-			slog.Debug(fmt.Sprintf("%+v", projectViper.AllSettings()))
-		}
-
-		// Merge all config files
-		cobra.CheckErr(v.MergeConfigMap(xdgViper.AllSettings()))
-		cobra.CheckErr(v.MergeConfigMap(homeViper.AllSettings()))
-		cobra.CheckErr(v.MergeConfigMap(projectViper.AllSettings()))
-		slog.Debug(fmt.Sprintf("%+v", v.AllSettings()))
+		// Print config values
+		slog.Debug(cobrax.DebugViper(v))
+		return nil
 	}
-	return nil
 }
 
 func Logger(v viper.Viper) *slog.Logger {

@@ -1,6 +1,6 @@
 module github.com/haijima/stool
 
-go 1.21
+go 1.21.5
 
 require (
 	github.com/Wing924/ltsv v0.3.1
@@ -8,6 +8,7 @@ require (
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.16.0
+	github.com/haijima/cobrax v0.1.0
 	github.com/haijima/gini v0.0.2
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-colorable v0.1.13
@@ -15,7 +16,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
@@ -38,6 +38,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect

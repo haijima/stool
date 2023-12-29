@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/graphviz"
 	"github.com/haijima/stool/internal/log"
@@ -46,7 +47,7 @@ func runScenario(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Sc
 	format := v.GetString("format")
 	palette := v.GetBool("palette")
 
-	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

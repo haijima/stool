@@ -8,6 +8,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
+	"github.com/haijima/cobrax"
 	"github.com/haijima/gini"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
@@ -60,7 +61,7 @@ func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Param
 		return fmt.Errorf("format flag should be 'table', 'md', 'csv' or 'tsv'. but: %s", format)
 	}
 
-	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

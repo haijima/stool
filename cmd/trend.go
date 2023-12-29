@@ -8,6 +8,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
+	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
 	"github.com/olekukonko/tablewriter"
@@ -51,7 +52,7 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
 
-	f, err := OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
