@@ -13,18 +13,14 @@ import (
 )
 
 func TestNewGenConfCmd(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 
 	assert.Equal(t, "genconf", cmd.Name(), "NewGenConfCmd() should return command named \"genconf\". but: \"%s\"", cmd.Name())
 }
 
 func TestNewGenConfCmd_Flag(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 	formatFlag := cmd.Flags().Lookup("format")
 
@@ -34,9 +30,7 @@ func TestNewGenConfCmd_Flag(t *testing.T) {
 }
 
 func Test_printMatchingGroupInToml(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 
 	stdout := new(bytes.Buffer)
@@ -49,9 +43,7 @@ func Test_printMatchingGroupInToml(t *testing.T) {
 }
 
 func Test_printMatchingGroupInYaml(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 
 	stdout := new(bytes.Buffer)
@@ -64,9 +56,7 @@ func Test_printMatchingGroupInYaml(t *testing.T) {
 }
 
 func Test_printMatchingGroupInJson(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 
 	stdout := new(bytes.Buffer)
@@ -79,9 +69,7 @@ func Test_printMatchingGroupInJson(t *testing.T) {
 }
 
 func Test_printArgNotBasicLitError(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 
 	stderr := new(bytes.Buffer)

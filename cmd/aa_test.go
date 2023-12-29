@@ -4,24 +4,18 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/spf13/afero"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewAaCommand(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewAaCmd(v, fs)
 
 	assert.Equal(t, "aa", cmd.Name())
 }
 
 func TestNewAaCommand_Run(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewAaCmd(v, fs)
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
@@ -32,9 +26,7 @@ func TestNewAaCommand_Run(t *testing.T) {
 }
 
 func TestNewAaCommand_Flag_Big(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewAaCmd(v, fs)
 	v.Set("big", true)
 	stdout := new(bytes.Buffer)
@@ -46,9 +38,7 @@ func TestNewAaCommand_Flag_Big(t *testing.T) {
 }
 
 func TestNewAaCommand_Flag_Text(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewAaCmd(v, fs)
 	v.Set("text", true)
 	stdout := new(bytes.Buffer)

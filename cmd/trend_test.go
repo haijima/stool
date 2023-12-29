@@ -14,9 +14,7 @@ import (
 
 func TestNewTrendCmd(t *testing.T) {
 	p := internal.NewTrendProfiler()
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 
 	assert.Equal(t, "trend", cmd.Name(), "NewTrendCmd() should return command named \"trend\". but: \"%s\"", cmd.Name())
@@ -24,9 +22,7 @@ func TestNewTrendCmd(t *testing.T) {
 
 func TestNewTrendCmd_Flag(t *testing.T) {
 	p := internal.NewTrendProfiler()
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 	fileFlag := cmd.Flags().Lookup("file")
 	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
@@ -55,9 +51,7 @@ func TestNewTrendCmd_Flag(t *testing.T) {
 
 func Test_Trend_RunE(t *testing.T) {
 	p := internal.NewTrendProfiler()
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 
 	fileName := "./access.log"
@@ -78,9 +72,7 @@ func Test_Trend_RunE(t *testing.T) {
 
 func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 	p := internal.NewTrendProfiler()
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 
 	v.Set("interval", "0")
@@ -92,9 +84,7 @@ func Test_TrendCmd_RunE_Flag_interval_not_positive(t *testing.T) {
 
 func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 	p := internal.NewTrendProfiler()
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 
 	fileName := "./not_exists.log"
@@ -108,9 +98,7 @@ func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 
 func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 	p := internal.NewTrendProfiler()
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 
 	fileName := "./access.log"

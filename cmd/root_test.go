@@ -10,9 +10,7 @@ import (
 )
 
 func TestNewRootCmd(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 
 	assert.Equal(t, "stool", cmd.Name(), "NewRootCommand() should return command named \"stool\". but: \"%s\"", cmd.Name())
@@ -22,9 +20,7 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestNewRootCmd_Flag(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 	versionFlag := cmd.PersistentFlags().Lookup("version")
 	configFlag := cmd.PersistentFlags().Lookup("config")
@@ -51,9 +47,7 @@ func TestNewRootCmd_Flag(t *testing.T) {
 	assert.Equal(t, "bool", quietFlag.Value.Type(), "\"quiet\" flag is bool")
 }
 func TestNewRootCmd_Flag_Verbose(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 
 	v.Set("verbose", true)
@@ -66,9 +60,7 @@ func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 }
 
 func TestNewRootCmd_Flag_Debug(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 
 	v.Set("debug", true)
@@ -81,9 +73,7 @@ func TestNewRootCmd_Flag_Debug(t *testing.T) {
 }
 
 func TestNewRootCmd_ConfigFile(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 
 	_, _ = fs.Create(".stool.yaml")
@@ -96,12 +86,17 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	v := viper.New()
-	fs := afero.NewMemMapFs()
-	v.SetFs(fs)
+	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 
 	err := cmd.Execute()
 
 	assert.NoError(t, err)
+}
+
+func createViperAndFs() (v *viper.Viper, fs afero.Fs) {
+	v = viper.New()
+	fs = afero.NewMemMapFs()
+	v.SetFs(fs)
+	return v, fs
 }
