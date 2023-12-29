@@ -15,12 +15,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
-func init() {
-
-}
-
 // NewRootCmd returns the base command used when called without any subcommands
 func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd := &cobra.Command{}
@@ -29,7 +23,8 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.Args = cobra.NoArgs
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-	rootCmd.SilenceUsage = true // don't show help content when error occurred
+	rootCmd.SilenceUsage = true  // don't show help content when error occurred
+	rootCmd.SilenceErrors = true // Print error by own slog logger
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		slog.SetDefault(Logger(*v))
 		color.NoColor = color.NoColor || v.GetBool("no_color")
@@ -42,14 +37,14 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 		return v.BindPFlags(cmd.Flags())
 	}
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/.stool.yaml)")
-	//rootCmd.PersistentFlags().BoolP("version", "v", false, "Show the version of this command")
-	rootCmd.PersistentFlags().Int("verbosity", 0, "verbosity level")
-	_ = v.BindPFlag("verbosity", rootCmd.PersistentFlags().Lookup("verbosity"))
-	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "quiet output")
-	_ = v.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
+	rootCmd.PersistentFlags().String("config", "", "config file (default is $XDG_CONFIG_HOME/.stool.yaml)")
 	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
 	_ = v.BindPFlag("no_color", rootCmd.PersistentFlags().Lookup("no_color"))
+	rootCmd.PersistentFlags().CountP("verbose", "v", "More output per occurrence. (Use -vvvv or --verbose 4 for max verbosity)")
+	_ = v.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Silence all output")
+	_ = v.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
+	rootCmd.MarkFlagsMutuallyExclusive("verbose", "quiet")
 
 	rootCmd.AddCommand(NewTrendCmd(internal.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
