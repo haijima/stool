@@ -16,6 +16,7 @@ func TestNewParamCmd(t *testing.T) {
 	p := internal.NewParamProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewParamCmd(p, v, fs)
 
 	assert.Equal(t, "param", cmd.Name(), "NewParamCmd() should return command named \"param\". but: \"%s\"", cmd.Name())
@@ -25,6 +26,7 @@ func TestNewParamCmd_Flag(t *testing.T) {
 	p := internal.NewParamProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewParamCmd(p, v, fs)
 	fileFlag := cmd.Flags().Lookup("file")
 	filterFlag := cmd.Flags().Lookup("filter")

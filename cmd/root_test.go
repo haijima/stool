@@ -10,8 +10,9 @@ import (
 )
 
 func TestNewRootCmd(t *testing.T) {
-	fs := afero.NewMemMapFs()
 	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewRootCmd(v, fs)
 
 	assert.Equal(t, "stool", cmd.Name(), "NewRootCommand() should return command named \"stool\". but: \"%s\"", cmd.Name())
@@ -21,36 +22,38 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestNewRootCmd_Flag(t *testing.T) {
-	fs := afero.NewMemMapFs()
 	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewRootCmd(v, fs)
-	//fileFlag := cmd.PersistentFlags().Lookup("file")
-	//matchingGroupsFlag := cmd.PersistentFlags().Lookup("matching_groups")
-	//timeFormatFlag := cmd.PersistentFlags().Lookup("time_format")
-	//logLabelsFlag := cmd.PersistentFlags().Lookup("log_labels")
-	//filterFlag := cmd.PersistentFlags().Lookup("filter")
-	noColorFlag := cmd.PersistentFlags().Lookup("no_color")
+	versionFlag := cmd.PersistentFlags().Lookup("version")
+	configFlag := cmd.PersistentFlags().Lookup("config")
+	noColorFlag := cmd.PersistentFlags().Lookup("no-color")
+	verboseFlag := cmd.PersistentFlags().Lookup("verbose")
+	quietFlag := cmd.PersistentFlags().Lookup("quiet")
 
 	assert.True(t, cmd.HasAvailablePersistentFlags(), "root command should have available flag")
-	assert.NotNil(t, noColorFlag, "root command should have \"no_color\" flag")
-	assert.Equal(t, "", noColorFlag.Shorthand, "\"no_color\" flag doesn't have shorthand")
-	assert.Equal(t, "bool", noColorFlag.Value.Type(), "\"no_color\" flag is string")
-	//assert.NotNil(t, fileFlag, "root command should have \"file\" flag")
-	//assert.Equal(t, "f", fileFlag.Shorthand, "\"file\" flag's shorthand is \"f\"")
-	//assert.Equal(t, "string", fileFlag.Value.Type(), "\"file\" flag is string")
-	//assert.NotNil(t, matchingGroupsFlag, "root command should have \"matching_groups\" flag")
-	//assert.Equal(t, "m", matchingGroupsFlag.Shorthand, "\"matching_groups\" flag's shorthand is \"m\"")
-	//assert.Equal(t, "stringSlice", matchingGroupsFlag.Value.Type(), "\"matching_groups\" flag is string slice")
-	//assert.NotNil(t, timeFormatFlag, "root command should have \"time_format\" flag")
-	//assert.Equal(t, "string", timeFormatFlag.Value.Type(), "\"time_format\" flag is string")
-	//assert.NotNil(t, logLabelsFlag, "root command should have \"log_labels\" flag")
-	//assert.Equal(t, "stringToString", logLabelsFlag.Value.Type(), "\"log_labels\" flag is stringToString")
-	//assert.NotNil(t, filterFlag, "root command should have \"filter\" flag")
-	//assert.Equal(t, "string", filterFlag.Value.Type(), "\"filter\" flag is string")
+
+	assert.NotNil(t, versionFlag, "root command should have \"version\" flag")
+	assert.Equal(t, "V", versionFlag.Shorthand, "\"version\" flag doesn't have shorthand")
+	assert.Equal(t, "bool", versionFlag.Value.Type(), "\"version\" flag is bool")
+	assert.NotNil(t, configFlag, "root command should have \"config\" flag")
+	assert.Equal(t, "", configFlag.Shorthand, "\"config\" flag doesn't have shorthand")
+	assert.Equal(t, "string", configFlag.Value.Type(), "\"config\" flag is string")
+	assert.NotNil(t, noColorFlag, "root command should have \"no-color\" flag")
+	assert.Equal(t, "", noColorFlag.Shorthand, "\"no-color\" flag doesn't have shorthand")
+	assert.Equal(t, "bool", noColorFlag.Value.Type(), "\"no-color\" flag is bool")
+	assert.NotNil(t, verboseFlag, "root command should have \"verbose\" flag")
+	assert.Equal(t, "v", verboseFlag.Shorthand, "\"verbose\" flag doesn't have shorthand")
+	assert.Equal(t, "count", verboseFlag.Value.Type(), "\"verbose\" flag is count")
+	assert.NotNil(t, quietFlag, "root command should have \"quiet\" flag")
+	assert.Equal(t, "q", quietFlag.Shorthand, "\"quiet\" flag doesn't have shorthand")
+	assert.Equal(t, "bool", quietFlag.Value.Type(), "\"quiet\" flag is bool")
 }
 func TestNewRootCmd_Flag_Verbose(t *testing.T) {
-	fs := afero.NewMemMapFs()
 	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewRootCmd(v, fs)
 
 	v.Set("verbose", true)
@@ -59,12 +62,13 @@ func TestNewRootCmd_Flag_Verbose(t *testing.T) {
 	cmd.SetArgs([]string{})                              // dummy not to use os.Args[1:]
 	err := cmd.Execute()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestNewRootCmd_Flag_Debug(t *testing.T) {
-	fs := afero.NewMemMapFs()
 	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewRootCmd(v, fs)
 
 	v.Set("debug", true)
@@ -73,12 +77,13 @@ func TestNewRootCmd_Flag_Debug(t *testing.T) {
 	cmd.SetArgs([]string{})                              // dummy not to use os.Args[1:]
 	err := cmd.Execute()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestNewRootCmd_ConfigFile(t *testing.T) {
-	fs := afero.NewMemMapFs()
 	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewRootCmd(v, fs)
 
 	_, _ = fs.Create(".stool.yaml")
@@ -87,15 +92,16 @@ func TestNewRootCmd_ConfigFile(t *testing.T) {
 	cmd.SetArgs([]string{"--config", ".stool.yaml"})
 	err := cmd.Execute()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestExecute(t *testing.T) {
-	fs := afero.NewMemMapFs()
 	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewRootCmd(v, fs)
 
 	err := cmd.Execute()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

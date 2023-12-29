@@ -16,6 +16,7 @@ func TestNewTransitionCmd(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 
 	assert.Equal(t, "transition", cmd.Name(), "NewTransitionCmd() should return command named \"transition\". but: \"%s\"", cmd.Name())
@@ -25,6 +26,7 @@ func TestNewTransitionCmd_Flag(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 	fileFlag := cmd.Flags().Lookup("file")
 	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
@@ -54,6 +56,7 @@ func Test_TransitionCmd_RunE(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 
 	fileName := "./access.log"
@@ -79,6 +82,7 @@ func Test_TransitionCmd_RunE_file_not_exists(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 
 	fileName := "./not_exists.log"
@@ -94,6 +98,7 @@ func Test_TransitionCmd_RunE_format_csv(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 
 	fileName := "./access.log"
@@ -116,6 +121,7 @@ func Test_TransitionCmd_RunE_format_mermaid(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 
 	fileName := "./access.log"
@@ -147,6 +153,7 @@ func Test_TransitionCmd_RunE_invalid_format(t *testing.T) {
 	p := internal.NewTransitionProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewTransitionCmd(p, v, fs)
 
 	fileName := "./access.log"

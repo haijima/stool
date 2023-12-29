@@ -52,7 +52,7 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 #### Global Options
 
 - `--config string` : Config file (default is `$XDG_CONFIG_HOME/.stool.yaml`)
-- `--no_color`: Disable colorized output
+- `--no-color`: Disable colorized output
 - `-q, --quiet`: Quiet output
 - `--verbosity int`: Verbosity level (default `0`)
 

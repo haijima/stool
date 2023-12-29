@@ -15,6 +15,7 @@ func TestNewScenarioCmd(t *testing.T) {
 	p := internal.NewScenarioProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewScenarioCmd(p, v, fs)
 
 	assert.Equal(t, "scenario", cmd.Name(), "NewScenarioCmd() should return command named \"scenario\". but: \"%s\"", cmd.Name())
@@ -24,6 +25,7 @@ func TestNewScenarioCmd_Flag(t *testing.T) {
 	p := internal.NewScenarioProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewScenarioCmd(p, v, fs)
 	fileFlag := cmd.Flags().Lookup("file")
 	matchingGroupsFlag := cmd.Flags().Lookup("matching_groups")
@@ -56,6 +58,7 @@ func Test_ScenarioCmd_RunE(t *testing.T) {
 	p := internal.NewScenarioProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewScenarioCmd(p, v, fs)
 
 	fileName := "./access.log"
@@ -81,6 +84,7 @@ func Test_ScenarioCmd_RunE_format_csv(t *testing.T) {
 	p := internal.NewScenarioProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewScenarioCmd(p, v, fs)
 
 	fileName := "./access.log"
@@ -103,6 +107,7 @@ func Test_ScenarioCmd_RunE_palette(t *testing.T) {
 	p := internal.NewScenarioProfiler()
 	v := viper.New()
 	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
 	cmd := NewScenarioCmd(p, v, fs)
 
 	fileName := "./access.log"
