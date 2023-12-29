@@ -19,7 +19,7 @@ func main() {
 	rootCmd.SetOut(colorable.NewColorableStdout())
 	rootCmd.SetErr(colorable.NewColorableStderr())
 	if err := rootCmd.Execute(); err != nil {
-		slog.Error(err.Error())
+		slog.Error(err.Error(), slog.Any(cmd.TraceErrorKey, err))
 		os.Exit(1)
 	}
 }

@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"io"
 	"log/slog"
-	"os"
 
 	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
@@ -49,7 +47,7 @@ func setup(v *viper.Viper) func(cmd *cobra.Command, args []string) error {
 		// Colorize settings (Do before logger setup)
 		color.NoColor = color.NoColor || v.GetBool("no_color")
 		// Set Logger
-		l := Logger(*v)
+		l := Logger(v)
 		slog.SetDefault(l)
 		cobrax.SetLogger(l)
 		// Read config file
@@ -68,19 +66,5 @@ func setup(v *viper.Viper) func(cmd *cobra.Command, args []string) error {
 		// Print config values
 		slog.Debug(cobrax.DebugViper(v))
 		return nil
-	}
-}
-
-func Logger(v viper.Viper) *slog.Logger {
-	if v.GetBool("quiet") {
-		return slog.New(slog.NewJSONHandler(io.Discard, &slog.HandlerOptions{Level: slog.LevelError}))
-	} else if v.GetInt("verbosity") >= 3 {
-		return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
-	} else if v.GetInt("verbosity") == 2 {
-		return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	} else if v.GetInt("verbosity") == 1 {
-		return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	} else {
-		return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
 	}
 }
