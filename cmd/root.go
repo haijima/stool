@@ -21,8 +21,10 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	rootCmd.SilenceUsage = true  // don't show help content when error occurred
 	rootCmd.SilenceErrors = true // Print error by own slog logger
+	rootCmd.Version = cobrax.VersionFunc()
 	rootCmd.PersistentPreRunE = setup(v)
 
+	rootCmd.PersistentFlags().BoolP("version", "V", false, "Print version information and quit")
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $XDG_CONFIG_HOME/.stool.yaml)")
 	rootCmd.PersistentFlags().Bool("no_color", false, "disable colorized output")
 	_ = v.BindPFlag("no_color", rootCmd.PersistentFlags().Lookup("no_color"))
@@ -62,7 +64,6 @@ func setup(v *viper.Viper) func(cmd *cobra.Command, args []string) error {
 		if err := v.BindPFlags(cmd.Flags()); err != nil {
 			return err
 		}
-
 		// Print config values
 		slog.Debug(cobrax.DebugViper(v))
 		return nil
