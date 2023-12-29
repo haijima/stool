@@ -9,7 +9,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/expr-lang/expr v1.15.7
 	github.com/fatih/color v1.16.0
-	github.com/haijima/cobrax v0.1.2
+	github.com/haijima/cobrax v0.1.4
 	github.com/haijima/gini v0.0.2
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-colorable v0.1.13
