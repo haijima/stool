@@ -1,4 +1,4 @@
-package cmd
+package internal
 
 import (
 	"context"
@@ -13,28 +13,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
-	"github.com/spf13/viper"
 )
 
 const TraceErrorKey = "trace_error"
-
-func Logger(v *viper.Viper) *slog.Logger {
-	verbosity := v.GetInt("verbose")
-	if v.GetBool("quiet") {
-		return slog.New(NewCliSlogHandler(&slog.HandlerOptions{Level: slog.Level(100)}))
-	} else if verbosity >= 4 {
-		//return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true, ReplaceAttr: replacer}))
-		return slog.New(NewCliSlogHandler(&slog.HandlerOptions{Level: slog.Level(-8)}))
-	} else if verbosity == 3 {
-		return slog.New(NewCliSlogHandler(&slog.HandlerOptions{Level: slog.LevelDebug}))
-	} else if verbosity == 2 {
-		return slog.New(NewCliSlogHandler(&slog.HandlerOptions{Level: slog.LevelInfo}))
-	} else if verbosity == 1 {
-		return slog.New(NewCliSlogHandler(&slog.HandlerOptions{Level: slog.LevelWarn}))
-	} else {
-		return slog.New(NewCliSlogHandler(&slog.HandlerOptions{Level: slog.LevelError}))
-	}
-}
 
 type CliSlogHandler struct {
 	mu   *sync.Mutex
