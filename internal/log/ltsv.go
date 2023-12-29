@@ -2,7 +2,6 @@ package log
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Wing924/ltsv"
+	"github.com/cockroachdb/errors"
 	"golang.org/x/exp/maps"
 )
 
@@ -139,7 +139,7 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 		case r.labels["time"]:
 			reqTime, err := time.Parse(r.timeFormat, string(value))
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Failed to parse time. See https://pkg.go.dev/time#pkg-constants for the format.")
 			}
 			entry.Time = reqTime
 

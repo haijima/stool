@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 	"github.com/haijima/cobrax"
@@ -79,7 +80,7 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 	} else if format == "csv" {
 		return printTrendCsv(cmd, result)
 	}
-	return fmt.Errorf("unknown format: %s", format)
+	return errors.Newf("unknown format: %s", format)
 }
 
 func printTrendTable(cmd *cobra.Command, result *internal.Trend, markdown bool) error {
