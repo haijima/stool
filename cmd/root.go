@@ -16,6 +16,7 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd := cobrax.NewRoot(v)
 	rootCmd.Use = "stool"
 	rootCmd.Short = "stool is access log profiler"
+	rootCmd.SetGlobalNormalizationFunc(cobrax.SnakeToKebab)
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// Colorization settings
 		color.NoColor = color.NoColor || v.GetBool("no-color")
