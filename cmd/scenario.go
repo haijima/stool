@@ -47,7 +47,7 @@ func runScenario(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Sc
 	format := v.GetString("format")
 	palette := v.GetBool("palette")
 
-	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cobrax.WithStdin(cmd.InOrStdin()))
 	if err != nil {
 		return err
 	}

@@ -53,7 +53,7 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
 
-	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cobrax.WithStdin(cmd.InOrStdin()))
 	if err != nil {
 		return err
 	}

@@ -61,7 +61,7 @@ func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Param
 		return fmt.Errorf("format flag should be 'table', 'md', 'csv' or 'tsv'. but: %s", format)
 	}
 
-	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cobrax.WithStdin(cmd.InOrStdin()))
 	if err != nil {
 		return err
 	}

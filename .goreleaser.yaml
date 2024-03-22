@@ -5,9 +5,6 @@ before:
 builds:
   - main: ./main.go
     binary: stool
-    ldflags:
-      - -s -w
-      - -X github.com/haijima/cobrax.Version={{.Version}}
     flags:
       - -trimpath
     env:

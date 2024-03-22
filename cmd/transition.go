@@ -45,7 +45,7 @@ func runTransition(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.
 	filter := v.GetString("filter")
 	format := v.GetString("format")
 
-	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cmd.InOrStdin())
+	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cobrax.WithStdin(cmd.InOrStdin()))
 	if err != nil {
 		return err
 	}
