@@ -89,6 +89,7 @@ func Test_TrendCmd_RunE_file_not_exists(t *testing.T) {
 
 	fileName := "./not_exists.log"
 	v.Set("file", fileName)
+	v.Set("format", "table")
 	v.Set("interval", "5")
 
 	err := cmd.RunE(cmd, []string{})
@@ -103,6 +104,7 @@ func Test_TrendCmd_RunE_file_profiler_error(t *testing.T) {
 
 	fileName := "./access.log"
 	v.Set("file", fileName)
+	v.Set("format", "table")
 	v.Set("time_format", "invalid")
 	v.Set("interval", "5")
 	_, _ = fs.Create(fileName)

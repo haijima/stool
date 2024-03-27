@@ -52,6 +52,9 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 	if interval <= 0 {
 		return fmt.Errorf("interval flag should be positive. but: %d", interval)
 	}
+	if format != "table" && format != "md" && format != "csv" {
+		return errors.Newf("unknown format: %s", format)
+	}
 
 	f, err := cobrax.OpenOrStdIn(v.GetString("file"), fs, cobrax.WithStdin(cmd.InOrStdin()))
 	if err != nil {
@@ -73,14 +76,16 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 		return err
 	}
 
-	if format == "table" {
+	switch format {
+	case "table":
 		return printTrendTable(cmd, result, false)
-	} else if format == "md" {
+	case "md":
 		return printTrendTable(cmd, result, true)
-	} else if format == "csv" {
+	case "csv":
 		return printTrendCsv(cmd, result)
+	default:
+		return nil // unreachable
 	}
-	return errors.Newf("unknown format: %s", format)
 }
 
 func printTrendTable(cmd *cobra.Command, result *internal.Trend, markdown bool) error {
