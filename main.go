@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -12,12 +13,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	// https://goreleaser.com/cookbooks/using-main.version/
-	version string
-	commit  string
-	date    string
-)
+// https://goreleaser.com/cookbooks/using-main.version/
+var version, commit, date string
 
 func main() {
 	slog.SetDefault(slog.New(internal.NewCliSlogHandler(nil)))
@@ -29,7 +26,11 @@ func main() {
 	rootCmd.SetOut(colorable.NewColorableStdout())
 	rootCmd.SetErr(colorable.NewColorableStderr())
 	if err := rootCmd.Execute(); err != nil {
-		slog.Error(err.Error(), slog.Any(internal.TraceErrorKey, err))
+		if slog.Default().Enabled(rootCmd.Context(), slog.LevelDebug) {
+			slog.Error(fmt.Sprintf("%+v", err))
+		} else {
+			slog.Error(err.Error())
+		}
 		os.Exit(1)
 	}
 }
