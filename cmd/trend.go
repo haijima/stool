@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/csv"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,7 +11,8 @@ import (
 	"github.com/haijima/cobrax"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
-	"github.com/olekukonko/tablewriter"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -76,67 +76,46 @@ func runTrend(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Trend
 		return err
 	}
 
-	switch format {
-	case "table":
-		return printTrendTable(cmd, result, false)
-	case "md":
-		return printTrendTable(cmd, result, true)
-	case "csv":
-		return printTrendCsv(cmd, result)
-	default:
-		return nil // unreachable
-	}
+	return printTrendTable(cmd, result, format)
 }
 
-func printTrendTable(cmd *cobra.Command, result *internal.Trend, markdown bool) error {
-	table := tablewriter.NewWriter(cmd.OutOrStdout())
-	if markdown {
-		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-		table.SetCenterSeparator("|")
-	}
+func printTrendTable(cmd *cobra.Command, result *internal.Trend, format string) error {
+	t := table.NewWriter()
+	t.SetOutputMirror(cmd.OutOrStdout())
 
-	header := resultToHeader(result)
-	table.SetHeader(header)
-
-	aligns := make([]int, 0, len(header))
-	aligns = append(aligns, tablewriter.ALIGN_LEFT)
-	aligns = append(aligns, tablewriter.ALIGN_LEFT)
-	for i := 2; i < len(header); i++ {
-		aligns = append(aligns, tablewriter.ALIGN_RIGHT)
-	}
-	table.SetColumnAlignment(aligns)
-	table.AppendBulk(resultToRows(result, true))
-	table.Render()
-	return nil
-}
-
-func printTrendCsv(cmd *cobra.Command, result *internal.Trend) error {
-	writer := csv.NewWriter(cmd.OutOrStdout())
-
-	if err := writer.Write(resultToHeader(result)); err != nil {
-		return err
-	}
-
-	if err := writer.WriteAll(resultToRows(result, false)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func resultToHeader(result *internal.Trend) []string {
-	header := make([]string, 0, result.Step+2)
-	header = append(header, "Method", "Uri")
+	header := table.Row{"Method", "Uri"}
 	for i := 0; i < result.Step; i++ {
 		header = append(header, strconv.Itoa(i*result.Interval))
 	}
-	return header
+	t.AppendHeader(header)
+
+	aligns := make([]table.ColumnConfig, 0, len(header)-2)
+	for i := 3; i <= len(header); i++ {
+		aligns = append(aligns, table.ColumnConfig{Number: i, Align: text.AlignRight})
+	}
+	t.SetColumnConfigs(aligns)
+
+	switch format {
+	case "table":
+		t.AppendRows(resultToRows(result, true))
+		t.Render()
+	case "md":
+		t.AppendRows(resultToRows(result, true))
+		t.RenderMarkdown()
+	case "csv":
+		t.AppendRows(resultToRows(result, false))
+		t.RenderCSV()
+	default:
+		return nil // unreachable
+	}
+	return nil
 }
 
-func resultToRows(result *internal.Trend, humanized bool) [][]string {
-	rows := make([][]string, 0, len(result.Endpoints()))
+func resultToRows(result *internal.Trend, humanized bool) []table.Row {
+	rows := make([]table.Row, 0, len(result.Endpoints()))
 	for _, endpoint := range result.Endpoints() {
-		row := make([]string, 0)
-		row = append(row, strings.SplitN(endpoint, " ", 2)...) // split into Method and Uri
+		methodAndUri := strings.SplitN(endpoint, " ", 2) // split into Method and Uri
+		row := table.Row{methodAndUri[0], methodAndUri[1]}
 		for i, count := range result.Counts(endpoint) {
 			s := strconv.Itoa(count)
 			if humanized {

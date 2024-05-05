@@ -11,9 +11,9 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/haijima/cobrax v0.3.1
 	github.com/haijima/gini v0.0.2
+	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-colorable v0.1.13
-	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pelletier/go-toml/v2 v2.2.1
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0

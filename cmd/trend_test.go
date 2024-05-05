@@ -137,7 +137,7 @@ func Test_printTrendCsv(t *testing.T) {
 	cmd.SetOut(stdout)
 
 	result := internal.NewTrend(data, 5, 5)
-	_ = printTrendCsv(cmd, result)
+	_ = printTrendTable(cmd, result, "csv")
 
 	assert.Equal(t, `Method,Uri,0,5,10,15,20
 GET,/,1,2,3,4,0

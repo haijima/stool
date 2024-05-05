@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/csv"
 	"fmt"
 	"sort"
 	"strings"
@@ -12,7 +11,8 @@ import (
 	"github.com/haijima/gini"
 	"github.com/haijima/stool/internal"
 	"github.com/haijima/stool/internal/log"
-	"github.com/olekukonko/tablewriter"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -289,7 +289,7 @@ func printQueryResult(cmd *cobra.Command, result *internal.Param, displayNum int
 }
 
 func printParamStat(cmd *cobra.Command, result *internal.Param, paramType, format string) {
-	rows := make([][]string, 0)
+	rows := make([]table.Row, 0)
 	for _, k := range result.Endpoints {
 		v := result.Count[k]
 		pathParams, hasPathParam := result.Path[k]
@@ -307,15 +307,15 @@ func printParamStat(cmd *cobra.Command, result *internal.Param, paramType, forma
 					paramName = fmt.Sprintf("Path param(%d)", i+1)
 				}
 				g, _ := gini.Gini(maps.Values(vv))
-				row := make([]string, 0, 6)
-				row = append(row, k)
-				row = append(row, "path")
-				row = append(row, paramName)
-				row = append(row, humanize.Comma(int64(v)))
-				row = append(row, color.HiBlackString("100.00"))
-				row = append(row, humanize.Comma(int64(len(vv))))
-				row = append(row, printGini(g, false))
-				rows = append(rows, row)
+				rows = append(rows, table.Row{
+					k,
+					"path",
+					paramName,
+					humanize.Comma(int64(v)),
+					color.HiBlackString("100.00"),
+					humanize.Comma(int64(len(vv))),
+					printGini(g, false),
+				})
 			}
 		}
 
@@ -325,46 +325,36 @@ func printParamStat(cmd *cobra.Command, result *internal.Param, paramType, forma
 			for _, kk := range queryKeys {
 				vv := queryParams[kk]
 				g, _ := gini.Gini(maps.Values(vv))
-				row := make([]string, 0, 6)
-				row = append(row, k)
-				row = append(row, "query")
-				row = append(row, fmt.Sprintf("?%s", kk))
-				row = append(row, humanize.Comma(int64(result.QueryKey[k][kk])))
-				row = append(row, fmt.Sprintf("%.2f", float64(result.QueryKey[k][kk])/float64(v)*100))
-				row = append(row, humanize.Comma(int64(len(vv))))
-				row = append(row, printGini(g, false))
-				rows = append(rows, row)
+				rows = append(rows, table.Row{
+					k,
+					"query",
+					fmt.Sprintf("?%s", kk),
+					humanize.Comma(int64(result.QueryKey[k][kk])),
+					fmt.Sprintf("%.2f", float64(result.QueryKey[k][kk])/float64(v)*100),
+					humanize.Comma(int64(len(vv))),
+					printGini(g, false),
+				})
 			}
 		}
 	}
 
-	header := []string{"Endpoint", "Type", "Parameter", "Count", "Count(%)", "Cardinality", "Gini"}
-	aligns := []int{tablewriter.ALIGN_LEFT, tablewriter.ALIGN_LEFT, tablewriter.ALIGN_LEFT, tablewriter.ALIGN_RIGHT, tablewriter.ALIGN_RIGHT, tablewriter.ALIGN_RIGHT, tablewriter.ALIGN_RIGHT}
+	t := table.NewWriter()
+	t.SetOutputMirror(cmd.OutOrStdout())
+	header := table.Row{"Endpoint", "Type", "Parameter", "Count", "Count(%)", "Cardinality", "Gini"}
+	t.AppendHeader(header)
+
+	aligns := []table.ColumnConfig{{Number: 4, Align: text.AlignRight}, {Number: 5, Align: text.AlignRight}, {Number: 6, Align: text.AlignRight}, {Number: 7, Align: text.AlignRight}}
+	t.SetColumnConfigs(aligns)
+	t.AppendRows(rows)
+
 	if format == "csv" {
-		csvWriter := csv.NewWriter(cmd.OutOrStdout())
-		_ = csvWriter.Write(header)
-		_ = csvWriter.WriteAll(rows)
+		t.RenderCSV()
 	} else if format == "tsv" {
-		csvWriter := csv.NewWriter(cmd.OutOrStdout())
-		csvWriter.Comma = '\t'
-		_ = csvWriter.Write(header)
-		_ = csvWriter.WriteAll(rows)
+		t.RenderTSV()
 	} else if format == "table" {
-		tableWriter := tablewriter.NewWriter(cmd.OutOrStdout())
-		tableWriter.SetAutoWrapText(false)
-		tableWriter.SetHeader(header)
-		tableWriter.SetColumnAlignment(aligns)
-		tableWriter.AppendBulk(rows)
-		tableWriter.Render()
+		t.Render()
 	} else if format == "md" {
-		mdWriter := tablewriter.NewWriter(cmd.OutOrStdout())
-		mdWriter.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-		mdWriter.SetCenterSeparator("|")
-		mdWriter.SetAutoWrapText(false)
-		mdWriter.SetHeader(header)
-		mdWriter.SetColumnAlignment(aligns)
-		mdWriter.AppendBulk(rows)
-		mdWriter.Render()
+		t.RenderMarkdown()
 	} else {
 		cmd.PrintErrf("invalid format: %s\n", format)
 	}
