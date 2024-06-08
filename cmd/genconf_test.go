@@ -16,7 +16,7 @@ func TestNewGenConfCmd(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewGenConfCmd(v, fs)
 
-	assert.Equal(t, "genconf", cmd.Name(), "NewGenConfCmd() should return command named \"genconf\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "genconf", cmd.Name(), "NewGenConfCmd() should return command named \"genconf\". but: %q", cmd.Name())
 }
 
 func TestNewGenConfCmd_Flag(t *testing.T) {

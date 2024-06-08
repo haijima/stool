@@ -103,9 +103,9 @@ func printParamResult(cmd *cobra.Command, result *internal.Param, paramType stri
 		if paramType != "all" && !hasPathParam && !hasQuery {
 			if !quiet {
 				if strings.HasPrefix(k, "GET ") {
-					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] Neither path parameter nor query parameter for \"%s\"", k)))
+					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] Neither path parameter nor query parameter for %q", k)))
 				} else {
-					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No path parameter for \"%s\"", k)))
+					cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No path parameter for %q", k)))
 				}
 				cmd.PrintErrln("Use capture group of regular expression to get path parameters. e.g. \"/users/([^/]+)\" or \"/users/(?P<id>[0-9]+)/posts\"")
 				cmd.PrintErrln()
@@ -113,7 +113,7 @@ func printParamResult(cmd *cobra.Command, result *internal.Param, paramType stri
 			continue // has no param
 		} else if paramType == "path" && !hasPathParam {
 			if !quiet {
-				cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No path parameter for \"%s\"", k)))
+				cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No path parameter for %q", k)))
 				cmd.PrintErrln("Use capture group of regular expression to get path parameters. e.g. \"/users/([^/]+)\" or \"/users/(?P<id>[0-9]+)/posts\"")
 				cmd.PrintErrln("When you want to show query parameters, please use \"-t query\" or \"-t all\" option")
 				cmd.PrintErrln()
@@ -121,7 +121,7 @@ func printParamResult(cmd *cobra.Command, result *internal.Param, paramType stri
 			continue // has no path param
 		} else if paramType == "query" && !hasQuery {
 			if !quiet && strings.HasPrefix(k, "GET ") {
-				cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No query parameter for \"%s\"", k)))
+				cmd.PrintErrln(color.YellowString(fmt.Sprintf("[Warning] No query parameter for %q", k)))
 				cmd.PrintErrln("When you want to show path parameters, please use \"-t path\" or \"-t all\" option")
 				cmd.PrintErrln()
 			}

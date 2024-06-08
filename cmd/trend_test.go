@@ -17,7 +17,7 @@ func TestNewTrendCmd(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewTrendCmd(p, v, fs)
 
-	assert.Equal(t, "trend", cmd.Name(), "NewTrendCmd() should return command named \"trend\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "trend", cmd.Name(), "NewTrendCmd() should return command named \"trend\". but: %q", cmd.Name())
 }
 
 func TestNewTrendCmd_Flag(t *testing.T) {

@@ -16,7 +16,7 @@ func TestNewScenarioCmd(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewScenarioCmd(p, v, fs)
 
-	assert.Equal(t, "scenario", cmd.Name(), "NewScenarioCmd() should return command named \"scenario\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "scenario", cmd.Name(), "NewScenarioCmd() should return command named \"scenario\". but: %q", cmd.Name())
 }
 
 func TestNewScenarioCmd_Flag(t *testing.T) {

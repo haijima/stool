@@ -169,13 +169,13 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	}
 
 	if entry.Req == "" {
-		return nil, fmt.Errorf("\"%s\" field is not found on line %d", r.labels["req"], r.line)
+		return nil, fmt.Errorf("%q field is not found on line %d", r.labels["req"], r.line)
 	} else if entry.Status == 0 {
-		return nil, fmt.Errorf("\"%s\" field is not found on line %d", r.labels["status"], r.line)
+		return nil, fmt.Errorf("%q field is not found on line %d", r.labels["status"], r.line)
 	} else if entry.Time.IsZero() {
-		return nil, fmt.Errorf("\"%s\" field　is not found on line %d", r.labels["time"], r.line)
+		return nil, fmt.Errorf("%q field is not found on line %d", r.labels["time"], r.line)
 	} else if entry.Uid == "" {
-		return nil, fmt.Errorf("\"%s\" or \"%s\" field is not found on line %d", r.labels["uidset"], r.labels["uidgot"], r.line)
+		return nil, fmt.Errorf("%q or %q field is not found on line %d", r.labels["uidset"], r.labels["uidgot"], r.line)
 	}
 
 	match, err := r.filter.Run(*entry)

@@ -13,7 +13,7 @@ func TestNewRootCmd(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
 
-	assert.Equal(t, "stool", cmd.Name(), "NewRootCommand() should return command named \"stool\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "stool", cmd.Name(), "NewRootCommand() should return command named \"stool\". but: %q", cmd.Name())
 	assert.False(t, cmd.HasParent(), "RootCommand should not have parent command.")
 	assert.Equal(t, 6, len(cmd.Commands()), "RootCommand should have 1 sub command. but: %d", len(cmd.Commands()))
 	assert.False(t, cmd.Runnable(), "RootCommand should not runnable.")

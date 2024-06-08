@@ -17,7 +17,7 @@ func TestNewParamCmd(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewParamCmd(p, v, fs)
 
-	assert.Equal(t, "param", cmd.Name(), "NewParamCmd() should return command named \"param\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "param", cmd.Name(), "NewParamCmd() should return command named \"param\". but: %q", cmd.Name())
 }
 
 func TestNewParamCmd_Flag(t *testing.T) {

@@ -17,7 +17,7 @@ func TestNewTransitionCmd(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewTransitionCmd(p, v, fs)
 
-	assert.Equal(t, "transition", cmd.Name(), "NewTransitionCmd() should return command named \"transition\". but: \"%s\"", cmd.Name())
+	assert.Equal(t, "transition", cmd.Name(), "NewTransitionCmd() should return command named \"transition\". but: %q", cmd.Name())
 }
 
 func TestNewTransitionCmd_Flag(t *testing.T) {
