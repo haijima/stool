@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,22 +12,24 @@ import (
 	"github.com/Wing924/ltsv"
 	"github.com/cockroachdb/errors"
 	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 type LTSVReader struct {
 	r                *bufio.Scanner
 	timeFormat       string
-	matchingPatterns []regexp.Regexp
+	matchingPatterns []*regexp.Regexp
 	labels           map[string]string
 	line             int
 	filter           *FilterExpr
 }
 
 type LTSVReadOpt struct {
-	MatchingGroups []string
-	TimeFormat     string
-	Labels         map[string]string
-	Filter         string
+	MatchingGroups    []string
+	TimeFormat        string
+	Labels            map[string]string
+	Filter            string
+	InitialBufferSize int
 }
 
 const defaultTimeFormat = "02/Jan/2006:15:04:05 -0700"
@@ -37,20 +38,23 @@ var Filtered = errors.New("filtered")
 
 func NewLTSVReader(r io.Reader, opt LTSVReadOpt) (*LTSVReader, error) {
 	scanner := bufio.NewScanner(r)
-	scanner.Split(bufio.ScanLines)
+	//scanner.Split(bufio.ScanLines)
+	if opt.InitialBufferSize > 0 {
+		scanner.Buffer(make([]byte, opt.InitialBufferSize), bufio.MaxScanTokenSize)
+	}
 
 	timeFormat := opt.TimeFormat
 	if opt.TimeFormat == "" {
 		timeFormat = defaultTimeFormat
 	}
 
-	matchingregexps := make([]regexp.Regexp, 0, len(opt.MatchingGroups))
+	matchingregexps := make([]*regexp.Regexp, 0, len(opt.MatchingGroups))
 	for _, pattern := range opt.MatchingGroups {
 		p, err := regexp.Compile(pattern)
 		if err != nil {
 			return nil, err
 		}
-		matchingregexps = append(matchingregexps, *p)
+		matchingregexps = append(matchingregexps, p)
 	}
 
 	labels := maps.Clone(defaultLabels)
@@ -98,12 +102,15 @@ func (e LogEntry) Key() string {
 }
 
 func (r *LTSVReader) Read() bool {
-	scanned := r.r.Scan()
-	if scanned {
+	if r.r.Scan() {
 		r.line++
+		return true
 	}
-	return scanned
+	return false
 }
+
+const HyphenByte = byte('-')
+const EqualByte = byte('=')
 
 // Parse parses one line of log file into LogEntry struct
 // For reducing memory allocation, you can pass a LogEntry to record to reuse the given one.
@@ -121,13 +128,21 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	entry.MatchedGroup = nil
 
 	err := ltsv.DefaultParser.ParseLine(r.r.Bytes(), func(label, value []byte) error {
+		//valStr := *(*string)(unsafe.Pointer(&value))
 		switch string(label) {
 		case r.labels["req"]:
 			entry.Req = string(value)
-			method, uri, MatchedGroup := parseReq(string(value), r.matchingPatterns)
-			entry.Method = method
+			var uri string
+			entry.Method, uri, _ = ParseReq(entry.Req)
 			entry.Uri = uri
-			entry.MatchedGroup = MatchedGroup
+			entry.MatchedGroup = nil
+			for i := range r.matchingPatterns {
+				if r.matchingPatterns[i].MatchString(uri) {
+					entry.Uri = r.matchingPatterns[i].String()
+					entry.MatchedGroup = r.matchingPatterns[i]
+					break
+				}
+			}
 
 		case r.labels["status"]:
 			status, err := strconv.Atoi(string(value))
@@ -144,9 +159,9 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 			entry.Time = reqTime
 
 		case r.labels["uidset"]:
-			if string(value) != "" && string(value) != "-" {
-				if i := strings.Index(string(value), "="); i >= 0 {
-					entry.Uid = string(value)[i+1:]
+			if len(value) > 0 && value[0] != HyphenByte {
+				if i := slices.Index(value, EqualByte); i >= 0 {
+					entry.Uid = string(value[i+1:])
 				} else {
 					entry.Uid = string(value)
 				}
@@ -154,9 +169,9 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 			}
 
 		case r.labels["uidgot"]:
-			if string(value) != "" && string(value) != "-" {
-				if i := strings.Index(string(value), "="); i >= 0 {
-					entry.Uid = string(value)[i+1:]
+			if len(value) > 0 && value[0] != HyphenByte {
+				if i := slices.Index(value, EqualByte); i >= 0 {
+					entry.Uid = string(value[i+1:])
 				} else {
 					entry.Uid = string(value)
 				}
@@ -188,14 +203,8 @@ func (r *LTSVReader) Parse(entry *LogEntry) (*LogEntry, error) {
 	return entry, nil
 }
 
-func parseReq(req string, patterns []regexp.Regexp) (string, string, *regexp.Regexp) {
-	method, uri, _ := ParseReq(req)
-	for _, p := range patterns {
-		if p.MatchString(uri) {
-			return method, p.String(), &p
-		}
-	}
-	return method, uri, nil
+func (r *LTSVReader) Err() error {
+	return r.r.Err()
 }
 
 func ParseReq(req string) (string, string, string) {
@@ -204,9 +213,8 @@ func ParseReq(req string) (string, string, string) {
 		return "", "", ""
 	}
 	uri, _, _ = strings.Cut(uri, " ")
-	parsed, err := url.Parse(uri)
-	if err != nil {
-		return "", "", ""
-	}
-	return method, parsed.Path, parsed.RawQuery
+	uri, _, _ = strings.Cut(uri, "#")
+	var query string
+	uri, query, _ = strings.Cut(uri, "?")
+	return method, uri, query
 }
