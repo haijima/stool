@@ -46,7 +46,6 @@ func (p *ParamProfiler) Profile(reader *log.LTSVReader) (*Param, error) {
 		_, uri, query := log.ParseReq(entry.Req)
 
 		// Path param
-		entry.MatchedGroup.NumSubexp()
 		subMatches := entry.MatchedGroup.FindStringSubmatch(uri)
 		key := fmt.Sprintf("%s %s", entry.Method, entry.Uri)
 		endpointsMap[key] = nil
