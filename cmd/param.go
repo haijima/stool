@@ -137,13 +137,6 @@ func printParamResult(cmd *cobra.Command, result *internal.Param, paramType stri
 			printQueryResult(cmd, result, displayNum, queryParams, k, v)
 		}
 	}
-
-	// Show stool param command to call again
-	fmt.Fprint(cmd.OutOrStdout(), "stool param")
-	for _, k := range validKeys {
-		fmt.Fprintf(cmd.OutOrStdout(), " \"%s\"\n", k)
-	}
-	fmt.Fprintf(cmd.OutOrStdout(), " -n %d\n", displayNum)
 }
 
 func printPathParamsResult(cmd *cobra.Command, pathParams []map[string]int, pathNames []string, displayNum int, v int) {
@@ -221,7 +214,7 @@ func printQueryResult(cmd *cobra.Command, result *internal.Param, displayNum int
 		ks := len(ss)
 
 		g, _ := gini.Gini(maps.Values(result.QueryKeyCombination[k]))
-		fmt.Fprintf(cmd.OutOrStdout(), "\tQuery key combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
+		fmt.Fprintf(cmd.OutOrStdout(), "\n\tQuery key combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
 
 		if ks > displayNum {
 			ss = ss[:displayNum]
@@ -258,7 +251,7 @@ func printQueryResult(cmd *cobra.Command, result *internal.Param, displayNum int
 		ks := len(ss)
 
 		g, _ := gini.Gini(maps.Values(result.QueryValueCombination[k]))
-		fmt.Fprintf(cmd.OutOrStdout(), "\tQuery key value combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
+		fmt.Fprintf(cmd.OutOrStdout(), "\n\tQuery key value combination (Cardinality: %s, Gini: %s)\n", emphasisInt(ks), printGini(g, true))
 
 		if ks > displayNum {
 			ss = ss[:displayNum]
