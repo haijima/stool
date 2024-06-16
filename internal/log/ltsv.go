@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -49,6 +50,9 @@ func NewLTSVReader(r io.Reader, opt LTSVReadOpt) (*LTSVReader, error) {
 		p, err := regexp.Compile(pattern)
 		if err != nil {
 			return nil, err
+		}
+		if p.NumSubexp() == 0 {
+			slog.Warn(fmt.Sprintf("no capturing group is found in the pattern: %q", pattern))
 		}
 		matchingregexps = append(matchingregexps, *p)
 	}
