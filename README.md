@@ -110,48 +110,6 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 - `--capture-group-name` : Add names to captured groups like `"(?P<name>pattern)"` (default `false`)
 - `--format string` : The output format {`toml`|`yaml`|`json`|`flag`} (default `"yaml"`)
 
-### Config file
-
-If `--config` option is specified, **only** the passed file is used as the default options.
-
-Otherwise, you can use a global config file and/or a project specific config file.
-They are merged and used as the default options.
-If the same option is specified in both config files, the option in the project specific config file is used.
-
-The global config file is searched in the following order:
-
-1. `$XDG_CONFIG_HOME/stool/config.yaml`
-2. `$HOME/.config/stool/config.yaml` when `$XDG_CONFIG_HOME` is not set
-3. `$HOME/.stool.yaml`
-
-The project specific config file is `$CURRENT_DIR/.stool.yaml`.
-
-Not only [YAML](https://yaml.org/) but also [JSON](https://www.json.org/json-en.html) and [TOML](https://toml.io/en/) format are supported.
-
-#### Example
-
-When the following config files exist and `--config` option is not specified
-```yaml
-# $XDG_CONFIG_HOME/stool/config.yaml
-optionA: 1
-optionB: 1
-
-# $HOME/.stool.yaml
-optionA: 2
-optionB: 2
-
-# $CURRENT_DIR/.stool.yaml
-optionB: 3
-optionC: 3
-```
-
-The merged config is as follows
-```yaml
-optionA: 1 # from $XDG_CONFIG_HOME/stool/config.yaml (prior to $HOME/.stool.yaml as global config) 
-optionB: 3 # overridden by $CURRENT_DIR/.stool.yaml as project specific config
-optionC: 3 # from $CURRENT_DIR/.stool.yaml as project specific config
-```
-
 ## Prerequisites
 
 ### Graphviz
