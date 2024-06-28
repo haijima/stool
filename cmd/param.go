@@ -94,7 +94,6 @@ type kv struct {
 }
 
 func printParamResult(cmd *cobra.Command, result *internal.Param, paramType string, displayNum int, quiet bool) {
-	validKeys := make([]string, 0)
 	for _, k := range result.Endpoints {
 		v := result.Count[k]
 		pathParams, hasPathParam := result.Path[k]
@@ -127,7 +126,6 @@ func printParamResult(cmd *cobra.Command, result *internal.Param, paramType stri
 			continue // has no query param
 		}
 
-		validKeys = append(validKeys, strings.Split(k, " ")[1])
 		fmt.Fprintf(cmd.OutOrStdout(), "%s (Count: %s)\n", color.New(color.FgHiBlue, color.Underline).Sprint(k), emphasisInt(v))
 
 		if hasPathParam && (paramType == "path" || paramType == "all") {
