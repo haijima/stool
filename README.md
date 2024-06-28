@@ -59,7 +59,7 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 #### Options for `stool param`
 
 - `-f, --file string` : Access log file to profile.
-- `--filter string` : Filter log lines by regular expression
+- `--filter string` : Filter log lines [for more information](#filter)
 - `--format string`: The stat output format {`table`|`md`|`csv`|`tsv`} (default `"table"`)
 - `--log_labels stringToString` : Comma-separated list of key=value pairs to override log labels (default `[]`)
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
@@ -72,7 +72,7 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 #### Options for `stool scenario`
 
 - `-f, --file string` : Access log file to profile.
-- `--filter string` : Filter log lines by regular expression
+- `--filter string` : Filter log lines [for more information](#filter)
 - `--format string` : The output format {`dot`|`mermaid`|`csv`} (default `"dot"`).
 - `--log_labels stringToString` : Comma-separated list of key=value pairs to override log labels (default `[]`)
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
@@ -83,7 +83,7 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 #### Options for `stool transition`
 
 - `-f, --file string` : Access log file to profile.
-- `--filter string` : Filter log lines by regular expression
+- `--filter string` : Filter log lines [for more information](#filter)
 - `--format string` : The output format {`dot`|`mermaid`|`csv`} (default `"dot"`).
 - `--log_labels stringToString` : Comma-separated list of key=value pairs to override log labels (default `[]`)
 - `-m, --matching_groups strings` : Comma-separated list of regular expression patterns to group matched URIs. For
@@ -93,7 +93,7 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 #### Options for `stool trend`
 
 - `-f, --file string` : Access log file to profile.
-- `--filter string` : Filter log lines by regular expression
+- `--filter string` : Filter log lines [for more information](#filter)
 - `--format string` : The output format {`table`|`md`|`csv`} (default `"table"`)
 - `-i, --interval int` : The time (in seconds) of the interval. Access counts are cumulated at each interval. (
   default `5`).
@@ -109,6 +109,31 @@ stool genconf path/to/main.go --format yaml >> .stool.yaml
 
 - `--capture-group-name` : Add names to captured groups like `"(?P<name>pattern)"` (default `false`)
 - `--format string` : The output format {`toml`|`yaml`|`json`|`flag`} (default `"yaml"`)
+
+#### filter
+
+Use [common expression language (CEL)](https://cel.dev/) to filter log lines.
+
+The following variables are defined
+- `req`: string
+- `status`: int
+- `method`: string
+- `uri`: string
+- `time`: timestamp
+- `uid`: string
+- `set_new_uid`: bool
+
+Example:
+```
+--filter "method == 'GET' && uri.contains('users') && time >= timestamp('2024-01-01T10:00:00Z')"
+```
+> [!TIP]
+> timestamp function requires [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format.
+
+- [CEL Spec](https://github.com/google/cel-spec/blob/master/doc/langdef.md)
+  - [List of Standard Definitions](https://github.com/google/cel-spec/blob/master/doc/langdef.md#list-of-standard-definitions)
+- [CEL Go implementation](https://github.com/google/cel-go)
+
 
 ## Prerequisites
 
