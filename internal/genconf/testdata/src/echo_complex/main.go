@@ -9,7 +9,7 @@ import (
 func main() {
 	e4 := echov4.New()
 
-	api := "api"
+	api := "/api"
 	index := "/index"
 	e4.POST(api+"/groups", CreateGroup)
 	e4.GET("/api/groups", GetGroups)
@@ -21,6 +21,9 @@ func main() {
 	auth := e4.Group("/auth")
 	auth.POST("/login", Login)
 	auth.POST("/logout", Logout)
+
+	adminAuth := auth.Group("/admin")
+	adminAuth.POST("/login", Login)
 
 	e4.Logger.Fatal(e4.Start(":3000"))
 }

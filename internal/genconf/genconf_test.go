@@ -7,19 +7,15 @@ import (
 )
 
 func TestCheckImportedFramework_echo(t *testing.T) {
-	filename := "testdata/echo_simple.go"
-	fw, err := CheckImportedFramework(filename)
+	fw, err := CheckImportedFramework("testdata/src/echo_simple", "./...")
 
 	assert.NoError(t, err)
-	assert.Equal(t, fw.Kind, EchoV4)
-	assert.Equal(t, fw.PkgName, "echo")
+	assert.Equal(t, fw, EchoV4)
 }
 
 func TestCheckImportedFramework_echo_complex(t *testing.T) {
-	filename := "testdata/echo_complex.go"
-	fw, err := CheckImportedFramework(filename)
+	fw, err := CheckImportedFramework("testdata/src/echo_complex", "./...")
 
 	assert.NoError(t, err)
-	assert.Equal(t, fw.Kind, EchoV4)
-	assert.Equal(t, fw.PkgName, "echov4")
+	assert.Equal(t, fw, EchoV4)
 }

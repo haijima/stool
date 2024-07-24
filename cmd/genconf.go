@@ -3,13 +3,10 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"go/types"
 	"log/slog"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/haijima/stool/internal/genconf"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/afero"
@@ -20,7 +17,7 @@ import (
 
 func NewGenConfCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	genConfCmd := &cobra.Command{}
-	genConfCmd.Use = "genconf [flags] <filename>"
+	genConfCmd.Use = "genconf [flags] <dir>"
 	genConfCmd.DisableFlagsInUseLine = true
 	genConfCmd.Short = "Generate configuration file"
 	genConfCmd.Long = `Extract the routing information from the source code and generate the "matching_group" configuration.
@@ -31,17 +28,19 @@ Currently, the following frameworks are supported:
 	genConfCmd.Example = "  stool genconf -f yaml main.go >> .stool.yaml"
 	genConfCmd.Args = cobra.ExactArgs(1)
 	genConfCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		fileName := args[0]
-		return runGenConf(cmd, v, fs, fileName)
+		dir := args[0]
+		return runGenConf(cmd, v, fs, dir)
 	}
 
+	genConfCmd.Flags().StringP("pattern", "p", "./...", "The pattern to analyze")
 	genConfCmd.Flags().String("format", "yaml", "The output format {toml|yaml|json|flag}")
 	genConfCmd.Flags().Bool("capture-group-name", false, "Add names to captured groups like \"(?P<name>pattern)\"")
 
 	return genConfCmd
 }
 
-func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, fileName string) error {
+func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, dir string) error {
+	pattern := v.GetString("pattern")
 	format := v.GetString("format")
 	captureGroupName := v.GetBool("capture-group-name")
 
@@ -49,29 +48,23 @@ func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, fileName string
 		return fmt.Errorf("invalid format: %s", format)
 	}
 
-	usedFramework, err := genconf.CheckImportedFramework(fileName)
+	usedFramework, err := genconf.CheckImportedFramework(dir, pattern)
 	if err != nil {
 		return err
 	}
-
-	var matchingGroups []string
-	switch usedFramework.Kind {
+	var ext genconf.APIPathPatternExtractor
+	switch usedFramework {
 	case genconf.EchoV4:
 		slog.Info("Detected Echo: \"github.com/labstack/echo/v4\"")
-
-		var anblErr *genconf.ArgNotBasicLitError
-		matchingGroups, err = genconf.GenMatchingGroupFromEchoV4(fileName, usedFramework.PkgName, captureGroupName)
-		if err != nil {
-			if errors.As(err, &anblErr) {
-				printArgNotBasicLitError(cmd, anblErr)
-			} else {
-				return err
-			}
-		}
+		ext = &genconf.EchoExtractor{}
 	case genconf.None:
-		return fmt.Errorf("not found web framework from %s", fileName)
+		return fmt.Errorf("not found web framework from %s", dir)
 	}
 
+	matchingGroups, err := genconf.GenMatchingGroup(dir, pattern, ext, captureGroupName)
+	if err != nil {
+		return err
+	}
 	conf := MatchingGroupConf{matchingGroups}
 	switch format {
 	case "toml":
@@ -121,19 +114,4 @@ func printMatchingGroupInJson(cmd *cobra.Command, conf MatchingGroupConf) error 
 func printMatchingGroupAsFlag(cmd *cobra.Command, conf MatchingGroupConf) error {
 	fmt.Fprintf(cmd.OutOrStdout(), "-m '%s'\n", strings.Join(conf.MatchingGroups, ","))
 	return nil
-}
-
-func printArgNotBasicLitError(cmd *cobra.Command, err *genconf.ArgNotBasicLitError) {
-	for _, x := range err.Info {
-		tag := color.YellowString("[Warning]")
-		pos := x.ArgPos.String()
-		msg := fmt.Sprintf("Unable to parse %T", x.Call.Args[x.ArgIndex])
-		args := make([]string, 0, len(x.Call.Args))
-		for _, a := range x.Call.Args {
-			args = append(args, types.ExprString(a))
-		}
-		args[x.ArgIndex] = color.New(color.Underline).Sprint(args[x.ArgIndex])
-		expr := fmt.Sprintf("%s(%s)", types.ExprString(x.Call.Fun), strings.Join(args, ", "))
-		cmd.PrintErrf("%s %s %s:\t%s\n", tag, pos, msg, expr)
-	}
 }

@@ -9,6 +9,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.17.0
 	github.com/google/cel-go v0.20.1
+	github.com/haijima/analysisutil v0.0.1
 	github.com/haijima/cobrax v0.4.0
 	github.com/haijima/gini v0.0.2
 	github.com/jedib0t/go-pretty/v6 v6.5.9
@@ -52,6 +53,8 @@ require (
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/mod v0.18.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect

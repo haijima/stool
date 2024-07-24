@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"bytes"
-	"go/ast"
-	"go/token"
 	"testing"
 
-	"github.com/haijima/stool/internal/genconf"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewGenConfCmd(t *testing.T) {
@@ -68,40 +66,15 @@ func Test_printMatchingGroupInJson(t *testing.T) {
 	assert.Equal(t, "{\n  \"matching_groups\": [\n    \"foo\",\n    \"bar\"\n  ]\n}\n", stdout.String())
 }
 
-func Test_printArgNotBasicLitError(t *testing.T) {
-	v, fs := createViperAndFs()
-	cmd := NewGenConfCmd(v, fs)
-
-	stderr := new(bytes.Buffer)
-	cmd.SetErr(stderr)
-
-	printArgNotBasicLitError(
-		cmd,
-		&genconf.ArgNotBasicLitError{
-			Info: []*genconf.ArgAstInfo{{
-				Call: &ast.CallExpr{
-					Fun:  &ast.SelectorExpr{X: &ast.Ident{Name: "foo"}, Sel: &ast.Ident{Name: "bar"}},
-					Args: []ast.Expr{&ast.Ident{Name: "baz"}, &ast.Ident{Name: "qux"}},
-				},
-				CallPos:  token.Position{Filename: "test.go", Line: 1, Column: 1},
-				ArgPos:   token.Position{Filename: "test.go", Line: 1, Column: 9},
-				ArgIndex: 0,
-			}},
-		},
-	)
-
-	assert.Equal(t, "[Warning] test.go:1:9 Unable to parse *ast.Ident:\tfoo.bar(baz, qux)\n", stderr.String())
-}
-
 func TestRunGenConf(t *testing.T) {
 	v := viper.New()
 	fs := afero.NewOsFs()
 	stdout := new(bytes.Buffer)
 	cmd := NewRootCmd(v, fs)
 	cmd.SetOut(stdout)
-	cmd.SetArgs([]string{"genconf", "--format", "yaml", "../internal/genconf/testdata/echo_simple.go"})
+	cmd.SetArgs([]string{"genconf", "--format", "yaml", "../internal/genconf/testdata/src/echo_simple"})
 	err := cmd.Execute()
 
-	assert.NoError(t, err)
-	assert.Equal(t, "matching_groups:\n    - ^/api/items$\n    - ^/api/users$\n    - ^/api/users/([^/]+)$\n\n", stdout.String())
+	require.NoError(t, err)
+	assert.Equal(t, "matching_groups:\n    - ^/api/users/([^/]+)$\n    - ^/api/users$\n    - ^/api/items$\n\n", stdout.String())
 }
