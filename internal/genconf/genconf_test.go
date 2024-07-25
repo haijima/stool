@@ -19,3 +19,10 @@ func TestCheckImportedFramework_echo_complex(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, fw, EchoV4)
 }
+
+func TestCheckImportedFramework_net_http(t *testing.T) {
+	fw, err := CheckImportedFramework("testdata/src/net_http", "./...")
+
+	assert.NoError(t, err)
+	assert.Equal(t, fw, NetHttp)
+}

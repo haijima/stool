@@ -13,6 +13,11 @@ type WebFramework int
 
 const (
 	EchoV4 WebFramework = iota
+	Gin
+	ChiV5
+	Iris12
+	Gorilla
+	NetHttp
 	None
 )
 
@@ -22,12 +27,26 @@ func CheckImportedFramework(dir, pattern string) (WebFramework, error) {
 		return None, err
 	}
 
+	var useNetHttp bool
 	for _, pkg := range pkgs {
 		for _, p := range pkg.Imports {
 			if p.PkgPath == "github.com/labstack/echo/v4" {
 				return EchoV4, nil
+			} else if p.PkgPath == "github.com/gin-gonic/gin" {
+				return Gin, nil
+			} else if p.PkgPath == "github.com/go-chi/chi/v5" {
+				return ChiV5, nil
+			} else if p.PkgPath == "github.com/kataras/iris/v12" {
+				return Iris12, nil
+			} else if p.PkgPath == "github.com/gorilla/mux" {
+				return Gorilla, nil
+			} else if p.PkgPath == "net/http" {
+				useNetHttp = true
 			}
 		}
+	}
+	if useNetHttp {
+		return NetHttp, nil
 	}
 	return None, nil
 }

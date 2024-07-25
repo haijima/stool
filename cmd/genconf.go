@@ -57,6 +57,21 @@ func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, dir string) err
 	case genconf.EchoV4:
 		slog.Info("Detected Echo: \"github.com/labstack/echo/v4\"")
 		ext = &genconf.EchoExtractor{}
+	case genconf.Gin:
+		slog.Info("Detected Gin: \"github.com/gin-gonic/gin\"")
+		return fmt.Errorf("unsupported framework: %v", usedFramework)
+	case genconf.ChiV5:
+		slog.Info("Detected go-chi: \"github.com/go-chi/chi/v5\"")
+		return fmt.Errorf("unsupported framework: %v", usedFramework)
+	case genconf.Iris12:
+		slog.Info("Detected Iris: \"github.com/kataras/iris/v12\"")
+		return fmt.Errorf("unsupported framework: %v", usedFramework)
+	case genconf.Gorilla:
+		slog.Info("Detected Gorilla: \"github.com/gorilla/mux\"")
+		return fmt.Errorf("unsupported framework: %v", usedFramework)
+	case genconf.NetHttp:
+		slog.Info("Detected \"net/http\"")
+		ext = &genconf.NetHttpExtractor{}
 	case genconf.None:
 		return fmt.Errorf("not found web framework from %s", dir)
 	}
