@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"runtime"
 	"strconv"
 	"sync"
@@ -23,7 +22,7 @@ type CliSlogHandler struct {
 	opts slog.HandlerOptions
 }
 
-func NewCliSlogHandler(opts *slog.HandlerOptions) *CliSlogHandler {
+func NewCliSlogHandler(w io.Writer, opts *slog.HandlerOptions) *CliSlogHandler {
 	if opts == nil {
 		opts = &slog.HandlerOptions{}
 	}
@@ -32,7 +31,7 @@ func NewCliSlogHandler(opts *slog.HandlerOptions) *CliSlogHandler {
 	}
 	return &CliSlogHandler{
 		mu:   &sync.Mutex{},
-		w:    os.Stderr,
+		w:    w,
 		opts: *opts,
 	}
 }

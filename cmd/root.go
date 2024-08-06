@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var Lv slog.LevelVar
+
 // NewRootCmd returns the base command used when called without any subcommands
 func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd := cobrax.NewRoot(v)
@@ -20,10 +22,8 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// Colorization settings
 		color.NoColor = color.NoColor || v.GetBool("no-color")
-		// Set Logger
-		l := slog.New(internal.NewCliSlogHandler(&slog.HandlerOptions{Level: cobrax.VerbosityLevel(v)}))
-		slog.SetDefault(l)
-		cobrax.SetLogger(l)
+		// Set Log level
+		Lv.Set(cobrax.VerbosityLevel(v))
 
 		return cobrax.RootPersistentPreRunE(cmd, v, fs, args)
 	}
