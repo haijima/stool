@@ -33,9 +33,9 @@ func TestRunEndpoint(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	cmd := NewRootCmd(v, fs)
 	cmd.SetOut(stdout)
-	cmd.SetArgs([]string{"endpoint", "--format", "table", "../internal/genconf/testdata/src/echo_simple"})
+	cmd.SetArgs([]string{"endpoint", "--format", "csv", "../internal/genconf/testdata/src/echo_simple"})
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	assert.Equal(t, "matching_groups:\n    - ^/api/users/([^/]+)$\n    - ^/api/users$\n    - ^/api/items$\n\n", stdout.String())
+	assert.Equal(t, "Method,Path,Function,Declared Package,Declared Position,Function Package,Function Position\nPOST,/api/users,CreateUser,g/h/s/i/testdata,main.go:10:8,g/h/s/i/testdata,main.go:18:6\nGET,/api/users,GetUsers,g/h/s/i/testdata,main.go:11:7,g/h/s/i/testdata,main.go:22:6\nGET,/api/users/:id,GetUser,g/h/s/i/testdata,main.go:12:7,g/h/s/i/testdata,main.go:26:6\nGET,/api/items,GetItems,g/h/s/i/testdata,main.go:13:7,g/h/s/i/testdata,main.go:30:6\n", stdout.String())
 }
