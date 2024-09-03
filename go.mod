@@ -2,6 +2,8 @@ module github.com/haijima/stool
 
 go 1.22.2
 
+toolchain go1.23.0
+
 require (
 	github.com/Wing924/ltsv v0.3.1
 	github.com/awalterschulze/gographviz v2.0.3+incompatible
