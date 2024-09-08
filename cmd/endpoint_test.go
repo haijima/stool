@@ -37,5 +37,5 @@ func TestRunEndpoint(t *testing.T) {
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	assert.Equal(t, "Method,Path,Function,Declared Package,Declared Position\nPOST,/api/users,CreateUser,g/h/s/i/testdata,main.go:18:6\nGET,/api/users,GetUsers,g/h/s/i/testdata,main.go:22:6\nGET,/api/users/:id,GetUser,g/h/s/i/testdata,main.go:26:6\nGET,/api/items,GetItems,g/h/s/i/testdata,main.go:30:6\n", stdout.String())
+	assert.Equal(t, "#,Method,Path,Function,Declared Package,Declared Position\n1,POST,/api/users,CreateUser,g/h/s/i/testdata,main.go:18:6\n2,GET,/api/users,GetUsers,g/h/s/i/testdata,main.go:22:6\n3,GET,/api/users/:id,GetUser,g/h/s/i/testdata,main.go:26:6\n4,GET,/api/items,GetItems,g/h/s/i/testdata,main.go:30:6\n", stdout.String())
 }
