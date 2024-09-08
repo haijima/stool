@@ -28,6 +28,13 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 		return cobrax.RootPersistentPreRunE(cmd, v, fs, args)
 	}
 
+	rootCmd.PersistentFlags().StringP("file", "f", "", "access log file to profile")
+	rootCmd.PersistentFlags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
+	rootCmd.PersistentFlags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
+	rootCmd.PersistentFlags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
+	rootCmd.PersistentFlags().String("filter", "", "filter log lines by regular expression")
+	_ = rootCmd.MarkFlagFilename("file", viper.SupportedExts...)
+
 	rootCmd.AddCommand(NewTrendCmd(internal.NewTrendProfiler(), v, fs))
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))

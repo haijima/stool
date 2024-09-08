@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"strings"
+	"slices"
 
-	"github.com/haijima/stool/internal/genconf"
+	"github.com/haijima/cobrax"
+	"github.com/haijima/epf"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -17,21 +16,15 @@ import (
 
 func NewGenConfCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	genConfCmd := &cobra.Command{}
-	genConfCmd.Use = "genconf [flags] <dir>"
-	genConfCmd.DisableFlagsInUseLine = true
+	genConfCmd.Use = "genconf"
 	genConfCmd.Short = "Generate configuration file"
-	genConfCmd.Long = `Extract the routing information from the source code and generate the "matching_group" configuration.
-
-The web framework used in the source code is automatically detected.
-Currently, the following frameworks are supported:
-- Echo (https://echo.labstack.com/)`
-	genConfCmd.Example = "  stool genconf -f yaml main.go >> .stool.yaml"
-	genConfCmd.Args = cobra.ExactArgs(1)
+	genConfCmd.Example = "  stool genconf --format yaml > .stool.yaml"
+	genConfCmd.Args = cobra.NoArgs
 	genConfCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		dir := args[0]
-		return runGenConf(cmd, v, fs, dir)
+		return runGenConf(cmd, v, fs)
 	}
 
+	genConfCmd.Flags().StringP("dir", "d", ".", "The directory to analyze")
 	genConfCmd.Flags().StringP("pattern", "p", "./...", "The pattern to analyze")
 	genConfCmd.Flags().String("format", "yaml", "The output format {toml|yaml|json|flag}")
 	genConfCmd.Flags().Bool("capture-group-name", false, "Add names to captured groups like \"(?P<name>pattern)\"")
@@ -39,94 +32,49 @@ Currently, the following frameworks are supported:
 	return genConfCmd
 }
 
-func runGenConf(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, dir string) error {
+func runGenConf(cmd *cobra.Command, v *viper.Viper, _ afero.Fs) error {
+	dir := v.GetString("dir")
 	pattern := v.GetString("pattern")
 	format := v.GetString("format")
-	captureGroupName := v.GetBool("capture-group-name")
-
-	if format != "toml" && format != "yaml" && format != "json" && format != "flag" {
+	if format != "toml" && format != "yaml" && format != "json" {
 		return fmt.Errorf("invalid format: %s", format)
 	}
 
-	usedFramework, err := genconf.CheckImportedFramework(dir, pattern)
+	flags := cobrax.GetFlags(cmd.Root())
+	matchingGroups, err := getMatchingGroups(dir, pattern)
 	if err != nil {
 		return err
 	}
-	var ext genconf.APIPathPatternExtractor
-	switch usedFramework {
-	case genconf.EchoV4:
-		slog.Info("Detected Echo: \"github.com/labstack/echo/v4\"")
-		ext = &genconf.EchoExtractor{}
-	case genconf.Gin:
-		slog.Info("Detected Gin: \"github.com/gin-gonic/gin\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.ChiV5:
-		slog.Info("Detected go-chi: \"github.com/go-chi/chi/v5\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.Iris12:
-		slog.Info("Detected Iris: \"github.com/kataras/iris/v12\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.Gorilla:
-		slog.Info("Detected Gorilla: \"github.com/gorilla/mux\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.NetHttp:
-		slog.Info("Detected \"net/http\"")
-		ext = &genconf.NetHttpExtractor{}
-	case genconf.None:
-		return fmt.Errorf("not found web framework from %s", dir)
-	}
+	flags["matching-groups"] = matchingGroups
 
-	matchingGroups, err := genconf.GenMatchingGroup(dir, pattern, ext, captureGroupName)
-	if err != nil {
-		return err
-	}
-	conf := MatchingGroupConf{matchingGroups}
 	switch format {
 	case "toml":
-		return printMatchingGroupInToml(cmd, conf)
+		return toml.NewEncoder(cmd.OutOrStdout()).Encode(flags)
 	case "yaml":
-		return printMatchingGroupInYaml(cmd, conf)
+		return yaml.NewEncoder(cmd.OutOrStdout()).Encode(flags)
 	case "json":
-		return printMatchingGroupInJson(cmd, conf)
-	case "flag":
-		return printMatchingGroupAsFlag(cmd, conf)
+		enc := json.NewEncoder(cmd.OutOrStdout())
+		enc.SetIndent("", "  ")
+		return enc.Encode(flags)
 	}
 	return nil
 }
 
-type MatchingGroupConf struct {
-	MatchingGroups []string `toml:"matching_groups" yaml:"matching_groups" json:"matching_groups"`
-}
-
-func printMatchingGroupInToml(cmd *cobra.Command, conf MatchingGroupConf) error {
-	var buf bytes.Buffer
-	enc := toml.NewEncoder(&buf).SetArraysMultiline(true)
-	if err := enc.Encode(conf); err != nil {
-		return err
-	}
-	fmt.Fprintln(cmd.OutOrStdout(), buf.String())
-	return nil
-}
-
-func printMatchingGroupInYaml(cmd *cobra.Command, conf MatchingGroupConf) error {
-	b, err := yaml.Marshal(conf)
+func getMatchingGroups(dir, pattern string) ([]string, error) {
+	ext, err := epf.AutoExtractor(dir, pattern)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Fprintln(cmd.OutOrStdout(), string(b))
-	return nil
-}
-
-func printMatchingGroupInJson(cmd *cobra.Command, conf MatchingGroupConf) error {
-	b, err := json.MarshalIndent(conf, "", "  ")
+	endpoints, err := epf.FindEndpoints(dir, pattern, ext)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	fmt.Fprintln(cmd.OutOrStdout(), string(b))
-	return nil
-}
-
-func printMatchingGroupAsFlag(cmd *cobra.Command, conf MatchingGroupConf) error {
-	fmt.Fprintf(cmd.OutOrStdout(), "-m '%s'\n", strings.Join(conf.MatchingGroups, ","))
-	return nil
+	matchingGroups := make([]string, 0, len(endpoints))
+	for _, endpoint := range endpoints {
+		matchingGroups = append(matchingGroups, endpoint.PathRegexpPattern)
+	}
+	slices.Sort(matchingGroups)
+	slices.Reverse(matchingGroups)
+	matchingGroups = slices.Compact(matchingGroups)
+	return matchingGroups, nil
 }

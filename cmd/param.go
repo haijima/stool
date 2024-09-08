@@ -34,11 +34,6 @@ func NewParamCmd(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobra.
 	paramCmd.Flags().IntP("num", "n", 5, "The number of parameters to show")
 	paramCmd.Flags().Bool("stat", false, "Show statistics of the parameters")
 	paramCmd.Flags().String("format", "table", "The stat output format {table|md|csv|tsv}")
-	paramCmd.Flags().StringP("file", "f", "", "access log file to profile")
-	paramCmd.Flags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
-	paramCmd.Flags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
-	paramCmd.Flags().String("filter", "", "filter log lines by regular expression")
-	_ = paramCmd.MarkFlagFilename("file", viper.SupportedExts...)
 
 	return paramCmd
 }

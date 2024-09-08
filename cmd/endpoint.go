@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 
-	"github.com/haijima/stool/internal/endpoint"
-	"github.com/haijima/stool/internal/genconf"
+	"github.com/haijima/epf"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -39,45 +36,23 @@ func runEndpoint(cmd *cobra.Command, v *viper.Viper, _ afero.Fs, dir string) err
 		return fmt.Errorf("invalid format: %s", format)
 	}
 
-	usedFramework, err := genconf.CheckImportedFramework(dir, pattern)
+	ext, err := epf.AutoExtractor(dir, pattern)
 	if err != nil {
 		return err
 	}
-	var ext endpoint.Extractor
-	switch usedFramework {
-	case genconf.EchoV4:
-		slog.Info("Detected Echo: \"github.com/labstack/echo/v4\"")
-		ext = &endpoint.EchoExtractor{}
-	case genconf.Gin:
-		slog.Info("Detected Gin: \"github.com/gin-gonic/gin\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.ChiV5:
-		slog.Info("Detected go-chi: \"github.com/go-chi/chi/v5\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.Iris12:
-		slog.Info("Detected Iris: \"github.com/kataras/iris/v12\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.Gorilla:
-		slog.Info("Detected Gorilla: \"github.com/gorilla/mux\"")
-		return fmt.Errorf("unsupported framework: %v", usedFramework)
-	case genconf.NetHttp:
-		slog.Info("Detected \"net/http\"")
-	case genconf.None:
-		return fmt.Errorf("not found web framework from %s", dir)
-	}
 
-	endpoints, err := endpoint.FindEndpoints(dir, pattern, ext)
+	endpoints, err := epf.FindEndpoints(dir, pattern, ext)
 	if err != nil {
 		return err
 	}
 
 	t := table.NewWriter()
 	t.SetOutputMirror(cmd.OutOrStdout())
-	header := table.Row{"Method", "Path", "Function", "Declared Package", "Declared Position", "Function Package", "Function Position"}
+	header := table.Row{"#", "Method", "Path", "Function", "Declared Package", "Declared Position"}
 	t.AppendHeader(header)
 
-	aligns := []table.ColumnConfig{{Number: 4, Align: text.AlignRight}, {Number: 5, Align: text.AlignRight}, {Number: 6, Align: text.AlignRight}, {Number: 7, Align: text.AlignRight}}
-	t.SetColumnConfigs(aligns)
+	//aligns := []table.ColumnConfig{{Number: 4, Align: text.AlignRight}, {Number: 5, Align: text.AlignRight}, {Number: 6, Align: text.AlignRight}, {Number: 7, Align: text.AlignRight}}
+	//t.SetColumnConfigs(aligns)
 	t.AppendRows(endpointsToRows(endpoints))
 
 	switch format {
@@ -93,10 +68,10 @@ func runEndpoint(cmd *cobra.Command, v *viper.Viper, _ afero.Fs, dir string) err
 	return nil
 }
 
-func endpointsToRows(endpoints []*endpoint.Endpoint) []table.Row {
+func endpointsToRows(endpoints []*epf.Endpoint) []table.Row {
 	rows := make([]table.Row, 0, len(endpoints))
-	for _, e := range endpoints {
-		row := table.Row{e.Method, e.Path, e.FuncName, e.DeclarePos.PackagePath(), e.DeclarePos.FLC(), e.FuncPos.PackagePath(), e.FuncPos.FLC()}
+	for i, e := range endpoints {
+		row := table.Row{i + 1, e.Method, e.Path, e.FuncName, e.DeclarePos.PackagePath(true), e.DeclarePos.PositionString()}
 		rows = append(rows, row)
 	}
 	return rows

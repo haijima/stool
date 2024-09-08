@@ -30,12 +30,6 @@ func NewTrendCmd(p *internal.TrendProfiler, v *viper.Viper, fs afero.Fs) *cobra.
 	trendCmd.Flags().String("format", "table", "The output format {table|md|csv}")
 	trendCmd.Flags().IntP("interval", "i", 5, "time (in seconds) of the interval. Access counts are cumulated at each interval.")
 	trendCmd.Flags().StringSlice("sort", []string{"sum:desc"}, "comma-separated list of \"<sort keys>:<order>\" Sort keys are {method|uri|sum|count0|count1|countN}. Orders are [asc|desc]. e.g. \"sum:desc,count0:asc\"")
-	trendCmd.Flags().StringP("file", "f", "", "access log file to profile")
-	trendCmd.Flags().StringSliceP("matching_groups", "m", []string{}, "comma-separated list of regular expression patterns to group matched URIs")
-	trendCmd.Flags().String("time_format", "02/Jan/2006:15:04:05 -0700", "format to parse time field on log file")
-	trendCmd.Flags().StringToString("log_labels", map[string]string{}, "comma-separated list of key=value pairs to override log labels")
-	trendCmd.Flags().String("filter", "", "filter log lines by regular expression")
-	_ = trendCmd.MarkFlagFilename("file", viper.SupportedExts...)
 
 	return trendCmd
 }
