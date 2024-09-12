@@ -22,6 +22,7 @@ import (
 func NewScenarioCmd(p *internal.ScenarioProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	scenarioCmd := &cobra.Command{}
 	scenarioCmd.Use = "scenario"
+	scenarioCmd.Aliases = []string{"scenarios"}
 	scenarioCmd.Short = "Show the access patterns of users"
 	scenarioCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return runScenario(cmd, v, fs, p)

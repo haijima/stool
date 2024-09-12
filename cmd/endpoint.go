@@ -13,6 +13,7 @@ import (
 func NewEndpointCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	genConfCmd := &cobra.Command{}
 	genConfCmd.Use = "endpoint <dir>"
+	genConfCmd.Aliases = []string{"endpoints"}
 	genConfCmd.DisableFlagsInUseLine = true
 	genConfCmd.Short = "Show endpoints"
 	genConfCmd.Example = "  stool endpoint ."
