@@ -41,7 +41,6 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.AddCommand(NewParamCmd(internal.NewParamProfiler(), v, fs))
 	rootCmd.AddCommand(NewAaCmd(v, fs))
 	rootCmd.AddCommand(NewGenConfCmd(v, fs))
-	rootCmd.AddCommand(NewEndpointCmd(v, fs))
 
 	return rootCmd
 }
