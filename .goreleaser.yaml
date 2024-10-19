@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -25,7 +26,6 @@ archives:
     files:
       - LICENSE
       - licenses.csv
-    rlcp: true
 checksum:
   name_template: 'checksums.txt'
 
@@ -57,7 +57,7 @@ brews:
       owner: haijima
       name: homebrew-tap
       token: "{{ .Env.PAT_FOR_HOMEBREW_TAP }}"
-    folder: Formula
-    description: "Analyzes SQL queries"
+    directory: Formula
+    description: "Profiles access log"
     homepage: "{{ .GitURL }}"
     license: "MIT"
