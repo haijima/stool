@@ -22,7 +22,7 @@ func TestNewRootCmd(t *testing.T) {
 func TestNewRootCmd_Flag(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
-	versionFlag := cmd.PersistentFlags().Lookup("version")
+	versionFlag := cmd.LocalFlags().Lookup("version")
 	configFlag := cmd.PersistentFlags().Lookup("config")
 	noColorFlag := cmd.PersistentFlags().Lookup("no-color")
 	verboseFlag := cmd.PersistentFlags().Lookup("verbose")
