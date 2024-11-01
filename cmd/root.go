@@ -39,7 +39,6 @@ func NewRootCmd(v *viper.Viper, fs afero.Fs) *cobra.Command {
 	rootCmd.AddCommand(NewTransitionCmd(internal.NewTransitionProfiler(), v, fs))
 	rootCmd.AddCommand(NewScenarioCmd(internal.NewScenarioProfiler(), v, fs))
 	rootCmd.AddCommand(NewParamCmd(internal.NewParamProfiler(), v, fs))
-	rootCmd.AddCommand(NewAaCmd(v, fs))
 	rootCmd.AddCommand(NewGenConfCmd(v, fs))
 
 	return rootCmd
