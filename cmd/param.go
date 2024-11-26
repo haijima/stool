@@ -23,13 +23,13 @@ import (
 // NewParamCmd returns the param command
 func NewParamCmd(p *internal.ParamProfiler, v *viper.Viper, fs afero.Fs) *cobra.Command {
 	paramCmd := &cobra.Command{}
-	paramCmd.Use = "param [flags] <matching_group>..."
+	paramCmd.Use = "param [flags]"
 	paramCmd.Aliases = []string{"params"}
 	paramCmd.Short = "Show the parameter statistics for each endpoint"
 	paramCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return runParam(cmd, v, fs, p, args)
 	}
-	paramCmd.Args = cobra.MinimumNArgs(1)
+	paramCmd.Args = cobra.NoArgs
 
 	paramCmd.Flags().StringP("type", "t", "all", "The type of the parameter {path|query|all}")
 	paramCmd.Flags().IntP("num", "n", 5, "The number of parameters to show")
@@ -47,6 +47,7 @@ func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Param
 	num := v.GetInt("num")
 	statFlg := v.GetBool("stat")
 	format := v.GetString("format")
+	matchingGroups := v.GetStringSlice("matching_groups")
 
 	paramType = strings.ToLower(paramType)
 	if paramType != "path" && paramType != "query" && paramType != "all" {
@@ -62,7 +63,7 @@ func runParam(cmd *cobra.Command, v *viper.Viper, fs afero.Fs, p *internal.Param
 	}
 	defer f.Close()
 	logReader, err := log.NewLTSVReader(f, log.LTSVReadOpt{
-		MatchingGroups: args,
+		MatchingGroups: matchingGroups,
 		TimeFormat:     timeFormat,
 		Labels:         labels,
 		Filter:         filter,
