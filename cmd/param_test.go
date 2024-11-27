@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"testing"
 
@@ -47,22 +46,23 @@ func TestNewParamCmd_RunE(t *testing.T) {
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"
 	v.Set("file", fileName)
+	v.Set("matching_groups", []string{"^/api/condition/([^/]+)$"})
 
 	stdout := new(bytes.Buffer)
 	cmd.SetOut(stdout)
 
 	_ = v.BindPFlags(cmd.Flags())
-	err := cmd.RunE(cmd, []string{"^/api/condition/[^/]+$"})
+	err := cmd.RunE(cmd, []string{})
 
-	s := stdout.String()
-	fmt.Println(s)
+	//s := stdout.String()
+	//fmt.Println(s)
 
 	assert.NoError(t, err)
-	assert.Contains(t, stdout.String(), "GET ^/api/condition/[^/]+$ (Count: 4,489)")
+	assert.Contains(t, stdout.String(), "GET ^/api/condition/([^/]+)$ (Count: 4,489)")
 	assert.Contains(t, stdout.String(), "\t?condition_level (Count: 4,441, Rate: 98.93%, Cardinality: 5, Gini: 0.793)\n")
 	assert.Contains(t, stdout.String(), "\tQuery key combination (Cardinality: 4, Gini: 0.710)")
 	assert.Contains(t, stdout.String(), "\tQuery key value combination (Cardinality: 4,195, Gini: 0.065)")
-	assert.Contains(t, stdout.String(), "POST ^/api/condition/[^/]+$ (Count: 65,993)")
+	assert.Contains(t, stdout.String(), "POST ^/api/condition/([^/]+)$ (Count: 65,993)")
 }
 
 func TestNewParamCmdExecute(t *testing.T) {
@@ -72,7 +72,7 @@ func TestNewParamCmdExecute(t *testing.T) {
 
 	dir, _ := os.Getwd()
 	fileName := dir + "/testdata/access.log"
-	cmd.SetArgs([]string{"param", "-f", fileName, "--format", "table", "--stat", "^/api/condition/[^/]+$"})
+	cmd.SetArgs([]string{"param", "-f", fileName, "--format", "table", "--stat"})
 
 	assert.NoError(t, cmd.Execute())
 }

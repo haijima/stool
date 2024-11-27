@@ -39,27 +39,25 @@ func (p *ParamProfiler) Profile(reader *log.LTSVReader) (*Param, error) {
 			return nil, err
 		}
 
-		if entry.MatchedGroup == nil {
-			continue
-		}
-
 		_, uri, query := log.ParseReq(entry.Req)
-
-		// Path param
-		subMatches := entry.MatchedGroup.FindStringSubmatch(uri)
 		key := fmt.Sprintf("%s %s", entry.Method, entry.Uri)
 		endpointsMap[key] = nil
-		if len(subMatches) > 1 { // this entry URI has path param
-			if _, ok := param.Path[key]; !ok {
-				param.Path[key] = make([]map[string]int, len(subMatches)-1)
-				for i := range param.Path[key] {
-					param.Path[key][i] = map[string]int{}
+
+		// Path param
+		if entry.MatchedGroup != nil {
+			subMatches := entry.MatchedGroup.FindStringSubmatch(uri)
+			if len(subMatches) > 1 { // this entry URI has path param
+				if _, ok := param.Path[key]; !ok {
+					param.Path[key] = make([]map[string]int, len(subMatches)-1)
+					for i := range param.Path[key] {
+						param.Path[key][i] = map[string]int{}
+					}
+					param.PathName[key] = make([]string, len(subMatches)-1)
 				}
-				param.PathName[key] = make([]string, len(subMatches)-1)
-			}
-			for i, v := range subMatches[1:] {
-				param.Path[key][i][v] += 1
-				param.PathName[key][i] = entry.MatchedGroup.SubexpNames()[i+1]
+				for i, v := range subMatches[1:] {
+					param.Path[key][i][v] += 1
+					param.PathName[key][i] = entry.MatchedGroup.SubexpNames()[i+1]
+				}
 			}
 		}
 
