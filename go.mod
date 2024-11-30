@@ -9,7 +9,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.18.0
 	github.com/google/cel-go v0.21.0
-	github.com/haijima/cobrax v0.6.1
+	github.com/haijima/cobrax v0.6.2
 	github.com/haijima/epf v0.1.0
 	github.com/haijima/gini v0.0.2
 	github.com/jedib0t/go-pretty/v6 v6.6.1
