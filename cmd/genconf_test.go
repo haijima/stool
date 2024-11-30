@@ -37,5 +37,5 @@ func TestRunGenConf(t *testing.T) {
 	err := cmd.Execute()
 
 	require.NoError(t, err)
-	assert.Equal(t, "config: \"\"\nfile: \"\"\nfilter: \"\"\ngenconf:\n    capture-group-name: \"false\"\n    dir: ./testdata/src\n    format: yaml\n    pattern: ./...\nlog-labels: '[]'\nmatching-groups:\n    - ^/api/users/([^/]+)$\n    - ^/api/users$\n    - ^/api/items$\nno-color: \"false\"\nparam:\n    format: table\n    num: \"5\"\n    stat: \"false\"\n    type: all\nquiet: \"false\"\nscenario:\n    format: dot\n    palette: \"false\"\ntime-format: 02/Jan/2006:15:04:05 -0700\ntransition:\n    format: dot\ntrend:\n    format: table\n    interval: \"5\"\n    sort: '[sum:desc]'\nverbose: \"0\"\n", stdout.String())
+	assert.Equal(t, "config: \"\"\nfile: \"\"\nfilter: \"\"\ngenconf:\n    capture_group_name: \"false\"\n    dir: ./testdata/src\n    format: yaml\n    pattern: ./...\nlog_labels: '[]'\nmatching_groups:\n    - ^/api/users/([^/]+)$\n    - ^/api/users$\n    - ^/api/items$\nno_color: \"false\"\nparam:\n    format: table\n    num: \"5\"\n    stat: \"false\"\n    type: all\nquiet: \"false\"\nscenario:\n    format: dot\n    palette: \"false\"\ntime_format: 02/Jan/2006:15:04:05 -0700\ntransition:\n    format: dot\ntrend:\n    format: table\n    interval: \"5\"\n    sort: '[sum:desc]'\nverbose: \"0\"\n", stdout.String())
 }

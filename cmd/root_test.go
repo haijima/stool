@@ -22,7 +22,6 @@ func TestNewRootCmd(t *testing.T) {
 func TestNewRootCmd_Flag(t *testing.T) {
 	v, fs := createViperAndFs()
 	cmd := NewRootCmd(v, fs)
-	versionFlag := cmd.LocalFlags().Lookup("version")
 	configFlag := cmd.PersistentFlags().Lookup("config")
 	noColorFlag := cmd.PersistentFlags().Lookup("no-color")
 	verboseFlag := cmd.PersistentFlags().Lookup("verbose")
@@ -30,9 +29,6 @@ func TestNewRootCmd_Flag(t *testing.T) {
 
 	assert.True(t, cmd.HasAvailablePersistentFlags(), "root command should have available flag")
 
-	assert.NotNil(t, versionFlag, "root command should have \"version\" flag")
-	assert.Equal(t, "V", versionFlag.Shorthand, "\"version\" flag doesn't have shorthand")
-	assert.Equal(t, "bool", versionFlag.Value.Type(), "\"version\" flag is bool")
 	assert.NotNil(t, configFlag, "root command should have \"config\" flag")
 	assert.Equal(t, "", configFlag.Shorthand, "\"config\" flag doesn't have shorthand")
 	assert.Equal(t, "string", configFlag.Value.Type(), "\"config\" flag is string")

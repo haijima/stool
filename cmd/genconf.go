@@ -45,7 +45,7 @@ func runGenConf(cmd *cobra.Command, v *viper.Viper, _ afero.Fs) error {
 	if err != nil {
 		return err
 	}
-	flags["matching-groups"] = matchingGroups
+	flags["matching_groups"] = matchingGroups
 
 	switch format {
 	case "toml":
