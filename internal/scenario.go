@@ -41,6 +41,7 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 
 	i := 0
 	var startTime time.Time
+	var endTime time.Time
 	var entry log.LogEntry
 	for reader.Read() {
 		_, err := reader.Parse(&entry)
@@ -56,7 +57,8 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 		if startTime.IsZero() {
 			startTime = entry.Time
 		}
-		reqTimeSec := int(entry.Time.Sub(startTime).Seconds())
+		endTime = entry.Time
+		reqTimeSec := int(entry.Time.Sub(startTime).Milliseconds())
 
 		_, exists := endpoints[k]
 		if !exists {
@@ -73,6 +75,15 @@ func (p *ScenarioProfiler) Profile(reader *log.LTSVReader) ([]ScenarioStruct, er
 			}
 			result[entry.Uid].Append(k)
 			lastCalls[entry.Uid] = reqTimeSec
+		}
+	}
+	period := endTime.Sub(startTime).Milliseconds()
+	latestFirstCall := int64(float64(period) * 0.95)
+	for uid, firstCall := range firstCalls {
+		if firstCall > int(latestFirstCall) {
+			delete(result, uid)
+			delete(firstCalls, uid)
+			delete(lastCalls, uid)
 		}
 	}
 
