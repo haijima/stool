@@ -1,8 +1,6 @@
 module github.com/haijima/stool
 
-go 1.22.2
-
-toolchain go1.23.1
+go 1.23.1
 
 require (
 	github.com/Wing924/ltsv v0.4.0
