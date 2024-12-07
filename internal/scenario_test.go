@@ -27,8 +27,8 @@ func TestScenarioProfiler_Profile(t *testing.T) {
 	assert.Equal(t, 0, scenarios[0].LastReq)
 	assert.Equal(t, "POST /initialize", scenarios[0].Pattern.String(true))
 	assert.Equal(t, "(GET /)*", scenarios[1].Hash)
-	assert.Equal(t, 3, scenarios[1].Count)
-	assert.Equal(t, 5, scenarios[1].FirstReq)
-	assert.Equal(t, 7, scenarios[1].LastReq)
+	assert.Equal(t, 1, scenarios[1].Count)
+	assert.Equal(t, 5000, scenarios[1].FirstReq)
+	assert.Equal(t, 6000, scenarios[1].LastReq)
 	assert.Equal(t, "(GET /)*", scenarios[1].Pattern.String(true))
 }

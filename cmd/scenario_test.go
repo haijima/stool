@@ -75,7 +75,7 @@ func Test_ScenarioCmd_RunE_format_csv(t *testing.T) {
 	err := cmd.RunE(cmd, []string{})
 
 	assert.NoError(t, err)
-	assert.Equal(t, "first call[s],last call[s],count,scenario node\n0,0,1,POST /initialize\n1,2,1,(GET /)*\n", stdout.String())
+	assert.Equal(t, "first call[s],last call[s],count,scenario node\n0,0,1,POST /initialize\n1000,2000,1,(GET /)*\n", stdout.String())
 }
 
 func Test_ScenarioCmd_RunE_palette(t *testing.T) {
