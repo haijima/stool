@@ -1,6 +1,7 @@
 # stool
 
-[![CI Status](https://github.com/haijima/stool/workflows/CI/badge.svg?branch=main)](https://github.com/haijima/stool/actions)
+[![GitHub Release](https://img.shields.io/github/v/release/haijima/stool)](https://github.com/haijima/stool/releases)
+[![CI Status](https://github.com/haijima/stool/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/haijima/stool/actions/workflows/ci.yaml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/haijima/stool.svg)](https://pkg.go.dev/github.com/haijima/stool)
 [![Go report](https://goreportcard.com/badge/github.com/haijima/stool)](https://goreportcard.com/report/github.com/haijima/stool)
 
