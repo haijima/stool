@@ -171,6 +171,8 @@ log_format ltsv "time:$time_local"
                 "\tuidgot:$uid_got"
                 "\tuidset:$uid_set"
                 "\tvhost:$host";
+
+access_log  /var/log/nginx/access.log  ltsv;
 ```
 
 ## License
